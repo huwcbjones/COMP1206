@@ -35,7 +35,6 @@ public class FontChooser {
         window = new JFrame("Font Chooser");
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         window.setLayout(new FlowLayout());
-        window.setSize(new Dimension(600, 100));
 
         // Checkboxes
         panel_style = new JPanel();
@@ -80,6 +79,11 @@ public class FontChooser {
         btn_ok = new JButton("OK");
         window.add(btn_ok);
 
+        // A little bit to make the layout the same size as the image given in the exercise sheet
+        // Pack the components to set the size
+        // Then use that height with 600px as the width
+        window.pack();
+        window.setSize(new Dimension(600, window.getHeight()));
         window.setVisible(true);
     }
 
