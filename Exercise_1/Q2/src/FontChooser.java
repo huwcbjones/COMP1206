@@ -20,7 +20,6 @@ public class FontChooser {
     private JRadioButton radio_courier;
 
     private JPanel panel_style;
-    private ButtonGroup group_style;
     private JCheckBox checkbox_bold;
     private JCheckBox checkbox_italic;
 
