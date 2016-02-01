@@ -24,6 +24,12 @@ public class SimpleGUI {
     }
 
     public SimpleGUI(){
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+
+        }
+
         window = new JFrame("Simple Submit Cancel Form");
         window.setLayout(new FlowLayout());
 

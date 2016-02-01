@@ -18,4 +18,16 @@ public class mp3Player {
     private JButton btn_playPause;
     private JButton btn_next;
     private JButton btn_stop;
+
+    public static void main(String[] args){
+        mp3Player mp3Player = new mp3Player();
+    }
+
+    public mp3Player(){
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+
+        }
+    }
 }

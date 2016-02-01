@@ -21,11 +21,16 @@ public class FontChooserAdvanced {
 
     private JButton btn_ok;
 
-    public static void main(String[] args) {
+    public static void main (String[] args) {
         FontChooserAdvanced fontChooserAdvanced = new FontChooserAdvanced();
     }
 
-    public FontChooserAdvanced() {
+    public FontChooserAdvanced () {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+
+        }
         window = new JFrame("Font Chooser");
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         window.setLayout(new FlowLayout());
@@ -68,11 +73,11 @@ public class FontChooserAdvanced {
     /**
      * Loads font names from system.
      * Snippet from <a href="https://docs.oracle.com/javase/tutorial/2d/text/fonts.html">https://docs.oracle.com/javase/tutorial/2d/text/fonts.html</a>.
+     *
      * @return String[] of available font names
      */
-    private String[] _loadFonts(){
+    private String[] _loadFonts () {
         GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
         return graphicsEnvironment.getAvailableFontFamilyNames();
     }
-
 }

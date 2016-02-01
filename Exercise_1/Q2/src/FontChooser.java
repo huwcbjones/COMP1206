@@ -32,6 +32,12 @@ public class FontChooser {
     }
 
     public FontChooser() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+
+        }
+
         window = new JFrame("Font Chooser");
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         window.setLayout(new FlowLayout());
