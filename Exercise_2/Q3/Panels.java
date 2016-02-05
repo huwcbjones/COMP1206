@@ -138,7 +138,7 @@ public class Panels extends JFrame {
         /**
          * Invoked when the component's size changes.
          *
-         * @param e
+         * @param e ComponentEvent
          */
         @Override
         public void componentResized(ComponentEvent e) {
@@ -156,7 +156,7 @@ public class Panels extends JFrame {
          * Invoked when the mouse button has been moved on a component
          * (with no buttons no down).
          *
-         * @param e
+         * @param e MouseEvent
          */
         @Override
         public void mouseMoved(MouseEvent e) {
