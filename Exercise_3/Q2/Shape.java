@@ -38,7 +38,7 @@ public abstract class Shape extends JPanel {
             int relX, relY;
             relX = e.getX() - Shape.this.getX();
             relY = e.getY() - Shape.this.getY();
-            if (isInShape(e.getX(), e.getY())) {
+            if (isInShape(relX, relY)) {
                 Shape.this.repaint();
             }
         }
