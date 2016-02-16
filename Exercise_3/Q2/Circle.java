@@ -11,7 +11,7 @@ public class Circle extends Shape {
     int radius;
 
     public Circle (int radius) {
-        super();
+        super(2 * radius, 2 * radius);
         this.radius = radius;
     }
 

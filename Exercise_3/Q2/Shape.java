@@ -12,8 +12,13 @@ import java.util.Random;
  */
 public abstract class Shape extends JPanel {
 
-    public Shape () {
+    public Shape (int width, int height) {
         this.addMouseListener(new mouseClickManager());
+        Dimension size = new Dimension(width, height);
+        this.setPreferredSize(size);
+        this.setSize(size);
+        this.setMaximumSize(size);
+        this.setMinimumSize(size);
     }
 
     /**
