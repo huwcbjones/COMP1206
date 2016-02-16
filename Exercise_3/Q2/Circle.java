@@ -25,8 +25,9 @@ public class Circle extends Shape {
      */
     @Override
     public boolean isInShape (int x, int y) {
-
-        return false;
+        x -= radius;
+        y -= radius;
+        return Math.pow(x, 2) + Math.pow(y, 2) <= Math.pow(radius, 2);
     }
 
     /**
