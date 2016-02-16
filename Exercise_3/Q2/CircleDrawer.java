@@ -31,6 +31,7 @@ public class CircleDrawer extends JFrame {
 
         circle = new Circle(Double.valueOf(this.getContentPane().getHeight() / 2).intValue());
         this.add(circle);
+        repaint();
     }
 
 
