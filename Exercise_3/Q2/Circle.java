@@ -38,9 +38,7 @@ public class Circle extends Shape {
      */
     @Override
     public void paintShape (Graphics g, Color colour) {
-        int x = super.getX();
-        int y = super.getY();
         g.setColor(colour);
-        g.fillOval(x, y, 2 * radius, 2 * radius);
+        g.fillOval(0, 0, 2 * radius, 2 * radius);
     }
 }
