@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * {DESCRIPTION}
@@ -8,16 +10,17 @@ import java.awt.*;
  * @since 16/02/2016
  */
 public class MultipleCircleDrawer extends JFrame {
-    private Circle circle1;
-    private Circle circle2;
+    private ArrayList<Circle> circles;
+    private boolean redrawInProgress = false;
 
-    public MultipleCircleDrawer() {
+    public MultipleCircleDrawer () {
         super("Multiple Circle Drawer");
 
-        this.setSize(new Dimension(1200, 600));
+        this.setSize(new Dimension(1600, 900));
+        this.circles = new ArrayList<>();
 
         Container cp = this.getContentPane();
-        cp.setLayout(new BorderLayout());
+        cp.setLayout(null);
 
 
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -30,16 +33,64 @@ public class MultipleCircleDrawer extends JFrame {
 
         this.setVisible(true);
 
-        circle1 = new Circle(Double.valueOf(this.getContentPane().getHeight() / 2).intValue());
-        cp.add(circle1, BorderLayout.LINE_START);
-
-        circle2 = new Circle(Double.valueOf(this.getContentPane().getHeight() /2 ).intValue());
-        cp.add(circle2, BorderLayout.LINE_END);
+        addCircles();
 
         repaint();
     }
 
-    public static void main(String[] args) {
+    private void addCircles(){
+        redrawInProgress = true;
+
+        if (this.circles.size() != 0) this.circles.forEach(this.getContentPane()::remove);
+
+        this.circles = new ArrayList<>();
+
+        Circle randomCircle;
+
+        for (int i = 0; i < (10 + new Random().nextInt(15)); i++) {
+            randomCircle = this.createCircle();
+            this.getContentPane().add(randomCircle);
+        }
+        redrawInProgress = false;
+    }
+
+    private Circle createCircle() {
+        Circle circle = new Circle(new Random().nextInt(this.getContentPane().getHeight() / 2));
+        Dimension size = new Dimension(circle.getWidth(), circle.getHeight());
+        circle.setBounds(getRandomX(size.width), getRandomY(size.height), size.width, size.height);
+
+        this.circles.add(circle);
+        return circle;
+    }
+
+    /**
+     * Gets a valid x coordinate on the JFrame that ensure the object won't disappear offscreen
+     *
+     * @param width Width of the object
+     * @return Random X Coordinate
+     */
+    private int getRandomX(int width) {
+        // Prevent negative bounds
+        if (this.getWidth() - width > 0) {
+            return new Random().nextInt(this.getWidth() - width);
+        }
+        return 0;
+    }
+
+    /**
+     * Gets a valid y coordinate on the JFrame that ensure the object won't disappear offscreen
+     *
+     * @param height Height of the object
+     * @return Random Y Coordinate
+     */
+    private int getRandomY(int height) {
+        // Prevent negative bounds
+        if (this.getHeight() - height > 0) {
+            return new Random().nextInt(this.getHeight() - height);
+        }
+        return 0;
+    }
+    public static void main (String[] args) {
         MultipleCircleDrawer drawer = new MultipleCircleDrawer();
     }
 }
