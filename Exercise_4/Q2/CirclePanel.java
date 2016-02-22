@@ -11,10 +11,6 @@ import java.awt.geom.Line2D;
 public class CirclePanel extends JPanel {
     private int maxIterations = 0;
 
-    public CirclePanel(int iterations) {
-        this.maxIterations = iterations;
-    }
-
     public void repaint(int iterations) {
         this.maxIterations = iterations;
         super.repaint();
