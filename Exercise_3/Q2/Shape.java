@@ -19,6 +19,7 @@ public abstract class Shape extends JPanel {
         this.setSize(size);
         this.setMaximumSize(size);
         this.setMinimumSize(size);
+        this.setOpaque(false);
     }
 
     /**
@@ -40,43 +41,15 @@ public abstract class Shape extends JPanel {
          */
         @Override
         public void mouseClicked (MouseEvent e) {
-            int relX, relY;
-            relX = e.getX() - Shape.this.getX();
-            relY = e.getY() - Shape.this.getY();
-            if (isInShape(relX, relY)) {
+            if (isInShape(e.getX(), e.getY())) {
                 Shape.this.repaint();
             }
         }
     }
 
-    /**
-     * Invoked by Swing to draw components.
-     * Applications should not invoke <code>paint</code> directly,
-     * but should instead use the <code>repaint</code> method to
-     * schedule the component for redrawing.
-     * <p>
-     * This method actually delegates the work of painting to three
-     * protected methods: <code>paintComponent</code>,
-     * <code>paintBorder</code>,
-     * and <code>paintChildren</code>.  They're called in the order
-     * listed to ensure that children appear on top of component itself.
-     * Generally speaking, the component and its children should not
-     * paint in the insets area allocated to the border. Subclasses can
-     * just override this method, as always.  A subclass that just
-     * wants to specialize the UI (look and feel) delegate's
-     * <code>paint</code> method should just override
-     * <code>paintComponent</code>.
-     *
-     * @param g the <code>Graphics</code> context in which to paint
-     * @see #paintComponent
-     * @see #paintBorder
-     * @see #paintChildren
-     * @see #getComponentGraphics
-     * @see #repaint
-     */
     @Override
-    public void paint (Graphics g) {
-        super.paint(g);
+    protected void paintComponent (Graphics g) {
+        super.paintComponent(g);
         paintShape(g, new RandomColour());
     }
 
