@@ -57,7 +57,7 @@ public abstract class Shape extends JPanel {
     /**
      * Paints the shape in the given colour.
      *
-     * @param @param g the <code>Graphics</code> context in which to paint
+     * @param g the <code>Graphics</code> context in which to paint
      * @param colour Colour to paint shape in
      */
     public abstract void paintShape (Graphics g, Color colour);
