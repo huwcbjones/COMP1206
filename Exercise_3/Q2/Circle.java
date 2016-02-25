@@ -1,44 +1,15 @@
-import java.awt.*;
+import java.awt.geom.Ellipse2D;
 
 /**
- * A Circle
+ * {DESCRIPTION}
  *
  * @author Huw Jones
- * @since 14/02/2016
+ * @since 24/02/2016
  */
 public class Circle extends Shape {
 
-    int radius;
-
-    public Circle (int radius) {
-        super(2 * radius, 2 * radius);
-        this.radius = radius;
+    public Circle(float x, float y, float w, float h){
+        shape = new Ellipse2D.Float(x, y, w, h);
     }
 
-    /**
-     * Abstract method implemented in shape that returns a boolean that represents whether the x and y co-ordinates
-     * are in the shape.
-     *
-     * @param x int x co-ordinates to check
-     * @param y int y-co-ordinates to check
-     * @return boolean, true if the x, y coordinates are in the shape
-     */
-    @Override
-    public boolean isInShape (int x, int y) {
-        x -= radius;
-        y -= radius;
-        return Math.pow(x, 2) + Math.pow(y, 2) <= Math.pow(radius, 2);
-    }
-
-    /**
-     * Paints the shape in the given colour.
-     *
-     * @param g
-     * @param colour Colour to paint shape in
-     */
-    @Override
-    public void paintShape (Graphics g, Color colour) {
-        g.setColor(colour);
-        g.fillOval(0, 0, 2 * radius, 2 * radius);
-    }
 }
