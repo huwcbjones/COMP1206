@@ -12,7 +12,6 @@ import java.util.Random;
 public class MultipleCircleDrawer extends JFrame {
     private ShapePanel panel_shape;
     private ArrayList<Shape> circles;
-    private boolean redrawInProgress = false;
 
     public MultipleCircleDrawer () {
         super("Multiple Circle Drawer");
@@ -40,24 +39,27 @@ public class MultipleCircleDrawer extends JFrame {
     }
 
     private void addCircles(){
-        redrawInProgress = true;
-
+        // Remove all circles
         if (this.circles.size() != 0) this.circles.forEach(this.panel_shape::removeShape);
 
         this.circles = new ArrayList<>();
 
         Circle randomCircle;
 
+        // Create a random amount of circles
         for (int i = 0; i < (10 + new Random().nextInt(15)); i++) {
             randomCircle = this.createCircle();
             this.panel_shape.addShape(randomCircle);
         }
-        redrawInProgress = false;
     }
 
     private Circle createCircle() {
+        // Diameter
         int d = new Random().nextInt(this.panel_shape.getHeight() / 3) + Double.valueOf(this.panel_shape.getHeight() / 4d).intValue();
+
         Dimension size = new Dimension(d,d);
+
+        // Create a new circle
         Circle circle = new Circle(getRandomX(size.width), getRandomY(size.height), size.width, size.height);
         circle.setRandomColour();
         this.circles.add(circle);

@@ -1,7 +1,7 @@
 import java.awt.geom.Ellipse2D;
 
 /**
- * {DESCRIPTION}
+ * A Circle
  *
  * @author Huw Jones
  * @since 24/02/2016
