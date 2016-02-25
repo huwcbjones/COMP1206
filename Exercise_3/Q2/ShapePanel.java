@@ -20,12 +20,24 @@ public class ShapePanel extends JPanel {
         this.addMouseListener(new clickEventHandler());
     }
 
+    /**
+     * Adds a shape to the panel
+     * @param shape Shape to add
+     */
     public void addShape(Shape shape) {
         shapes.add(shape);
+        repaint();
     }
 
+    /**
+     * Removes a shape from the panel
+     * @param shape shape to remove
+     * @return Returns true if shape was removed
+     */
     public boolean removeShape(Shape shape) {
-        return shapes.remove(shape);
+        boolean removed = shapes.remove(shape);
+        repaint();
+        return removed;
     }
 
     @Override
@@ -56,10 +68,13 @@ public class ShapePanel extends JPanel {
         @Override
         public void mouseClicked(MouseEvent e) {
             for (Shape s : shapes) {
+                // If shape was clicked
                 if (s.getShape().contains(e.getPoint())) {
+                    // Recolour shape
                     s.setRandomColour();
                 }
             }
+            // Repaint all shapes
             repaint();
         }
     }

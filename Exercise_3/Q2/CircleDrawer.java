@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
 
 /**
  * Draws circles
@@ -38,6 +37,4 @@ public class CircleDrawer extends JFrame {
         panel.addShape(circle);
         repaint();
     }
-
-
 }
