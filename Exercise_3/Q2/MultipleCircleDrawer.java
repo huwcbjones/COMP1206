@@ -10,7 +10,8 @@ import java.util.Random;
  * @since 16/02/2016
  */
 public class MultipleCircleDrawer extends JFrame {
-    private ArrayList<Circle> circles;
+    private ShapePanel panel_shape;
+    private ArrayList<Shape> circles;
     private boolean redrawInProgress = false;
 
     public MultipleCircleDrawer () {
@@ -19,9 +20,9 @@ public class MultipleCircleDrawer extends JFrame {
         this.setSize(new Dimension(1600, 900));
         this.circles = new ArrayList<>();
 
-        Container cp = this.getContentPane();
-        cp.setLayout(null);
+        this.panel_shape = new ShapePanel();
 
+        this.getContentPane().add(panel_shape);
 
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         try {
@@ -41,7 +42,7 @@ public class MultipleCircleDrawer extends JFrame {
     private void addCircles(){
         redrawInProgress = true;
 
-        if (this.circles.size() != 0) this.circles.forEach(this.getContentPane()::remove);
+        if (this.circles.size() != 0) this.circles.forEach(this.panel_shape::removeShape);
 
         this.circles = new ArrayList<>();
 
@@ -49,16 +50,16 @@ public class MultipleCircleDrawer extends JFrame {
 
         for (int i = 0; i < (10 + new Random().nextInt(15)); i++) {
             randomCircle = this.createCircle();
-            this.getContentPane().add(randomCircle);
+            this.panel_shape.addShape(randomCircle);
         }
         redrawInProgress = false;
     }
 
     private Circle createCircle() {
-        Circle circle = new Circle(new Random().nextInt(this.getContentPane().getHeight() / 2));
-        Dimension size = new Dimension(circle.getWidth(), circle.getHeight());
-        circle.setBounds(getRandomX(size.width), getRandomY(size.height), size.width, size.height);
-
+        int d = new Random().nextInt(this.panel_shape.getHeight() / 3) + Double.valueOf(this.panel_shape.getHeight() / 4d).intValue();
+        Dimension size = new Dimension(d,d);
+        Circle circle = new Circle(getRandomX(size.width), getRandomY(size.height), size.width, size.height);
+        circle.setRandomColour();
         this.circles.add(circle);
         return circle;
     }
