@@ -12,7 +12,11 @@ public class CircleDrawer extends JFrame {
     private Circle circle;
     private ShapePanel panel;
     public static void main(String[] args){
-        CircleDrawer drawer = new CircleDrawer();
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                CircleDrawer drawer = new CircleDrawer();
+            }
+        });
     }
 
     public CircleDrawer(){

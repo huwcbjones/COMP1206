@@ -94,6 +94,10 @@ public class MultipleCircleDrawer extends JFrame {
         return 0;
     }
     public static void main (String[] args) {
-        MultipleCircleDrawer drawer = new MultipleCircleDrawer();
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                MultipleCircleDrawer drawer = new MultipleCircleDrawer();
+            }
+        });
     }
 }
