@@ -1,6 +1,6 @@
 import javax.swing.*;
-import javax.swing.plaf.DimensionUIResource;
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 
 /**
  * Draws circles
@@ -11,6 +11,7 @@ import java.awt.*;
 public class CircleDrawer extends JFrame {
 
     private Circle circle;
+    private ShapePanel panel;
     public static void main(String[] args){
         CircleDrawer drawer = new CircleDrawer();
     }
@@ -29,8 +30,12 @@ public class CircleDrawer extends JFrame {
 
         this.setVisible(true);
 
-        circle = new Circle(Double.valueOf(this.getContentPane().getHeight() / 2).intValue());
-        this.add(circle);
+        panel = new ShapePanel();
+        this.getContentPane().add(panel);
+
+        circle = new Circle(0, 0, this.getContentPane().getHeight(), this.getContentPane().getHeight());
+        circle.setRandomColour();
+        panel.addShape(circle);
         repaint();
     }
 
