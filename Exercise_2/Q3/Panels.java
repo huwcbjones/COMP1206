@@ -31,7 +31,7 @@ public class Panels extends JFrame {
         this.setSize(new Dimension(1600, 900));
         this.setMinimumSize(new Dimension(640, 480));
         this.addComponentListener(new ResizeEventListener());
-        this.addMouseMotionListener(new CursorPositionListener());
+        this.getContentPane().addMouseMotionListener(new CursorPositionListener());
         this.panels = new ArrayList<>();
 
         // Create Panes
