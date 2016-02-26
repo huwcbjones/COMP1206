@@ -60,9 +60,6 @@ public class PrimeTest {
 
         // Shutdown the thread pool after all threads have exited
         es.shutdown();
-        // Wait until the thread pool is shutdown
-        while(!es.isTerminated()){
-        }
     }
 
     private class PrimeChecker implements Runnable {
