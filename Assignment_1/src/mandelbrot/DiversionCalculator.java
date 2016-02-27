@@ -16,26 +16,29 @@ public class DiversionCalculator implements Runnable {
     private DrawingThread drawingThread;
     private Point2D point;
     private Complex complex;
-    private int iterations;
+    private int maxIterations;
 
-    public DiversionCalculator(DrawingThread t, Point2D point, Complex complex, int iterations) {
+    public DiversionCalculator(DrawingThread t, Point2D point, Complex complex, int maxIterations) {
         this.drawingThread = t;
         this.point = point;
         this.complex = complex;
-        this.iterations = iterations;
+        this.maxIterations = maxIterations;
     }
 
     @Override
     public void run() {
         int currIteration = 0;
-        while (complex.modulusSquared() <= 4 && currIteration < iterations) {
-
+        Complex z = new Complex(complex.getReal(), complex.getImaginary());
+        Complex c = complex;
+        while (z.modulusSquared() <= 4 && currIteration < maxIterations) {
+            z = z.square();
+            z.add(c);
             currIteration++;
         }
-        if (currIteration < iterations) {
-            drawingThread.paintPixel(point, Color.BLACK);
-        } else {
+        if (currIteration < maxIterations) {
             drawingThread.paintPixel(point, Color.WHITE);
+        } else {
+            drawingThread.paintPixel(point, Color.BLACK);
         }
     }
 }
