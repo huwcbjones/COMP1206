@@ -4,13 +4,14 @@ import utils.Complex;
 import utils.ImagePanel;
 
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * {DESCRIPTION}
+ * Manages and delegates drawing/calculation threads
  *
  * @author Huw Jones
  * @since 27/02/2016
@@ -20,10 +21,26 @@ class DrawingThread extends Thread {
     private ImagePanel panel;
     private BufferedImage image;
 
+    private boolean hasDrawn = false;
+
+    double xShift;
+    double yShift;
+    double scaleFactor;
+
+    double imgHeight;
+    double imgWidth;
+
+    double xScale;
+    double yScale;
+
+    int numberThreads;
+
     public DrawingThread(Main mainWindow, ImagePanel panel) {
         this.mainWindow = mainWindow;
         this.panel = panel;
         this.setName("Mandelbrot_Drawing_Thread");
+
+        numberThreads = Runtime.getRuntime().availableProcessors();
     }
 
     @Override
@@ -31,14 +48,14 @@ class DrawingThread extends Thread {
         image = panel.createImage();
 
         // Get an executor service for the amount of cores we have
-        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
 
-        double scale_factor = mainWindow.getScaleFactor();
-        double x_shift = mainWindow.getTranslateX();
-        double y_shift = mainWindow.getTranslateY();
+        scaleFactor = mainWindow.getScaleFactor();
+        xShift = mainWindow.getTranslateX();
+        yShift = mainWindow.getTranslateY();
 
-        double imgHeight = image.getHeight();
-        double imgWidth = image.getWidth();
+        imgHeight = image.getHeight();
+        imgWidth = image.getWidth();
 
         double aspectRatio = imgWidth / imgHeight;
         double xRange = 4;
@@ -50,24 +67,19 @@ class DrawingThread extends Thread {
             xRange = 3.2 * aspectRatio;
         }
 
-        double xScale = xRange / imgWidth;
-        double yScale = yRange / imgHeight;
+        xScale = xRange / imgWidth;
+        yScale = yRange / imgHeight;
 
         int iterations = mainWindow.getIterations();
 
-        double adjX, adjY;
-        Point2D point;
-        Complex complex;
+        Line2D bounds;
+        int stripWidth = (int) Math.floor(imgWidth / (numberThreads * 2d));
+        for (int i = 0; i < numberThreads * 2; i++) {
+            int xStart = (i == 0) ? 0 : i * stripWidth;
+            int xEnd = (i == (numberThreads * 2) - 1) ? (int)imgWidth : (i + 1) * stripWidth;
 
-        for (int y = 0; y < imgHeight; y++) {
-            for (int x = 0; x < imgWidth; x++) {
-                point = new Point2D.Double(x, y);
-                adjX = ((x - imgWidth / 2d) * xScale + x_shift) / scale_factor;
-                adjY = ((y - imgHeight / 2d) * yScale + y_shift) / scale_factor;
-
-                complex = new Complex(adjX, adjY);
-                executorService.execute(new DiversionCalculator(this, point, complex, iterations));
-            }
+            bounds = new Line2D.Double(xStart, 0, xEnd, imgHeight);
+            executorService.execute(new DiversionCalculator(this, bounds, iterations));
         }
 
         executorService.shutdown();
@@ -77,8 +89,25 @@ class DrawingThread extends Thread {
 
         panel.setImage(image);
         panel.repaint();
+
+        hasDrawn = true;
+
+        // Let objects waiting on us know we're done
+        synchronized (this){
+            notify();
+        }
     }
 
+    public Complex getComplexFromPoint(Point2D p) {
+        return getComplexFromPoint(p.getX(), p.getY());
+    }
+
+    public Complex getComplexFromPoint(double x, double y){
+        x = ((x- imgWidth / 2d) * xScale + xShift) / scaleFactor;
+        y = ((y - imgHeight / 2d) * yScale + yShift) / scaleFactor;
+
+        return new Complex(x, y);
+    }
     public void paintPixel(Point2D p, Color c) {
         int x = Double.valueOf(p.getX()).intValue();
         int y = Double.valueOf(p.getY()).intValue();
@@ -87,5 +116,9 @@ class DrawingThread extends Thread {
         synchronized (image) {
             image.setRGB(x, y, c.getRGB());
         }
+    }
+
+    public boolean hasDrawn(){
+        return hasDrawn;
     }
 }
