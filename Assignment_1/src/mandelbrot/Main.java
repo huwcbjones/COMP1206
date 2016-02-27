@@ -68,7 +68,7 @@ public class Main extends JFrame {
         this.pack();
         this.setVisible(true);
 
-        drawer = new DrawingThread(panel_display);
+        drawer = new DrawingThread(this, panel_display);
         drawer.start();
     }
 
@@ -194,6 +194,5 @@ public class Main extends JFrame {
     public int getIterations() {
         return (int) spinner_iterations.getValue();
     }
-
 
 }
