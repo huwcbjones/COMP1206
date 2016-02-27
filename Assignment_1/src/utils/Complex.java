@@ -21,9 +21,11 @@ public class Complex {
      * Calculates square of the complex number
      * @return Returns the square of the complex number
      */
-    public double square(){
-        // (a + bi) ^2 can be expanded to a^2 + 2ab + b^2
-        return (real * real) + (2 * real * imaginary) + (imaginary * imaginary);
+    public Complex square(){
+        // (a + bi) ^2 can be expanded to a^2 + 2abi + i^2 * b^2
+        // which equals a^2 - b^2 + abi
+
+        return new Complex((real * real) - (imaginary * imaginary), (2 * real * imaginary));
     }
 
     /**
