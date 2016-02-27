@@ -40,7 +40,13 @@ public class Main extends JFrame {
         panel_display = new JPanel();
         c.add(panel_display, BorderLayout.CENTER);
 
-        panel_controls = new JPanel();
+        panel_controls = new JPanel(new SpringLayout());
+
+        label_rangeX = new JLabel("X Range:");
+        panel_controls.add(label_rangeX);
+
+        spinner_rangeX = new JSpinner(new SpinnerNumberModel())
+
 
         c.add(panel_controls, BorderLayout.LINE_START);
     }
