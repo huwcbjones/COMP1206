@@ -29,4 +29,8 @@ public class ImagePanel extends JPanel {
         super.paintComponent(g);
         g.drawImage(image, 0, 0, null);
     }
+
+    public BufferedImage createImage() {
+        return new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
+    }
 }
