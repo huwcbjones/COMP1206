@@ -1,14 +1,14 @@
 package mandelbrot;
 
 
+import utils.Complex;
 import utils.ImagePanel;
 import utils.SpringUtilities;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 /**
  * Main Application Window
@@ -46,14 +46,19 @@ public class Main extends JFrame {
     private JButton btn_redraw;
 
     // Info
-    private JLabel label_complexPoint;
-    private JTextField text_complexPoint;
-
     private JLabel label_xRange;
     private JTextField text_xRange;
 
     private JLabel label_yRange;
     private JTextField text_yRange;
+
+    private JLabel label_cursorPoint;
+    private JTextField text_cursorPoint;
+
+    private JLabel label_selectedPoint;
+    private JTextField text_selectedPoint;
+
+    private Complex selectedPosition;
 
     // Bookmarks
 
@@ -99,6 +104,8 @@ public class Main extends JFrame {
         layout.putConstraint(SpringLayout.EAST, imgPanel_image, -5, SpringLayout.EAST, panel_display);
         layout.putConstraint(SpringLayout.SOUTH, imgPanel_image, -5, SpringLayout.SOUTH, panel_display);
         layout.putConstraint(SpringLayout.WEST, imgPanel_image, 5, SpringLayout.WEST, panel_display);
+        imgPanel_image.addMouseListener(new mouseClickPositionHandler());
+        imgPanel_image.addMouseMotionListener(new mousePositionHandler());
 
         initSidePanels(constraints);
         initControlPanel();
@@ -153,7 +160,7 @@ public class Main extends JFrame {
         label_iterations = new JLabel("Iterations:", JLabel.TRAILING);
         panel_controls.add(label_iterations);
 
-        spinner_iterations = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
+        spinner_iterations = new JSpinner(new SpinnerNumberModel(75, 1, 1000, 1));
         panel_controls.add(spinner_iterations);
 
         // Scale
@@ -188,26 +195,32 @@ public class Main extends JFrame {
         label_xRange = new JLabel("X Range:", JLabel.TRAILING);
         panel_info.add(label_xRange);
 
-        text_xRange = new JTextField("");
+        text_xRange = new JTextField("- to -");
         text_xRange.setEditable(false);
         panel_info.add(text_xRange);
 
         label_yRange = new JLabel("Y Range:", JLabel.TRAILING);
         panel_info.add(label_yRange);
 
-        text_yRange = new JTextField("");
+        text_yRange = new JTextField("- to -");
         text_yRange.setEditable(false);
         panel_info.add(text_yRange);
 
-        label_complexPoint = new JLabel("Selected Point:", JLabel.TRAILING);
-        label_complexPoint.setForeground(Color.lightGray);
-        panel_info.add(label_complexPoint);
+        label_cursorPoint = new JLabel("Cursor Point:", JLabel.TRAILING);
+        panel_info.add(label_cursorPoint);
 
-        text_complexPoint = new JTextField("");
-        text_complexPoint.setEditable(false);
-        panel_info.add(text_complexPoint);
+        text_cursorPoint = new JTextField("-");
+        text_cursorPoint.setEditable(false);
+        panel_info.add(text_cursorPoint);
 
-        SpringUtilities.makeCompactGrid(panel_info, 3, 2, 6, 6, 6, 6);
+        label_selectedPoint = new JLabel("Selected Point:", JLabel.TRAILING);
+        panel_info.add(label_selectedPoint);
+
+        text_selectedPoint = new JTextField("-");
+        text_selectedPoint.setEditable(false);
+        panel_info.add(text_selectedPoint);
+
+        SpringUtilities.makeCompactGrid(panel_info, 4, 2, 6, 6, 6, 6);
     }
 
     public double getTranslateX() {
@@ -226,6 +239,38 @@ public class Main extends JFrame {
         return (double) spinner_scale.getValue();
     }
 
+    private void updateRangeDisplay() {
+        // Wait for the thread to notify us that it has completed
+        synchronized (drawer) {
+            try {
+                drawer.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Complex minimum = drawer.getComplexFromPoint(0, 0);
+        Complex maximum = drawer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
+        text_xRange.setText(String.format("%.2f to %.2f", minimum.getReal(), maximum.getReal()));
+        text_yRange.setText(String.format("%.2f to %.2f", minimum.getImaginary(), maximum.getImaginary()));
+    }
+
+    private void updatedSelectedPoint() {
+        text_selectedPoint.setText("-");
+    }
+
+    private void updatedSelectedPoint(Complex c) {
+        text_selectedPoint.setText(c.toString());
+    }
+
+    private void updatedCursorPoint() {
+        text_cursorPoint.setText("-");
+    }
+
+    private void updatedCursorPoint(Complex c) {
+        text_cursorPoint.setText(c.toString());
+    }
+
     private class redrawHandler implements ActionListener {
 
         /**
@@ -239,8 +284,40 @@ public class Main extends JFrame {
                 drawer = new DrawingThread(Main.this, imgPanel_image);
                 drawer.start();
             }
+
+            updateRangeDisplay();
         }
     }
 
+    /**
+     * Updates diplay of selected position when mouse clicked
+     */
+    private class mouseClickPositionHandler extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (drawer.hasDrawn()) {
+                selectedPosition = drawer.getComplexFromPoint(e.getPoint());
+                updatedSelectedPoint(selectedPosition);
+            } else {
+                updatedSelectedPoint();
+            }
+        }
+    }
+
+    /**
+     * Updates display of mouse cursor when mouse moved
+     */
+    private class mousePositionHandler extends MouseMotionAdapter {
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            super.mouseMoved(e);
+            if (drawer != null && drawer.hasDrawn()) {
+                updatedCursorPoint(drawer.getComplexFromPoint(e.getPoint()));
+            } else {
+                updatedCursorPoint();
+            }
+        }
+    }
 
 }
