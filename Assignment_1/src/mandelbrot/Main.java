@@ -1,11 +1,17 @@
 package mandelbrot;
 
 
+import utils.Complex;
+import utils.ImagePanel;
 import utils.SpringUtilities;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Main Application Window
@@ -16,11 +22,15 @@ import java.awt.*;
 public class Main extends JFrame {
 
     private static final double DISPLAY_CONSTRAINT = 0.95;
-    private JPanel panel_display;
+
+
+    private ImagePanel panel_display;
     private JPanel panel_info;
     private JPanel panel_controls;
     private JPanel panel_bookmarks;
     private JPanel panel_julia;
+
+    private DrawingThread drawer;
 
     // Control Panel
     private JLabel label_iterations;
@@ -57,6 +67,9 @@ public class Main extends JFrame {
         initComponents();
         this.pack();
         this.setVisible(true);
+
+        drawer = new DrawingThread(panel_display);
+        drawer.start();
     }
 
     private void initComponents(){
@@ -65,7 +78,7 @@ public class Main extends JFrame {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
 
-        panel_display = new JPanel();
+        panel_display = new ImagePanel();
         panel_display.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Mandelbrot Set"));
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -169,4 +182,18 @@ public class Main extends JFrame {
 
         SpringUtilities.makeCompactGrid(panel_info, 1, 2, 6, 6, 6, 6);
     }
+
+    public double getRangeX() {
+        return (double) spinner_rangeMaxX.getValue() - (double) spinner_rangeMinX.getValue();
+    }
+
+    public double getRangeY() {
+        return (double) spinner_rangeMaxY.getValue() - (double) spinner_rangeMinY.getValue();
+    }
+
+    public int getIterations() {
+        return (int) spinner_iterations.getValue();
+    }
+
+
 }
