@@ -11,6 +11,12 @@ public class Complex {
     private double real;
     private double imaginary;
 
+    public Complex(double real, double imaginary) {
+        this.real = real;
+        this.imaginary = imaginary;
+    }
+
+
     /**
      * Calculates square of the complex number
      * @return Returns the square of the complex number
