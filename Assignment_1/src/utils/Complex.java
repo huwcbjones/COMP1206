@@ -50,4 +50,15 @@ public class Complex {
     public double getImaginary(){
         return imaginary;
     }
+
+    @Override
+    public String toString(){
+        String imaginaryString = String.format("%.2f", imaginary);
+        if (getImaginary() > 0) {
+            imaginaryString = "+ " + imaginaryString;
+        } else {
+            imaginaryString = "- " + String.format("%.2f", -1 * imaginary);
+        }
+        return String.format("%.2f %s", real, imaginaryString) + "i";
+    }
 }
