@@ -33,19 +33,37 @@ class DrawingThread extends Thread {
         // Get an executor service for the amount of cores we have
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-        double x_factor = mainWindow.getRangeX() / image.getWidth();
-        double y_factor = mainWindow.getRangeY() / image.getWidth();
+        double scale_factor = mainWindow.getScaleFactor();
+        double x_shift = mainWindow.getTranslateX();
+        double y_shift = mainWindow.getTranslateY();
+
+        double imgHeight = image.getHeight();
+        double imgWidth = image.getWidth();
+
+        double aspectRatio = imgWidth / imgHeight;
+        double xRange = 4;
+        double yRange = 3.2;
+
+        if (aspectRatio * yRange < 4) {
+            yRange = 4 / aspectRatio;
+        } else {
+            xRange = 3.2 * aspectRatio;
+        }
+
+        double xScale = xRange / imgWidth;
+        double yScale = yRange / imgHeight;
+
         int iterations = mainWindow.getIterations();
 
         double adjX, adjY;
         Point2D point;
         Complex complex;
 
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
+        for (int y = 0; y < imgHeight; y++) {
+            for (int x = 0; x < imgWidth; x++) {
                 point = new Point2D.Double(x, y);
-                adjX = (x - (image.getWidth() / 2)) * x_factor;
-                adjY = (y - (image.getHeight() / 2)) * y_factor;
+                adjX = ((x - imgWidth / 2d) * xScale + x_shift) / scale_factor;
+                adjY = ((y - imgHeight / 2d) * yScale + y_shift) / scale_factor;
 
                 complex = new Complex(adjX, adjY);
                 executorService.execute(new DiversionCalculator(this, point, complex, iterations));
@@ -56,6 +74,8 @@ class DrawingThread extends Thread {
         while(!executorService.isTerminated()){
 
         }
+
+        panel.setImage(image);
         panel.repaint();
     }
 

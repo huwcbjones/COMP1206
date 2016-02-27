@@ -1,17 +1,14 @@
 package mandelbrot;
 
 
-import utils.Complex;
 import utils.ImagePanel;
 import utils.SpringUtilities;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Main Application Window
@@ -24,7 +21,8 @@ public class Main extends JFrame {
     private static final double DISPLAY_CONSTRAINT = 0.95;
 
 
-    private ImagePanel panel_display;
+    private JPanel panel_display;
+    private ImagePanel imgPanel_image;
     private JPanel panel_info;
     private JPanel panel_controls;
     private JPanel panel_bookmarks;
@@ -36,19 +34,26 @@ public class Main extends JFrame {
     private JLabel label_iterations;
     private JSpinner spinner_iterations;
 
-    private JLabel label_rangeX;
-    private JPanel panel_rangeX;
-    private JSpinner spinner_rangeMinX;
-    private JSpinner spinner_rangeMaxX;
+    private JLabel label_translateX;
+    private JSpinner spinner_translateX;
 
-    private JLabel label_rangeY;
-    private JPanel panel_rangeY;
-    private JSpinner spinner_rangeMinY;
-    private JSpinner spinner_rangeMaxY;
+    private JLabel label_translateY;
+    private JSpinner spinner_translateY;
+
+    private JLabel label_scale;
+    private JSpinner spinner_scale;
+
+    private JButton btn_redraw;
 
     // Info
     private JLabel label_complexPoint;
     private JTextField text_complexPoint;
+
+    private JLabel label_xRange;
+    private JTextField text_xRange;
+
+    private JLabel label_yRange;
+    private JTextField text_yRange;
 
     // Bookmarks
 
@@ -67,9 +72,6 @@ public class Main extends JFrame {
         initComponents();
         this.pack();
         this.setVisible(true);
-
-        drawer = new DrawingThread(this, panel_display);
-        drawer.start();
     }
 
     private void initComponents(){
@@ -78,7 +80,9 @@ public class Main extends JFrame {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
 
-        panel_display = new ImagePanel();
+        SpringLayout layout = new SpringLayout();
+        panel_display = new JPanel();
+        panel_display.setLayout(layout);
         panel_display.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Mandelbrot Set"));
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -87,6 +91,14 @@ public class Main extends JFrame {
         constraints.gridheight = 4;
         constraints.gridwidth = 1;
         c.add(panel_display, constraints);
+
+        imgPanel_image = new ImagePanel();
+        imgPanel_image.setBackground(Color.WHITE);
+        panel_display.add(imgPanel_image);
+        layout.putConstraint(SpringLayout.NORTH, imgPanel_image, 5, SpringLayout.NORTH, panel_display);
+        layout.putConstraint(SpringLayout.EAST, imgPanel_image, -5, SpringLayout.EAST, panel_display);
+        layout.putConstraint(SpringLayout.SOUTH, imgPanel_image, -5, SpringLayout.SOUTH, panel_display);
+        layout.putConstraint(SpringLayout.WEST, imgPanel_image, 5, SpringLayout.WEST, panel_display);
 
         initSidePanels(constraints);
         initControlPanel();
@@ -112,6 +124,10 @@ public class Main extends JFrame {
         c.gridy = 1;
         pane.add(panel_controls, c);
 
+        btn_redraw = new JButton("Redraw");
+        btn_redraw.addActionListener(new redrawHandler());
+        pane.add(btn_redraw);
+
         c.fill = GridBagConstraints.BOTH;
         c.weighty = 0.5;
 
@@ -134,37 +150,34 @@ public class Main extends JFrame {
         panel_controls.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Controls"));
 
         // Iterations
-        label_iterations = new JLabel("Iterations: ", JLabel.TRAILING);
+        label_iterations = new JLabel("Iterations:", JLabel.TRAILING);
         panel_controls.add(label_iterations);
 
         spinner_iterations = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
         panel_controls.add(spinner_iterations);
 
-        // x Range
-        label_rangeX = new JLabel("X Range:", JLabel.TRAILING);
-        panel_controls.add(label_rangeX);
+        // Scale
+        label_scale = new JLabel("Scale:", JLabel.TRAILING);
+        panel_controls.add(label_scale);
 
-        panel_rangeX = new JPanel(new GridLayout(0, 2));
-        spinner_rangeMinX = new JSpinner(new SpinnerNumberModel(-2, -10, 10, 0.2));
-        panel_rangeX.add(spinner_rangeMinX);
+        spinner_scale = new JSpinner(new SpinnerNumberModel(1, 0, 100, 0.1d));
+        panel_controls.add(spinner_scale);
 
-        spinner_rangeMaxX = new JSpinner(new SpinnerNumberModel(2, -10, 10, 0.2));
-        panel_rangeX.add(spinner_rangeMaxX);
-        panel_controls.add(panel_rangeX);
+        // x shift
+        label_translateX = new JLabel("X Shift:", JLabel.TRAILING);
+        panel_controls.add(label_translateX);
 
-        // y Range
-        label_rangeY = new JLabel("Y Range:", JLabel.TRAILING);
-        panel_controls.add(label_rangeY);
+        spinner_translateX = new JSpinner(new SpinnerNumberModel(0, -4, 4, 0.1));
+        panel_controls.add(spinner_translateX);
 
-        panel_rangeY = new JPanel(new GridLayout(0, 2));
-        spinner_rangeMinY = new JSpinner(new SpinnerNumberModel(-1.6, -10, 10, 0.2));
-        panel_rangeY.add(spinner_rangeMinY);
+         // y shit
+        label_translateY = new JLabel("Y Shift:", JLabel.TRAILING);
+        panel_controls.add(label_translateY);
 
-        spinner_rangeMaxY = new JSpinner(new SpinnerNumberModel(1.6, -10, 10, 0.2));
-        panel_rangeY.add(spinner_rangeMaxY);
-        panel_controls.add(panel_rangeY);
+        spinner_translateY = new JSpinner(new SpinnerNumberModel(0, -3.2, 3.2, 0.1));
+        panel_controls.add(spinner_translateY);
 
-        SpringUtilities.makeCompactGrid(panel_controls, 3, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(panel_controls, 4, 2, 6, 6, 6, 6);
     }
 
     private void initInfoPanel() {
@@ -172,7 +185,21 @@ public class Main extends JFrame {
         panel_info.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Information"));
         panel_info.setLayout(layout);
 
-        label_complexPoint = new JLabel("Selected Point:");
+        label_xRange = new JLabel("X Range:", JLabel.TRAILING);
+        panel_info.add(label_xRange);
+
+        text_xRange = new JTextField("");
+        text_xRange.setEditable(false);
+        panel_info.add(text_xRange);
+
+        label_yRange = new JLabel("Y Range:", JLabel.TRAILING);
+        panel_info.add(label_yRange);
+
+        text_yRange = new JTextField("");
+        text_yRange.setEditable(false);
+        panel_info.add(text_yRange);
+
+        label_complexPoint = new JLabel("Selected Point:", JLabel.TRAILING);
         label_complexPoint.setForeground(Color.lightGray);
         panel_info.add(label_complexPoint);
 
@@ -180,19 +207,40 @@ public class Main extends JFrame {
         text_complexPoint.setEditable(false);
         panel_info.add(text_complexPoint);
 
-        SpringUtilities.makeCompactGrid(panel_info, 1, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(panel_info, 3, 2, 6, 6, 6, 6);
     }
 
-    public double getRangeX() {
-        return (double) spinner_rangeMaxX.getValue() - (double) spinner_rangeMinX.getValue();
+    public double getTranslateX() {
+        return (double) spinner_translateX.getValue();
     }
 
-    public double getRangeY() {
-        return (double) spinner_rangeMaxY.getValue() - (double) spinner_rangeMinY.getValue();
+    public double getTranslateY() {
+        return (double) spinner_translateY.getValue();
     }
 
     public int getIterations() {
         return (int) spinner_iterations.getValue();
     }
+
+    public double getScaleFactor() {
+        return (double) spinner_scale.getValue();
+    }
+
+    private class redrawHandler implements ActionListener {
+
+        /**
+         * Invoked when an action occurs.
+         *
+         * @param e
+         */
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (drawer == null || !drawer.isAlive()) {
+                drawer = new DrawingThread(Main.this, imgPanel_image);
+                drawer.start();
+            }
+        }
+    }
+
 
 }
