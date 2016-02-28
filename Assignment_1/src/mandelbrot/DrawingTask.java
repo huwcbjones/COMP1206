@@ -41,7 +41,6 @@ public abstract class DrawingTask implements Callable<ImageSegment> {
         ColouredPixel pixel;
         for (int y = 0; y < getImageHeight(); y++) {
             for (int x = 0; x < getImageWidth(); x++) {
-
                 Point2D absP = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
                 Point2D relP = new Point2D.Double(x, y);
 

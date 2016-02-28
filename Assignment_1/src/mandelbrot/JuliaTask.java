@@ -23,11 +23,12 @@ public class JuliaTask extends DrawingTask {
     @Override
     protected ColouredPixel doPixelCalculation(Point2D point, Complex c) {
         int currIteration = 0;
-        Complex z = new Complex(c.getReal(), c.getImaginary());
+        Complex complex = new Complex(-0.5, 0.5);
+        Complex z = drawingManagementThread.getComplexFromPoint(point);
 
-        while (z.modulusSquared() <= 4 && currIteration < maxIterations) {
+        while (z.squareReal() + z.squareImaginary() <= 2 && currIteration < maxIterations) {
             z = z.square();
-            z.add(c);
+            z.add(complex);
             currIteration++;
         }
 

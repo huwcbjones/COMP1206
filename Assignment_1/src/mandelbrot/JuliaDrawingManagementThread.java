@@ -52,6 +52,6 @@ public class JuliaDrawingManagementThread extends DrawingManagementThread {
 
     @Override
     protected double getScaleFactor() {
-        return 0;
+        return 1;
     }
 }
