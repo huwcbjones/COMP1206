@@ -2,6 +2,8 @@ package mandelbrot;
 
 
 import mandelbrot.events.DrawListener;
+import mandelbrot.management.JuliaDrawingManagementThread;
+import mandelbrot.management.MandelbrotManagementThread;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.SpringUtilities;

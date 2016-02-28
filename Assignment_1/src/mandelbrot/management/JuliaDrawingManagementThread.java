@@ -1,5 +1,7 @@
-package mandelbrot;
+package mandelbrot.management;
 
+import mandelbrot.render.JuliaTask;
+import mandelbrot.Main;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.ImageProperties;

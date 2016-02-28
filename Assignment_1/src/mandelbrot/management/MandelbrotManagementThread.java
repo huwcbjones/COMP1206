@@ -1,5 +1,7 @@
-package mandelbrot;
+package mandelbrot.management;
 
+import mandelbrot.Main;
+import mandelbrot.render.MandelbrotTask;
 import utils.ImagePanel;
 import utils.ImageProperties;
 import utils.ImageSegment;

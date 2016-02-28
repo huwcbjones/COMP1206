@@ -1,5 +1,6 @@
-package mandelbrot;
+package mandelbrot.render;
 
+import mandelbrot.management.DrawingManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
 import utils.ImageSegment;
@@ -16,14 +17,14 @@ import java.util.concurrent.Callable;
  * @author Huw Jones
  * @since 27/02/2016
  */
-public abstract class DrawingTask implements Callable<ImageSegment> {
+public abstract class RenderTask implements Callable<ImageSegment> {
 
     protected DrawingManagementThread drawingManagementThread;
     protected Rectangle2D bounds;
     protected int maxIterations;
     protected BufferedImage image;
 
-    public DrawingTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations) {
+    public RenderTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations) {
         this.drawingManagementThread = t;
         this.bounds = bounds;
         this.maxIterations = maxIterations;

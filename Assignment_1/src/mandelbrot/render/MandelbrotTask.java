@@ -1,8 +1,8 @@
-package mandelbrot;
+package mandelbrot.render;
 
+import mandelbrot.management.DrawingManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
-import utils.ImageSegment;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -16,7 +16,7 @@ import java.awt.image.BufferedImage;
  * @author Huw Jones
  * @since 28/02/2016
  */
-public class MandelbrotTask extends DrawingTask {
+public class MandelbrotTask extends RenderTask {
 
     public MandelbrotTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations) {
         super(t, bounds, maxIterations);

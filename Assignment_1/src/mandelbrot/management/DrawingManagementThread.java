@@ -1,5 +1,6 @@
-package mandelbrot;
+package mandelbrot.management;
 
+import mandelbrot.Main;
 import mandelbrot.events.DrawListener;
 import utils.Complex;
 import utils.ImagePanel;
