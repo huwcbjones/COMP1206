@@ -77,6 +77,9 @@ public class Main extends JFrame {
         initComponents();
         this.pack();
         this.setVisible(true);
+
+        drawer = new DrawingThread(Main.this, imgPanel_image);
+        drawer.start();
     }
 
     private void initComponents(){
@@ -174,14 +177,14 @@ public class Main extends JFrame {
         label_translateX = new JLabel("X Shift:", JLabel.TRAILING);
         panel_controls.add(label_translateX);
 
-        spinner_translateX = new JSpinner(new SpinnerNumberModel(0, -4, 4, 0.1));
+        spinner_translateX = new JSpinner(new SpinnerNumberModel(0, -100, 100, 0.1));
         panel_controls.add(spinner_translateX);
 
          // y shit
         label_translateY = new JLabel("Y Shift:", JLabel.TRAILING);
         panel_controls.add(label_translateY);
 
-        spinner_translateY = new JSpinner(new SpinnerNumberModel(0, -3.2, 3.2, 0.1));
+        spinner_translateY = new JSpinner(new SpinnerNumberModel(0, -100, 100, 0.1));
         panel_controls.add(spinner_translateY);
 
         SpringUtilities.makeCompactGrid(panel_controls, 4, 2, 6, 6, 6, 6);
@@ -271,21 +274,29 @@ public class Main extends JFrame {
         text_cursorPoint.setText(c.toString());
     }
 
+    /**
+     * Triggers redraw of mandelbrot set
+     */
     private class redrawHandler implements ActionListener {
 
-        /**
-         * Invoked when an action occurs.
-         *
-         * @param e
-         */
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (drawer == null || !drawer.isAlive()) {
-                drawer = new DrawingThread(Main.this, imgPanel_image);
-                drawer.start();
-            }
+            drawer.draw();
+            class Runner extends Thread {
+                public void run() {
+                    synchronized (drawer)
 
-            updateRangeDisplay();
+                    {
+                        try {
+                            drawer.wait();
+                        } catch (InterruptedException e1) {
+
+                        }
+                        updateRangeDisplay();
+                    }
+                }
+            }
+            new Runner().start();
         }
     }
 
@@ -312,7 +323,7 @@ public class Main extends JFrame {
         @Override
         public void mouseMoved(MouseEvent e) {
             super.mouseMoved(e);
-            if (drawer != null && drawer.hasDrawn()) {
+            if (drawer.hasDrawn()) {
                 updatedCursorPoint(drawer.getComplexFromPoint(e.getPoint()));
             } else {
                 updatedCursorPoint();
