@@ -1,5 +1,6 @@
 package mandelbrot;
 
+import mandelbrot.events.DrawListener;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.ImageProperties;
@@ -9,6 +10,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 
@@ -20,6 +22,7 @@ import java.util.concurrent.*;
  */
 
 public abstract class DrawingManagementThread extends Thread {
+    private ArrayList<DrawListener> listeners;
     protected final Object shouldRedraw = new Object();
     protected Main mainWindow;
     protected ImagePanel panel;
@@ -46,11 +49,21 @@ public abstract class DrawingManagementThread extends Thread {
 
         images = new LinkedHashMap<>();
 
+        listeners = new ArrayList<>();
+
         numberThreads = Runtime.getRuntime().availableProcessors();
 
         // Get an executor service for the amount of cores we have
         ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
         this.executorService = new ExecutorCompletionService<>(executorService);
+    }
+
+    public void addDrawListenener(DrawListener listener){
+        listeners.add(listener);
+    }
+
+    private void drawComplete(){
+        listeners.forEach(DrawListener::drawComplete);
     }
 
     @Override
@@ -77,17 +90,21 @@ public abstract class DrawingManagementThread extends Thread {
         calculateVariables();
 
         if (checkCache()) {
+            System.out.println("Image found in cache.");
+            drawComplete();
             return;
         }
 
         ImageProperties properties = getImageProperties();
 
-        int numberStrips = numberThreads;
+        int numberStrips = numberThreads * 2;
         int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
 
         Rectangle2D bounds;
 
         int start;
+
+        long startTime = System.nanoTime();
 
         // Queue up strips to be calculated
         for (int i = 0; i < numberStrips; i++) {
@@ -128,7 +145,9 @@ public abstract class DrawingManagementThread extends Thread {
                 break;
             }
         }
+        long endTime = System.nanoTime();
 
+        System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
         checkCacheSize();
         images.put(properties, image);
         panel.setImage(image);
@@ -136,10 +155,7 @@ public abstract class DrawingManagementThread extends Thread {
 
         hasDrawn = true;
 
-        // Let objects waiting on us know we're done
-        synchronized (this) {
-            notify();
-        }
+        drawComplete();
     }
 
     private void calculateVariables() {

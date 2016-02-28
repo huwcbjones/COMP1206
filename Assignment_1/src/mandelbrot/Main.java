@@ -1,6 +1,7 @@
 package mandelbrot;
 
 
+import mandelbrot.events.DrawListener;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.SpringUtilities;
@@ -83,6 +84,7 @@ public class Main extends JFrame {
         this.setVisible(true);
 
         mandel_drawer = new MandelbrotManagementThread(Main.this, imgPanel_image);
+        mandel_drawer.addDrawListenener(new redrawHandler());
         mandel_drawer.start();
 
         julia_drawer = new JuliaDrawingManagementThread(this, imgPanel_julia);
@@ -288,27 +290,16 @@ public class Main extends JFrame {
     /**
      * Triggers redraw of mandelbrot set
      */
-    private class redrawHandler implements ActionListener {
+    private class redrawHandler implements ActionListener, DrawListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
             mandel_drawer.draw();
+        }
 
-            class Runner extends Thread {
-                public void run() {
-                    synchronized (mandel_drawer)
-
-                    {
-                        try {
-                            mandel_drawer.wait();
-                        } catch (InterruptedException e1) {
-
-                        }
-                        updateRangeDisplay();
-                    }
-                }
-            }
-            new Runner().start();
+        @Override
+        public void drawComplete() {
+            updateRangeDisplay();
         }
     }
 
@@ -321,7 +312,7 @@ public class Main extends JFrame {
             if (mandel_drawer.hasDrawn()) {
                 selectedPosition = mandel_drawer.getComplexFromPoint(e.getPoint());
                 updatedSelectedPoint(selectedPosition);
-                ((JuliaDrawingManagementThread) julia_drawer).draw(selectedPosition);
+                julia_drawer.draw(selectedPosition);
             } else {
                 updatedSelectedPoint();
             }
