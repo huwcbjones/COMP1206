@@ -72,7 +72,9 @@ public class ImageProperties {
 
     @Override
     public int hashCode() {
+
         String code = "I:" + iterations +",S:" + scale + ",X:"+ xShift + ",Y:"+yShift;
+        if(complex != null) code += ",C:" + complex.toString();
         return code.hashCode();
     }
 
