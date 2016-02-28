@@ -1,8 +1,8 @@
 package mandelbrot;
 
 import utils.Complex;
-import utils.ImageCache;
 import utils.ImagePanel;
+import utils.ImageProperties;
 import utils.ImageSegment;
 
 import java.awt.*;
@@ -18,43 +18,43 @@ import java.util.concurrent.*;
  * @author Huw Jones
  * @since 27/02/2016
  */
-class DrawingThread extends Thread {
-    private Main mainWindow;
-    private ImagePanel panel;
-    private BufferedImage image;
 
-    private boolean hasDrawn = false;
+public abstract class DrawingManagementThread extends Thread {
+    protected final Object shouldRedraw = new Object();
+    protected Main mainWindow;
+    protected ImagePanel panel;
+    protected BufferedImage image;
+    protected boolean hasDrawn = false;
+    protected double xShift;
+    protected double yShift;
+    protected double scaleFactor;
 
-    private final Object shouldRedraw = new Object();
-    double xShift;
-    double yShift;
-    double scaleFactor;
+    protected double imgHeight;
+    protected double imgWidth;
 
-    double imgHeight;
-    double imgWidth;
+    protected double xScale;
+    protected double yScale;
+    protected int iterations;
+    protected ExecutorCompletionService<ImageSegment> executorService;
+    protected int numberThreads;
+    protected LinkedHashMap<ImageProperties, BufferedImage> images;
 
-    double xScale;
-    double yScale;
-    int iterations;
-    ExecutorCompletionService<ImageSegment> executorService;
-    int numberThreads;
-    private LinkedHashMap<ImageCache, BufferedImage> images;
-
-    public DrawingThread(Main mainWindow, ImagePanel panel) {
+    public DrawingManagementThread(Main mainWindow, ImagePanel panel, String threadName) {
         this.mainWindow = mainWindow;
         this.panel = panel;
-        this.setName("Mandelbrot_Drawing_Thread");
+        this.setName("Drawing_Management_Thread_" + threadName);
 
         images = new LinkedHashMap<>();
 
         numberThreads = Runtime.getRuntime().availableProcessors();
+
         // Get an executor service for the amount of cores we have
         ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
         this.executorService = new ExecutorCompletionService<>(executorService);
     }
 
     @Override
-    public void run() {
+    public final void run() {
         while (!this.isInterrupted()) {
             synchronized (this.shouldRedraw) {
                 try {
@@ -80,6 +80,7 @@ class DrawingThread extends Thread {
             return;
         }
 
+        ImageProperties properties = getImageProperties();
 
         int numberStrips = numberThreads;
         int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
@@ -87,6 +88,7 @@ class DrawingThread extends Thread {
         Rectangle2D bounds;
 
         int start;
+
         // Queue up strips to be calculated
         for (int i = 0; i < numberStrips; i++) {
             if (i == 0) {
@@ -94,9 +96,12 @@ class DrawingThread extends Thread {
             } else {
                 start = i * stripWidth - 1;
             }
-
-            bounds = new Rectangle2D.Double(start + 1, 0, stripWidth + 2, imgHeight);
-            executorService.submit(new DiversionCalculator(this, bounds, iterations));
+            if (i == numberStrips - 1) {
+                bounds = new Rectangle2D.Double(start + 1, 0, imgWidth - start, imgHeight);
+            } else {
+                bounds = new Rectangle2D.Double(start + 1, 0, stripWidth + 2, imgHeight);
+            }
+            executorService.submit(createTask(properties, bounds));
         }
 
         Future<ImageSegment> result;
@@ -125,7 +130,7 @@ class DrawingThread extends Thread {
         }
 
         checkCacheSize();
-        images.put(getCacheKey(), image);
+        images.put(properties, image);
         panel.setImage(image);
         panel.repaint();
 
@@ -137,18 +142,13 @@ class DrawingThread extends Thread {
         }
     }
 
-    private boolean checkCacheValidity() {
-        if (image == null) return true;
-        return (image.getHeight() == panel.getHeight()) && (image.getWidth() == panel.getWidth());
-    }
-
     private void calculateVariables() {
         image = panel.createImage();
 
-        iterations = mainWindow.getIterations();
-        scaleFactor = mainWindow.getScaleFactor();
-        xShift = mainWindow.getTranslateX();
-        yShift = mainWindow.getTranslateY();
+        iterations = this.getIterations();
+        scaleFactor = this.getScaleFactor();
+        xShift = this.getxShift();
+        yShift = this.getyShift();
 
         imgHeight = image.getHeight();
         imgWidth = image.getWidth();
@@ -167,8 +167,13 @@ class DrawingThread extends Thread {
         yScale = yRange / imgHeight;
     }
 
+    private boolean checkCacheValidity() {
+        if (image == null) return true;
+        return (image.getHeight() == panel.getHeight()) && (image.getWidth() == panel.getWidth());
+    }
+
     private boolean checkCache() {
-        ImageCache cache = getCacheKey();
+        ImageProperties cache = getImageProperties();
         if (!images.containsKey(cache)) return false;
         panel.setImage(images.get(cache));
         panel.repaint();
@@ -176,9 +181,11 @@ class DrawingThread extends Thread {
         return true;
     }
 
-    private ImageCache getCacheKey() {
-        return new ImageCache(iterations, scaleFactor, xShift, yShift);
+    protected ImageProperties getImageProperties() {
+        return new ImageProperties(iterations, scaleFactor, xShift, yShift);
     }
+
+    protected abstract Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds);
 
     /**
      * Public method to notify the thread to call redraw
@@ -193,23 +200,43 @@ class DrawingThread extends Thread {
         long total = Runtime.getRuntime().totalMemory();
         long free = Runtime.getRuntime().freeMemory();
 
+        if (images.size() == 0) {
+            return;
+        }
         if(free * 100d/ total >= 80){
             images.remove(images.entrySet().iterator().next().getKey());
         }
     }
 
-    public Complex getComplexFromPoint(Point2D p) {
+    protected int getIterations() {
+        return mainWindow.getIterations();
+    }
+
+    protected double getScaleFactor() {
+        return mainWindow.getScaleFactor();
+    }
+
+    protected double getxShift() {
+        return mainWindow.getTranslateX();
+    }
+
+    protected double getyShift() {
+        return mainWindow.getTranslateY();
+    }
+
+    public final Complex getComplexFromPoint(Point2D p) {
         return getComplexFromPoint(p.getX(), p.getY());
     }
 
-    public Complex getComplexFromPoint(double x, double y){
+    public final Complex getComplexFromPoint(double x, double y) {
         x = ((x- imgWidth / 2d) * xScale + xShift) / scaleFactor;
         y = ((y - imgHeight / 2d) * yScale + yShift) / scaleFactor;
 
         return new Complex(x, y);
     }
 
-    public boolean hasDrawn(){
+    public final boolean hasDrawn() {
         return hasDrawn;
     }
+
 }
