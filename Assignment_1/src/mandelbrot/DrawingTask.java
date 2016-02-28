@@ -37,10 +37,10 @@ public abstract class DrawingTask implements Callable<ImageSegment> {
      */
     @Override
     public final ImageSegment call() throws Exception {
-        image = new BufferedImage((int) bounds.getWidth(), (int) bounds.getHeight(), BufferedImage.TYPE_INT_RGB);
+        image = new BufferedImage(getImageWidth(), getImageHeight(), BufferedImage.TYPE_INT_RGB);
         ColouredPixel pixel;
-        for (int y = 0; y < bounds.getHeight(); y++) {
-            for (int x = 0; x < bounds.getWidth(); x++) {
+        for (int y = 0; y < getImageHeight(); y++) {
+            for (int x = 0; x < getImageWidth(); x++) {
 
                 Point2D absP = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
                 Point2D relP = new Point2D.Double(x, y);
@@ -51,7 +51,19 @@ public abstract class DrawingTask implements Callable<ImageSegment> {
                 paintPixel(pixel);
             }
         }
+
+        adjustImage();
+
         return new ImageSegment(image, bounds);
+    }
+
+    protected int getImageHeight(){
+        return (int)this.bounds.getHeight();
+    }
+    protected int getImageWidth(){
+        return (int)this.bounds.getWidth();
+    }
+    protected void adjustImage(){
     }
 
     protected abstract ColouredPixel doPixelCalculation(Point2D point, Complex complex);
