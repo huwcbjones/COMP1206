@@ -13,9 +13,9 @@ import java.awt.geom.Rectangle2D;
  * @author Huw Jones
  * @since 28/02/2016
  */
-public class JuliaCalculator extends DrawingTask {
+public class JuliaTask extends DrawingTask {
     Complex complex;
-    public JuliaCalculator(DrawingManagementThread t, Rectangle2D bounds, int maxIterations, Complex c) {
+    public JuliaTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations, Complex c) {
         super(t, bounds, maxIterations);
         complex = c;
     }
