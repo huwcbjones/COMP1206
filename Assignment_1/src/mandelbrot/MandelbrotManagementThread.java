@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.concurrent.Callable;
 
 /**
- * {DESCRIPTION}
+ * Management Thread for Mandelbrot Set
  *
  * @author Huw Jones
  * @since 28/02/2016
@@ -20,6 +20,6 @@ public class MandelbrotManagementThread extends DrawingManagementThread {
 
     @Override
     protected Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds) {
-        return new DiversionCalculator(this, bounds, properties.getIterations());
+        return new MandelbrotTask(this, bounds, properties.getIterations());
     }
 }
