@@ -19,7 +19,7 @@ import java.awt.event.*;
  */
 public class Main extends JFrame {
 
-    private static final double DISPLAY_CONSTRAINT = 0.95;
+    private static final double DISPLAY_CONSTRAINT = 0.8;
 
 
     private JPanel panel_display;
@@ -110,12 +110,13 @@ public class Main extends JFrame {
         c.add(panel_display, constraints);
 
         imgPanel_image = new ImagePanel();
-        imgPanel_image.setBackground(Color.WHITE);
-        panel_display.add(imgPanel_image);
-        layout.putConstraint(SpringLayout.NORTH, imgPanel_image, 5, SpringLayout.NORTH, panel_display);
-        layout.putConstraint(SpringLayout.EAST, imgPanel_image, -5, SpringLayout.EAST, panel_display);
-        layout.putConstraint(SpringLayout.SOUTH, imgPanel_image, -5, SpringLayout.SOUTH, panel_display);
-        layout.putConstraint(SpringLayout.WEST, imgPanel_image, 5, SpringLayout.WEST, panel_display);
+        imgPanel_julia = new ImagePanel();
+        imgPanel_julia.setBackground(Color.WHITE);
+        panel_display.add(imgPanel_julia);
+        layout.putConstraint(SpringLayout.NORTH, imgPanel_julia, 5, SpringLayout.NORTH, panel_display);
+        layout.putConstraint(SpringLayout.EAST, imgPanel_julia, -5, SpringLayout.EAST, panel_display);
+        layout.putConstraint(SpringLayout.SOUTH, imgPanel_julia, -5, SpringLayout.SOUTH, panel_display);
+        layout.putConstraint(SpringLayout.WEST, imgPanel_julia, 5, SpringLayout.WEST, panel_display);
         imgPanel_image.addMouseListener(new mouseClickPositionHandler());
         imgPanel_image.addMouseMotionListener(new mousePositionHandler());
 
@@ -159,13 +160,14 @@ public class Main extends JFrame {
         c.gridy = 3;
         pane.add(panel_julia, c);
 
-        imgPanel_julia = new ImagePanel();
-        imgPanel_julia.setBackground(Color.WHITE);
-        panel_julia.add(imgPanel_julia);
-        layout.putConstraint(SpringLayout.NORTH, imgPanel_julia, 5, SpringLayout.NORTH, panel_julia);
-        layout.putConstraint(SpringLayout.EAST, imgPanel_julia, -5, SpringLayout.EAST, panel_julia);
-        layout.putConstraint(SpringLayout.SOUTH, imgPanel_julia, -5, SpringLayout.SOUTH, panel_julia);
-        layout.putConstraint(SpringLayout.WEST, imgPanel_julia, 5, SpringLayout.WEST, panel_julia);
+
+        //imgPanel_image = new ImagePanel();
+        imgPanel_image.setBackground(Color.WHITE);
+        panel_julia.add(imgPanel_image);
+        layout.putConstraint(SpringLayout.NORTH, imgPanel_image, 5, SpringLayout.NORTH, panel_julia);
+        layout.putConstraint(SpringLayout.EAST, imgPanel_image, -5, SpringLayout.EAST, panel_julia);
+        layout.putConstraint(SpringLayout.SOUTH, imgPanel_image, -5, SpringLayout.SOUTH, panel_julia);
+        layout.putConstraint(SpringLayout.WEST, imgPanel_image, 5, SpringLayout.WEST, panel_julia);
     }
 
     private void initControlPanel() {
