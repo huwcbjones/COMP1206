@@ -54,7 +54,7 @@ public class MandelbrotTask extends DrawingTask {
     @Override
     protected ColouredPixel doPixelCalculation(Point2D point, Complex c) {
         int currIteration = 0;
-        Complex z = new Complex(c.getReal(), c.getImaginary());
+        Complex z = c.clone();
         Complex prevPoint;
 
         while (z.squareReal() + z.squareImaginary() <= 4 && currIteration < maxIterations) {
