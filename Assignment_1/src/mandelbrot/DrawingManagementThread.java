@@ -114,9 +114,9 @@ public abstract class DrawingManagementThread extends Thread {
                 start = i * stripWidth - 1;
             }
             if (i == numberStrips - 1) {
-                bounds = new Rectangle2D.Double(start + 1, 0, imgWidth - start, imgHeight);
+                bounds = new Rectangle2D.Double(start, 0, imgWidth - start, imgHeight);
             } else {
-                bounds = new Rectangle2D.Double(start + 1, 0, stripWidth + 2, imgHeight);
+                bounds = new Rectangle2D.Double(start, 0, stripWidth , imgHeight);
             }
             executorService.submit(createTask(properties, bounds));
         }
