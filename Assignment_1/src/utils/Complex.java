@@ -6,10 +6,13 @@ package utils;
  * @author Huw Jones
  * @since 22/02/2016
  */
-public class Complex {
+public class Complex implements Cloneable {
 
     private double real;
     private double imaginary;
+
+    private double real_square = -1;
+    private double imaginary_square = -1;
 
     public Complex(double real, double imaginary) {
         this.real = real;
@@ -24,8 +27,20 @@ public class Complex {
     public Complex square(){
         // (a + bi) ^2 can be expanded to a^2 + 2abi + i^2 * b^2
         // which equals a^2 - b^2 + abi
+        double abi = real * imaginary;
+        return new Complex(squareReal() - squareImaginary(), abi + abi);
+    }
 
-        return new Complex((real * real) - (imaginary * imaginary), (2 * real * imaginary));
+    public double squareReal() {
+        if (real_square != -1) return real_square;
+        real_square = real * real;
+        return real_square;
+    }
+
+    public double squareImaginary() {
+        if (imaginary_square != -1) return imaginary_square;
+        imaginary_square = imaginary * imaginary;
+        return imaginary_square;
     }
 
     /**
@@ -53,12 +68,29 @@ public class Complex {
 
     @Override
     public String toString(){
-        String imaginaryString = String.format("%.2f", imaginary);
+        String imaginaryString = String.format("%.3f", imaginary);
         if (getImaginary() > 0) {
             imaginaryString = "+ " + imaginaryString;
         } else {
-            imaginaryString = "- " + String.format("%.2f", -1 * imaginary);
+            imaginaryString = "- " + String.format("%.3f", -1 * imaginary);
         }
-        return String.format("%.2f %s", real, imaginaryString) + "i";
+        return String.format("%.3f %s", real, imaginaryString) + "i";
     }
+
+    @Override
+    public int hashCode() {
+        return (int) (real * imaginary + imaginary);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Complex)) return false;
+        Complex c = (Complex) obj;
+        return imaginary == c.getImaginary() && real == c.getReal();
+    }
+
+    public Complex clone() {
+        return new Complex(real, imaginary);
+    }
+
 }

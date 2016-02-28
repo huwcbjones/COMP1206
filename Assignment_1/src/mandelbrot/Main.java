@@ -1,6 +1,7 @@
 package mandelbrot;
 
 
+import mandelbrot.events.DrawListener;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.SpringUtilities;
@@ -18,7 +19,7 @@ import java.awt.event.*;
  */
 public class Main extends JFrame {
 
-    private static final double DISPLAY_CONSTRAINT = 0.95;
+    private static final double DISPLAY_CONSTRAINT = 0.8;
 
 
     private JPanel panel_display;
@@ -28,7 +29,11 @@ public class Main extends JFrame {
     private JPanel panel_bookmarks;
     private JPanel panel_julia;
 
-    private DrawingThread drawer;
+    private final MandelbrotManagementThread mandel_drawer;
+    private final JuliaDrawingManagementThread julia_drawer;
+
+    // Julia Set
+    private ImagePanel imgPanel_julia;
 
     // Control Panel
     private JLabel label_iterations;
@@ -78,8 +83,12 @@ public class Main extends JFrame {
         this.pack();
         this.setVisible(true);
 
-        drawer = new DrawingThread(Main.this, imgPanel_image);
-        drawer.start();
+        mandel_drawer = new MandelbrotManagementThread(Main.this, imgPanel_image);
+        mandel_drawer.addDrawListenener(new redrawHandler());
+        mandel_drawer.start();
+
+        julia_drawer = new JuliaDrawingManagementThread(this, imgPanel_julia);
+        julia_drawer.start();
     }
 
     private void initComponents(){
@@ -101,12 +110,13 @@ public class Main extends JFrame {
         c.add(panel_display, constraints);
 
         imgPanel_image = new ImagePanel();
-        imgPanel_image.setBackground(Color.WHITE);
-        panel_display.add(imgPanel_image);
-        layout.putConstraint(SpringLayout.NORTH, imgPanel_image, 5, SpringLayout.NORTH, panel_display);
-        layout.putConstraint(SpringLayout.EAST, imgPanel_image, -5, SpringLayout.EAST, panel_display);
-        layout.putConstraint(SpringLayout.SOUTH, imgPanel_image, -5, SpringLayout.SOUTH, panel_display);
-        layout.putConstraint(SpringLayout.WEST, imgPanel_image, 5, SpringLayout.WEST, panel_display);
+        imgPanel_julia = new ImagePanel();
+        imgPanel_julia.setBackground(Color.WHITE);
+        panel_display.add(imgPanel_julia);
+        layout.putConstraint(SpringLayout.NORTH, imgPanel_julia, 5, SpringLayout.NORTH, panel_display);
+        layout.putConstraint(SpringLayout.EAST, imgPanel_julia, -5, SpringLayout.EAST, panel_display);
+        layout.putConstraint(SpringLayout.SOUTH, imgPanel_julia, -5, SpringLayout.SOUTH, panel_display);
+        layout.putConstraint(SpringLayout.WEST, imgPanel_julia, 5, SpringLayout.WEST, panel_display);
         imgPanel_image.addMouseListener(new mouseClickPositionHandler());
         imgPanel_image.addMouseMotionListener(new mousePositionHandler());
 
@@ -134,10 +144,6 @@ public class Main extends JFrame {
         c.gridy = 1;
         pane.add(panel_controls, c);
 
-        btn_redraw = new JButton("Redraw");
-        btn_redraw.addActionListener(new redrawHandler());
-        pane.add(btn_redraw);
-
         c.fill = GridBagConstraints.BOTH;
         c.weighty = 0.5;
 
@@ -148,10 +154,20 @@ public class Main extends JFrame {
 
         pane.add(panel_bookmarks, c);
 
-        panel_julia = new JPanel();
+        SpringLayout layout = new SpringLayout();
+        panel_julia = new JPanel(layout);
         panel_julia.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Julia Set"));
         c.gridy = 3;
         pane.add(panel_julia, c);
+
+
+        //imgPanel_image = new ImagePanel();
+        imgPanel_image.setBackground(Color.WHITE);
+        panel_julia.add(imgPanel_image);
+        layout.putConstraint(SpringLayout.NORTH, imgPanel_image, 5, SpringLayout.NORTH, panel_julia);
+        layout.putConstraint(SpringLayout.EAST, imgPanel_image, -5, SpringLayout.EAST, panel_julia);
+        layout.putConstraint(SpringLayout.SOUTH, imgPanel_image, -5, SpringLayout.SOUTH, panel_julia);
+        layout.putConstraint(SpringLayout.WEST, imgPanel_image, 5, SpringLayout.WEST, panel_julia);
     }
 
     private void initControlPanel() {
@@ -187,7 +203,14 @@ public class Main extends JFrame {
         spinner_translateY = new JSpinner(new SpinnerNumberModel(0, -100, 100, 0.1));
         panel_controls.add(spinner_translateY);
 
-        SpringUtilities.makeCompactGrid(panel_controls, 4, 2, 6, 6, 6, 6);
+        JLabel blank = new JLabel();
+        panel_controls.add(blank);
+
+        btn_redraw = new JButton("Redraw");
+        btn_redraw.addActionListener(new redrawHandler());
+        panel_controls.add(btn_redraw);
+        SpringUtilities.makeCompactGrid(panel_controls, 5, 2, 6, 6, 6, 6);
+
     }
 
     private void initInfoPanel() {
@@ -244,18 +267,10 @@ public class Main extends JFrame {
 
     private void updateRangeDisplay() {
         // Wait for the thread to notify us that it has completed
-        synchronized (drawer) {
-            try {
-                drawer.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        Complex minimum = drawer.getComplexFromPoint(0, 0);
-        Complex maximum = drawer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
-        text_xRange.setText(String.format("%.2f to %.2f", minimum.getReal(), maximum.getReal()));
-        text_yRange.setText(String.format("%.2f to %.2f", minimum.getImaginary(), maximum.getImaginary()));
+        Complex minimum = mandel_drawer.getComplexFromPoint(0, 0);
+        Complex maximum = mandel_drawer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
+        text_xRange.setText(String.format("%.3f to %.3f", minimum.getReal(), maximum.getReal()));
+        text_yRange.setText(String.format("%.3f to %.3f", minimum.getImaginary(), maximum.getImaginary()));
     }
 
     private void updatedSelectedPoint() {
@@ -277,26 +292,16 @@ public class Main extends JFrame {
     /**
      * Triggers redraw of mandelbrot set
      */
-    private class redrawHandler implements ActionListener {
+    private class redrawHandler implements ActionListener, DrawListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            drawer.draw();
-            class Runner extends Thread {
-                public void run() {
-                    synchronized (drawer)
+            mandel_drawer.draw();
+        }
 
-                    {
-                        try {
-                            drawer.wait();
-                        } catch (InterruptedException e1) {
-
-                        }
-                        updateRangeDisplay();
-                    }
-                }
-            }
-            new Runner().start();
+        @Override
+        public void drawComplete() {
+            updateRangeDisplay();
         }
     }
 
@@ -306,9 +311,10 @@ public class Main extends JFrame {
     private class mouseClickPositionHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (drawer.hasDrawn()) {
-                selectedPosition = drawer.getComplexFromPoint(e.getPoint());
+            if (mandel_drawer.hasDrawn()) {
+                selectedPosition = mandel_drawer.getComplexFromPoint(e.getPoint());
                 updatedSelectedPoint(selectedPosition);
+                julia_drawer.draw(selectedPosition);
             } else {
                 updatedSelectedPoint();
             }
@@ -323,8 +329,8 @@ public class Main extends JFrame {
         @Override
         public void mouseMoved(MouseEvent e) {
             super.mouseMoved(e);
-            if (drawer.hasDrawn()) {
-                updatedCursorPoint(drawer.getComplexFromPoint(e.getPoint()));
+            if (mandel_drawer.hasDrawn()) {
+                updatedCursorPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
             } else {
                 updatedCursorPoint();
             }
