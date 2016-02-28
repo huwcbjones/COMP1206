@@ -53,12 +53,12 @@ public class Complex {
 
     @Override
     public String toString(){
-        String imaginaryString = String.format("%.2f", imaginary);
+        String imaginaryString = String.format("%.3f", imaginary);
         if (getImaginary() > 0) {
             imaginaryString = "+ " + imaginaryString;
         } else {
-            imaginaryString = "- " + String.format("%.2f", -1 * imaginary);
+            imaginaryString = "- " + String.format("%.3f", -1 * imaginary);
         }
-        return String.format("%.2f %s", real, imaginaryString) + "i";
+        return String.format("%.3f %s", real, imaginaryString) + "i";
     }
 }
