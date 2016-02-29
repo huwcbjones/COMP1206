@@ -6,7 +6,7 @@ package mandelbrot.events;
  * @author Huw Jones
  * @since 28/02/2016
  */
-public interface DrawListener {
+public interface RenderListener {
 
-    public void drawComplete();
+    void renderComplete();
 }
