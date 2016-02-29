@@ -26,10 +26,19 @@ public class JuliaTask extends RenderTask {
     protected ColouredPixel doPixelCalculation(Point2D point, Complex c) {
         int currIteration = 0;
         Complex z = c;
+        Complex prevPoint;
 
         while (z.squareReal() + z.squareImaginary() <= 4 && currIteration < maxIterations) {
+            prevPoint = z.clone();
             z = z.square();
             z.add(complex);
+
+            // Apply period detection
+            if(z.equals(prevPoint)){
+                currIteration = maxIterations;
+                break;
+            }
+
             currIteration++;
         }
 

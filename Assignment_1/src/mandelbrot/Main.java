@@ -269,6 +269,7 @@ public class Main extends JFrame {
     }
 
     public void tintMandelbrot(){
+        if(!mandel_drawer.hasDrawn()) return;
         mandel_drawer.tintImage();
     }
 

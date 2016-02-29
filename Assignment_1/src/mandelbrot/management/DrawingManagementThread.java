@@ -164,9 +164,6 @@ public abstract class DrawingManagementThread extends Thread {
         checkCacheSize();
         images.put(properties, image);
 
-        hasDrawn = true;
-
-        drawComplete();
         original = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
         g = original.createGraphics();
         g.drawImage(image, 0, 0, null);
@@ -183,6 +180,7 @@ public abstract class DrawingManagementThread extends Thread {
 
         if (checkCache()) {
             System.out.println("Image found in cache.");
+            hasDrawn = true;
             drawComplete();
             return;
         }
@@ -245,7 +243,6 @@ public abstract class DrawingManagementThread extends Thread {
         panel.repaint();
 
         hasDrawn = true;
-
         drawComplete();
     }
 
