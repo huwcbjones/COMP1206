@@ -267,17 +267,6 @@ public class Main extends JFrame {
         if(selectedPosition == null) return;
         julia_drawer.draw(selectedPosition);
     }
-
-    public void tintMandelbrot(){
-        if(!mandel_drawer.hasRendered()) return;
-        mandel_drawer.tint();
-    }
-
-    public void tintJulia(){
-        if(selectedPosition == null) return;
-        julia_drawer.tint();
-    }
-
     //endregion
 
     //region Event Handlers
@@ -306,8 +295,8 @@ public class Main extends JFrame {
 
         @Override
         public void colourShiftChange(double shift) {
-            tintMandelbrot();
-            tintJulia();
+            renderMandelbrot();
+            renderJulia();
         }
     }
 

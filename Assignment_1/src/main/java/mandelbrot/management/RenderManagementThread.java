@@ -3,15 +3,11 @@ package mandelbrot.management;
 import mandelbrot.Main;
 import mandelbrot.events.RenderListener;
 import mandelbrot.render.TintTask;
-import utils.Complex;
-import utils.ImagePanel;
-import utils.ImageProperties;
-import utils.ImageSegment;
+import utils.*;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.*;
@@ -27,14 +23,11 @@ public abstract class RenderManagementThread extends Thread {
     private ArrayList<RenderListener> listeners;
 
     protected final Object runThread = new Object();
-    protected boolean shouldRender = false;
-    protected boolean shouldTint = false;
 
     protected final int numberStrips;
     protected Main mainWindow;
     protected ImagePanel panel;
-    private BufferedImage image;
-    private BufferedImage original;
+    private FractalImage image;
     protected boolean hasRendered = false;
 
     protected double xShift;
@@ -51,10 +44,8 @@ public abstract class RenderManagementThread extends Thread {
 
     protected ExecutorCompletionService<ImageSegment> executorService;
     protected int numberThreads;
-    protected LinkedHashMap<ImageProperties, BufferedImage> renderCache;
 
-    private boolean isDrawing;
-    private boolean shouldStop;
+    protected LinkedHashMap<ImageProperties, FractalImage> renderCache;
 
     /**
      * Creates a Render Management Thread
@@ -87,16 +78,7 @@ public abstract class RenderManagementThread extends Thread {
      *
      * @return BufferedImage, render result
      */
-    public BufferedImage getOriginalImage() {
-        return original;
-    }
-
-    /**
-     * Returns the tinted image
-     *
-     * @return BufferedImage, tinted render result
-     */
-    public BufferedImage getTintedImage() {
+    public FractalImage getImage() {
         return image;
     }
 
@@ -123,7 +105,7 @@ public abstract class RenderManagementThread extends Thread {
      *
      * @return double X axis shift
      */
-    protected double getxShift() {
+    protected double getShiftX() {
         return mainWindow.getShiftX();
     }
 
@@ -132,7 +114,7 @@ public abstract class RenderManagementThread extends Thread {
      *
      * @return double Y axis shift
      */
-    protected double getyShift() {
+    protected double getShiftY() {
         return mainWindow.getShiftY();
     }
 
@@ -204,11 +186,7 @@ public abstract class RenderManagementThread extends Thread {
             synchronized (this.runThread) {
                 try {
                     runThread.wait();
-                    if (shouldRender) {
-                        doRender();
-                    } else if (shouldTint) {
-                        doTint();
-                    }
+                    doRender();
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -221,23 +199,9 @@ public abstract class RenderManagementThread extends Thread {
      */
     public void render() {
         synchronized (this.runThread) {
-            this.shouldRender = true;
-            this.shouldTint = false;
             runThread.notify();
         }
     }
-
-    /**
-     * Public method to notify the thread to call doTint without blocking
-     */
-    public void tint() {
-        synchronized (this.runThread) {
-            this.shouldRender = false;
-            this.shouldTint = true;
-            runThread.notify();
-        }
-    }
-
     //endregion
 
     //region Render Processing
@@ -255,19 +219,23 @@ public abstract class RenderManagementThread extends Thread {
      * Private method to do the render
      */
     private void doRender() {
+        boolean fullRender = true;
+
         // Check if cache is valid for settings
         if (!checkCacheValidity()) {
             // Recreate cache of rendered images
             renderCache = new LinkedHashMap<>();
         }
 
+        image = FractalImage.fromBufferedImage(panel.createImage());
         updateImageProperties();
         ImageProperties properties = getImageProperties();
+        image.setTint(properties.getTint());
 
         // Check if an image that matches our settings is in the cache
         if (imageIsCached()) {
-            displayCachedImage(properties);
-            return;
+            useCachedImage(properties);
+            fullRender = false;
         }
 
         int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
@@ -276,9 +244,9 @@ public abstract class RenderManagementThread extends Thread {
 
         long startTime = System.nanoTime();
 
+        Callable<ImageSegment> task;
         // Queue up strips to be calculated
         for (int i = 0; i < numberStrips; i++) {
-
             // If first strip, start at 0
             if (i == 0) {
                 start = 0;
@@ -291,7 +259,13 @@ public abstract class RenderManagementThread extends Thread {
             } else {
                 bounds = new Rectangle2D.Double(start, 0, stripWidth , imgHeight);
             }
-            executorService.submit(createTask(properties, bounds));
+
+            if(fullRender) {
+                task = createTask(properties, bounds);
+            }else{
+                task = new TintTask(this, bounds, properties);
+            }
+            executorService.submit(task);
         }
 
         Future<ImageSegment> result;
@@ -301,11 +275,16 @@ public abstract class RenderManagementThread extends Thread {
         // Get results from strips
         for (int i = 0; i < numberStrips; i++) {
             try {
+                // Get result from Executor Completion Service (this method is blocking)
                 result = executorService.take();
+
+                // If result failed, skip it
                 if (!result.isDone()) {
                     System.err.println("Failed to calculate segment. (not done)");
                     continue;
                 }
+
+                // Try to get result and reconstruct the image
                 try {
                     imgSeg = result.get();
                     g.drawImage(imgSeg.getImage(), (int) imgSeg.getBounds().getX(), (int) imgSeg.getBounds().getY(), null);
@@ -319,93 +298,13 @@ public abstract class RenderManagementThread extends Thread {
             }
         }
         long endTime = System.nanoTime();
-
-        System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
-        checkCleanCache();
-        renderCache.put(properties, image);
-
-        original = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
-        g = original.createGraphics();
-        g.drawImage(image, 0, 0, null);
         g.dispose();
 
-        doTint();
-    }
-
-    /**
-     * Private method to tint the render result
-     */
-    private void doTint() {
-        if (!checkCacheValidity()) {
-            renderCache = new LinkedHashMap<>();
-        }
-
-        updateImageProperties();
-        ImageProperties properties = getImageProperties();
-
-        if (imageIsCached()) {
-            displayCachedImage(properties);
-            return;
-        }
-
-
-        int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
-
-        Rectangle2D bounds;
-
-        int start;
-
-        long startTime = System.nanoTime();
-
-        // Queue up strips to be calculated
-        for (int i = 0; i < numberStrips; i++) {
-            if (i == 0) {
-                start = 0;
-            } else {
-                start = i * stripWidth - 1;
-            }
-            if (i == numberStrips - 1) {
-                bounds = new Rectangle2D.Double(start, 0, imgWidth - start, imgHeight);
-            } else {
-                bounds = new Rectangle2D.Double(start, 0, stripWidth, imgHeight);
-            }
-            executorService.submit(new TintTask(this, bounds, properties));
-        }
-
-        Future<ImageSegment> result;
-        ImageSegment imgSeg;
-        Graphics2D g = (Graphics2D) image.getGraphics();
-
-        // Get results from strips
-        for (int i = 0; i < numberStrips; i++) {
-            try {
-                result = executorService.take();
-                if (!result.isDone()) {
-                    System.err.println("Failed to calculate segment. (not done)");
-                    continue;
-                }
-                try {
-                    imgSeg = result.get();
-                    g.drawImage(imgSeg.getImage(), (int) imgSeg.getBounds().getX(), (int) imgSeg.getBounds().getY(), null);
-                } catch (ExecutionException ex) {
-                    ex.printStackTrace(System.err);
-                    System.err.println("Failed to calculate segment.\n" + ex.getMessage());
-                }
-
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
-        long endTime = System.nanoTime();
-
         System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
         checkCleanCache();
         renderCache.put(properties, image);
-        panel.setImage(image);
-        panel.repaint();
 
-        hasRendered = true;
-        drawComplete();
+        panel.setImage(image, true);
     }
 
     //endregion
@@ -438,12 +337,10 @@ public abstract class RenderManagementThread extends Thread {
      *
      * @param properties Properties of image to display
      */
-    private void displayCachedImage(ImageProperties properties) {
-        System.out.println("Displaying cached image.");
-
-        panel.setImage(renderCache.get(properties), true);
-        hasRendered = true;
-        drawComplete();
+    private void useCachedImage(ImageProperties properties) {
+        System.out.println("Using cached image.");
+        if (renderCache.get(properties) == this.image) return;
+        this.image = renderCache.get(properties);
     }
 
     /**
@@ -469,13 +366,10 @@ public abstract class RenderManagementThread extends Thread {
      * Updates the properties of the image
      */
     private void updateImageProperties() {
-        image = panel.createImage();
-        original = panel.createImage();
-
         iterations = this.getIterations();
         scaleFactor = this.getScaleFactor();
-        xShift = this.getxShift();
-        yShift = this.getyShift();
+        xShift = this.getShiftX();
+        yShift = this.getShiftY();
         tint = this.getTint();
 
         imgHeight = image.getHeight();
