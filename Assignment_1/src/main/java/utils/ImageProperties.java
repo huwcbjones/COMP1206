@@ -91,9 +91,24 @@ public class ImageProperties {
 
     @Override
     public boolean equals(Object obj) {
-        return obj.hashCode() == this.hashCode();
+        if (!(obj instanceof ImageProperties)) return false;
+        ImageProperties p = (ImageProperties) obj;
+
+        return equalsNotTint(p) && tint == p.getTint();
     }
 
+    public boolean equalsNotTint(ImageProperties p) {
+        // If these values are unset in either property, return false
+        if (p.getComplex() == null && complex != null) return false;
+        if (p.getTint() == -1 && tint != -1) return false;
+
+        boolean complex = (this.complex == null) || this.complex.equals(p.getComplex());
+        return iterations == p.getIterations() &&
+                scale == p.getScale() &&
+                xShift == p.getxShift() &&
+                yShift == p.getyShift() &&
+                complex;
+    }
     public float getTint () {
         return tint;
     }
