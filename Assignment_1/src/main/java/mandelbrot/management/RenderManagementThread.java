@@ -167,7 +167,7 @@ public abstract class RenderManagementThread extends Thread {
         listeners.add(listener);
     }
 
-    private void drawComplete() {
+    private void fireRenderComplete() {
         listeners.forEach(RenderListener::renderComplete);
     }
 
@@ -305,6 +305,9 @@ public abstract class RenderManagementThread extends Thread {
         renderCache.put(properties, image);
 
         panel.setImage(image, true);
+
+        fireRenderComplete();
+        hasRendered = true;
     }
 
     //endregion
