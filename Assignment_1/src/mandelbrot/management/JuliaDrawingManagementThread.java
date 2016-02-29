@@ -25,7 +25,7 @@ public class JuliaDrawingManagementThread extends DrawingManagementThread {
     }
 
     @Override
-    protected ImageProperties getImageProperties() {
+    public ImageProperties getImageProperties() {
         ImageProperties img = super.getImageProperties();
         img.setComplex(c);
         return img;
