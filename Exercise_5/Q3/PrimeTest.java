@@ -19,8 +19,8 @@ public class PrimeTest {
 
     public static void main(String args[]) {
         Vector<Integer> primes = new Vector<>();
-        for (int i = 0; i < 100; i++) {
-            primes.add(new Random().nextInt(64507));
+        for (int i = 400; i < 600; i++) {
+            primes.add(i);
         }
         PrimeTest test = new PrimeTest(primes);
         test.checkPrimes();

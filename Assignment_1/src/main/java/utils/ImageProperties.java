@@ -1,6 +1,12 @@
 package utils;
 
 
+import java.awt.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * Creates a unique key for an image's settings
  *
@@ -33,7 +39,7 @@ public class ImageProperties {
 
     public ImageProperties(int iterations, double scale, double xShift, double yShift, Complex complex) {
         this.iterations = iterations;
-        this.scale = scale;
+        this.scale = ImageProperties.round(scale, 4);
         this.xShift = xShift;
         this.yShift = yShift;
         this.complex = complex;
@@ -52,7 +58,7 @@ public class ImageProperties {
     }
 
     public void setScale(double scale) {
-        this.scale = scale;
+        this.scale = ImageProperties.round(scale, 4);
     }
 
     public double getxShift() {
@@ -82,10 +88,24 @@ public class ImageProperties {
     @Override
     public int hashCode() {
 
-        String code = "I:" + iterations +",S:" + scale + ",X:"+ xShift + ",Y:"+yShift;
-        if(complex != null) code += ",C:" + complex.toString();
-        if(tint != -1) code += ",T:" + tint;
-        return code.hashCode();
+        int h_iteration = iterations * 499;
+        int h_scale = (int)(scale * 503);
+        int h_xShift = (int)(xShift * 509);
+        int h_yShift = (int)(xShift * 521);
+        int h_tint = (int)(tint * 523);
+
+        int code = h_iteration ^ h_scale ^ h_xShift ^ h_yShift ^ h_tint;
+        if(complex != null) code ^= complex.hashCode();
+
+        return code;
+    }
+
+    private static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
 
