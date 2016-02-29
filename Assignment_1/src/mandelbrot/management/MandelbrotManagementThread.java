@@ -22,6 +22,6 @@ public class MandelbrotManagementThread extends DrawingManagementThread {
 
     @Override
     protected Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds) {
-        return new MandelbrotTask(this, bounds, properties.getIterations());
+        return new MandelbrotTask(this, bounds, properties);
     }
 }

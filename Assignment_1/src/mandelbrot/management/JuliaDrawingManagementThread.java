@@ -33,7 +33,7 @@ public class JuliaDrawingManagementThread extends DrawingManagementThread {
 
     @Override
     protected Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds) {
-        return new JuliaTask(this, bounds, properties.getIterations(), properties.getComplex());
+        return new JuliaTask(this, bounds, properties, properties.getComplex());
     }
 
 
