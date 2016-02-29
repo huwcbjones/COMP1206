@@ -12,6 +12,7 @@ public class ImageProperties {
     private double scale;
     private double xShift;
     private double yShift;
+    private float tint = -1;
 
     private Complex complex;
 
@@ -20,6 +21,14 @@ public class ImageProperties {
         this.scale = scale;
         this.xShift = xShift;
         this.yShift = yShift;
+    }
+
+    public ImageProperties(int iterations, double scale, double xShift, double yShift, float tint) {
+        this.iterations = iterations;
+        this.scale = scale;
+        this.xShift = xShift;
+        this.yShift = yShift;
+        this.tint = tint;
     }
 
     public ImageProperties(int iterations, double scale, double xShift, double yShift, Complex complex) {
@@ -75,6 +84,7 @@ public class ImageProperties {
 
         String code = "I:" + iterations +",S:" + scale + ",X:"+ xShift + ",Y:"+yShift;
         if(complex != null) code += ",C:" + complex.toString();
+        if(tint != -1) code += ",T:" + tint;
         return code.hashCode();
     }
 
@@ -82,5 +92,13 @@ public class ImageProperties {
     @Override
     public boolean equals(Object obj) {
         return obj.hashCode() == this.hashCode();
+    }
+
+    public float getTint () {
+        return tint;
+    }
+
+    public void setTint (float tint) {
+        this.tint = tint;
     }
 }
