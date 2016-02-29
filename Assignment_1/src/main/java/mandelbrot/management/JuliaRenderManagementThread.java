@@ -43,12 +43,12 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     }
 
     @Override
-    protected double getxShift() {
+    protected double getShiftX() {
         return 0;
     }
 
     @Override
-    protected double getyShift() {
+    protected double getShiftY() {
         return 0;
     }
 
