@@ -1,7 +1,7 @@
 package mandelbrot.management;
 
 import mandelbrot.Main;
-import mandelbrot.events.DrawListener;
+import mandelbrot.events.RenderListener;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.ImageProperties;
@@ -23,7 +23,7 @@ import java.util.concurrent.*;
  */
 
 public abstract class DrawingManagementThread extends Thread {
-    private ArrayList<DrawListener> listeners;
+    private ArrayList<RenderListener> listeners;
     protected final Object shouldRedraw = new Object();
     protected Main mainWindow;
     protected ImagePanel panel;
@@ -43,6 +43,9 @@ public abstract class DrawingManagementThread extends Thread {
     protected int numberThreads;
     protected LinkedHashMap<ImageProperties, BufferedImage> images;
 
+    private boolean isDrawing;
+    private boolean shouldStop;
+
     public DrawingManagementThread(Main mainWindow, ImagePanel panel, String threadName) {
         this.mainWindow = mainWindow;
         this.panel = panel;
@@ -59,12 +62,12 @@ public abstract class DrawingManagementThread extends Thread {
         this.executorService = new ExecutorCompletionService<>(executorService);
     }
 
-    public void addDrawListenener(DrawListener listener){
+    public void addDrawListenener(RenderListener listener){
         listeners.add(listener);
     }
 
     private void drawComplete(){
-        listeners.forEach(DrawListener::drawComplete);
+        listeners.forEach(RenderListener::renderComplete);
     }
 
     @Override
@@ -198,7 +201,7 @@ public abstract class DrawingManagementThread extends Thread {
         return true;
     }
 
-    protected ImageProperties getImageProperties() {
+    public ImageProperties getImageProperties() {
         return new ImageProperties(iterations, scaleFactor, xShift, yShift);
     }
 
@@ -234,11 +237,11 @@ public abstract class DrawingManagementThread extends Thread {
     }
 
     protected double getxShift() {
-        return mainWindow.getTranslateX();
+        return mainWindow.getShiftX();
     }
 
     protected double getyShift() {
-        return mainWindow.getTranslateY();
+        return mainWindow.getShiftY();
     }
 
     public final Complex getComplexFromPoint(Point2D p) {
