@@ -1,7 +1,8 @@
 package mandelbrot;
 
 
-import mandelbrot.events.DrawListener;
+import mandelbrot.events.ConfigChangeAdapter;
+import mandelbrot.events.RenderListener;
 import mandelbrot.management.JuliaDrawingManagementThread;
 import mandelbrot.management.MandelbrotManagementThread;
 import utils.Complex;
@@ -21,9 +22,11 @@ import java.awt.event.*;
  */
 public class Main extends JFrame {
 
-    private static final double DISPLAY_CONSTRAINT = 0.8;
+    private static final double DISPLAY_CONSTRAINT = 0.9;
 
+    private ConfigManager config;
 
+    //region Main Panels
     private JPanel panel_display;
     private ImagePanel imgPanel_image;
     private JPanel panel_info;
@@ -31,28 +34,15 @@ public class Main extends JFrame {
     private JPanel panel_bookmarks;
     private JPanel panel_julia;
 
+    //endregion
+
     private final MandelbrotManagementThread mandel_drawer;
     private final JuliaDrawingManagementThread julia_drawer;
 
     // Julia Set
     private ImagePanel imgPanel_julia;
 
-    // Control Panel
-    private JLabel label_iterations;
-    private JSpinner spinner_iterations;
-
-    private JLabel label_translateX;
-    private JSpinner spinner_translateX;
-
-    private JLabel label_translateY;
-    private JSpinner spinner_translateY;
-
-    private JLabel label_scale;
-    private JSpinner spinner_scale;
-
-    private JButton btn_redraw;
-
-    // Info
+    //region Info Properties
     private JLabel label_xRange;
     private JTextField text_xRange;
 
@@ -67,11 +57,14 @@ public class Main extends JFrame {
 
     private Complex selectedPosition;
 
+    //endregion
+
+
     // Bookmarks
 
 
     public Main() {
-        super("Mandelbrot Viewer");
+        super("Fractal Explorer");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         this.setMinimumSize(new Dimension(800, 600));
@@ -81,17 +74,24 @@ public class Main extends JFrame {
 
         }
 
+        config = new ConfigManager(this);
+        config.addConfigChangeListener(new configChangeHandler());
+
         initComponents();
+
         this.pack();
-        this.setVisible(true);
 
         mandel_drawer = new MandelbrotManagementThread(Main.this, imgPanel_image);
-        mandel_drawer.addDrawListenener(new redrawHandler());
+        mandel_drawer.addDrawListenener(new renderCompleteHandler());
         mandel_drawer.start();
 
         julia_drawer = new JuliaDrawingManagementThread(this, imgPanel_julia);
         julia_drawer.start();
+
+        this.setVisible(true);
     }
+
+    //region Initialise Components
 
     private void initComponents(){
         Container c = this.getContentPane();
@@ -122,7 +122,6 @@ public class Main extends JFrame {
         imgPanel_image.addMouseMotionListener(new mousePositionHandler());
 
         initSidePanels(constraints);
-        initControlPanel();
         initInfoPanel();
     }
 
@@ -140,7 +139,7 @@ public class Main extends JFrame {
         c.gridy = 0;
         pane.add(panel_info, c);
 
-        panel_controls = new JPanel();
+        panel_controls = config.getConfigPanel();
         panel_controls.setOpaque(false);
         c.gridy = 1;
         pane.add(panel_controls, c);
@@ -169,49 +168,6 @@ public class Main extends JFrame {
         layout.putConstraint(SpringLayout.EAST, imgPanel_julia, -5, SpringLayout.EAST, panel_julia);
         layout.putConstraint(SpringLayout.SOUTH, imgPanel_julia, -5, SpringLayout.SOUTH, panel_julia);
         layout.putConstraint(SpringLayout.WEST, imgPanel_julia, 5, SpringLayout.WEST, panel_julia);
-    }
-
-    private void initControlPanel() {
-        SpringLayout layout = new SpringLayout();
-        panel_controls.setLayout(layout);
-        panel_controls.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Controls"));
-
-        // Iterations
-        label_iterations = new JLabel("Iterations:", JLabel.TRAILING);
-        panel_controls.add(label_iterations);
-
-        spinner_iterations = new JSpinner(new SpinnerNumberModel(75, 1, 1000, 1));
-        panel_controls.add(spinner_iterations);
-
-        // Scale
-        label_scale = new JLabel("Scale:", JLabel.TRAILING);
-        panel_controls.add(label_scale);
-
-        spinner_scale = new JSpinner(new SpinnerNumberModel(1, 0, 100, 0.1d));
-        panel_controls.add(spinner_scale);
-
-        // x shift
-        label_translateX = new JLabel("X Shift:", JLabel.TRAILING);
-        panel_controls.add(label_translateX);
-
-        spinner_translateX = new JSpinner(new SpinnerNumberModel(0, -100, 100, 0.1));
-        panel_controls.add(spinner_translateX);
-
-         // y shit
-        label_translateY = new JLabel("Y Shift:", JLabel.TRAILING);
-        panel_controls.add(label_translateY);
-
-        spinner_translateY = new JSpinner(new SpinnerNumberModel(0, -100, 100, 0.1));
-        panel_controls.add(spinner_translateY);
-
-        JLabel blank = new JLabel();
-        panel_controls.add(blank);
-
-        btn_redraw = new JButton("Redraw");
-        btn_redraw.addActionListener(new redrawHandler());
-        panel_controls.add(btn_redraw);
-        SpringUtilities.makeCompactGrid(panel_controls, 5, 2, 6, 6, 6, 6);
-
     }
 
     private void initInfoPanel() {
@@ -250,22 +206,28 @@ public class Main extends JFrame {
         SpringUtilities.makeCompactGrid(panel_info, 4, 2, 6, 6, 6, 6);
     }
 
-    public double getTranslateX() {
-        return (double) spinner_translateX.getValue();
+    //endregion
+
+    //region Get Config Options
+
+    public double getShiftX() {
+        return config.getShiftX();
     }
 
-    public double getTranslateY() {
-        return (double) spinner_translateY.getValue();
+    public double getShiftY() {
+        return config.getShiftY();
     }
 
     public int getIterations() {
-        return (int) spinner_iterations.getValue();
+        return config.getIterations();
     }
 
     public double getScaleFactor() {
-        return (double) spinner_scale.getValue();
+        return config.getScaleFactor();
     }
+    //endregion
 
+    //region Update Info Sections
     private void updateRangeDisplay() {
         // Wait for the thread to notify us that it has completed
         Complex minimum = mandel_drawer.getComplexFromPoint(0, 0);
@@ -290,24 +252,60 @@ public class Main extends JFrame {
         text_cursorPoint.setText(c.toString());
     }
 
-    /**
-     * Triggers redraw of mandelbrot set
-     */
-    private class redrawHandler implements ActionListener, DrawListener {
+    //endregion
 
+    //region Render Handlers
+    public void renderMandelbrot(){
+        mandel_drawer.draw();
+    }
+
+    public void renderJulia(){
+        if(selectedPosition == null);
+        julia_drawer.draw(selectedPosition);
+    }
+
+    //endregion
+
+    //region Event Handlers
+
+    private class configChangeHandler extends ConfigChangeAdapter {
         @Override
-        public void actionPerformed(ActionEvent e) {
-            mandel_drawer.draw();
+        public void iterationChange(int iterations) {
+            renderMandelbrot();
+            renderJulia();
         }
 
         @Override
-        public void drawComplete() {
+        public void xShiftChange(double xShift) {
+            renderMandelbrot();
+        }
+
+        @Override
+        public void yShiftChange(double yShift) {
+            renderMandelbrot();
+        }
+
+        @Override
+        public void scaleChange(double scale) {
+            renderMandelbrot();
+        }
+
+        @Override
+        public void colourShiftChange(double shift) {
+            imgPanel_image.tintImage(shift);
+            imgPanel_julia.tintImage(shift);
+        }
+    }
+
+    private class renderCompleteHandler implements RenderListener {
+        @Override
+        public void renderComplete() {
             updateRangeDisplay();
         }
     }
 
     /**
-     * Updates diplay of selected position when mouse clicked
+     * Updates display of selected position when mouse clicked
      */
     private class mouseClickPositionHandler extends MouseAdapter {
         @Override
@@ -338,4 +336,5 @@ public class Main extends JFrame {
         }
     }
 
+    //endregion
 }
