@@ -2,6 +2,7 @@ package mandelbrot.management;
 
 import mandelbrot.Main;
 import mandelbrot.events.RenderListener;
+import mandelbrot.render.TintTask;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.ImageProperties;
@@ -25,20 +26,25 @@ import java.util.concurrent.*;
 public abstract class DrawingManagementThread extends Thread {
     private ArrayList<RenderListener> listeners;
     protected final Object shouldRedraw = new Object();
+    protected final int numberStrips;
     protected Main mainWindow;
     protected ImagePanel panel;
-    protected BufferedImage image;
+    private BufferedImage image;
+    private BufferedImage original;
     protected boolean hasDrawn = false;
+
     protected double xShift;
     protected double yShift;
     protected double scaleFactor;
+    protected int iterations;
+    protected float tint;
 
     protected double imgHeight;
     protected double imgWidth;
 
     protected double xScale;
     protected double yScale;
-    protected int iterations;
+
     protected ExecutorCompletionService<ImageSegment> executorService;
     protected int numberThreads;
     protected LinkedHashMap<ImageProperties, BufferedImage> images;
@@ -56,6 +62,7 @@ public abstract class DrawingManagementThread extends Thread {
         listeners = new ArrayList<>();
 
         numberThreads = Runtime.getRuntime().availableProcessors();
+        numberStrips = numberThreads * 2;
 
         // Get an executor service for the amount of cores we have
         ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
@@ -70,6 +77,9 @@ public abstract class DrawingManagementThread extends Thread {
         listeners.forEach(RenderListener::renderComplete);
     }
 
+    public BufferedImage getImage(){
+        return original;
+    }
     @Override
     public final void run() {
         while (!this.isInterrupted()) {
@@ -101,7 +111,6 @@ public abstract class DrawingManagementThread extends Thread {
 
         ImageProperties properties = getImageProperties();
 
-        int numberStrips = numberThreads * 2;
         int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
 
         Rectangle2D bounds;
@@ -154,6 +163,84 @@ public abstract class DrawingManagementThread extends Thread {
         System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
         checkCacheSize();
         images.put(properties, image);
+
+        hasDrawn = true;
+
+        drawComplete();
+        original = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+        g = original.createGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        tintImage();
+    }
+
+    public void tintImage(){
+        if (!checkCacheValidity()) {
+            images = new LinkedHashMap<>();
+        }
+        calculateVariables();
+
+        if (checkCache()) {
+            System.out.println("Image found in cache.");
+            drawComplete();
+            return;
+        }
+
+        ImageProperties properties = getImageProperties();
+
+        int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
+
+        Rectangle2D bounds;
+
+        int start;
+
+        long startTime = System.nanoTime();
+
+        // Queue up strips to be calculated
+        for (int i = 0; i < numberStrips; i++) {
+            if (i == 0) {
+                start = 0;
+            } else {
+                start = i * stripWidth - 1;
+            }
+            if (i == numberStrips - 1) {
+                bounds = new Rectangle2D.Double(start, 0, imgWidth - start, imgHeight);
+            } else {
+                bounds = new Rectangle2D.Double(start, 0, stripWidth , imgHeight);
+            }
+            executorService.submit(new TintTask(this, bounds, properties));
+        }
+
+        Future<ImageSegment> result;
+        ImageSegment imgSeg;
+        Graphics2D g = (Graphics2D) image.getGraphics();
+
+        // Get results from strips
+        for (int i = 0; i < numberStrips; i++) {
+            try {
+                result = executorService.take();
+                if (!result.isDone()) {
+                    System.err.println("Failed to calculate segment. (not done)");
+                    continue;
+                }
+                try {
+                    imgSeg = result.get();
+                    g.drawImage(imgSeg.getImage(), (int) imgSeg.getBounds().getX(), (int) imgSeg.getBounds().getY(), null);
+                } catch (ExecutionException ex) {
+                    ex.printStackTrace(System.err);
+                    System.err.println("Failed to calculate segment.\n" + ex.getMessage());
+                }
+
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        long endTime = System.nanoTime();
+
+        System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
+        checkCacheSize();
+        images.put(properties, image);
         panel.setImage(image);
         panel.repaint();
 
@@ -169,6 +256,7 @@ public abstract class DrawingManagementThread extends Thread {
         scaleFactor = this.getScaleFactor();
         xShift = this.getxShift();
         yShift = this.getyShift();
+        tint = this.getTint();
 
         imgHeight = image.getHeight();
         imgWidth = image.getWidth();
@@ -202,7 +290,7 @@ public abstract class DrawingManagementThread extends Thread {
     }
 
     public ImageProperties getImageProperties() {
-        return new ImageProperties(iterations, scaleFactor, xShift, yShift);
+        return new ImageProperties(iterations, scaleFactor, xShift, yShift, tint);
     }
 
     protected abstract Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds);
@@ -243,6 +331,8 @@ public abstract class DrawingManagementThread extends Thread {
     protected double getyShift() {
         return mainWindow.getShiftY();
     }
+
+    protected float getTint() { return mainWindow.getTint(); }
 
     public final Complex getComplexFromPoint(Point2D p) {
         return getComplexFromPoint(p.getX(), p.getY());
