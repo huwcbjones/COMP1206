@@ -37,7 +37,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     }
 
 
-    public void draw(Complex c) {
+    public void render(Complex c) {
         this.c = c;
         super.render();
     }

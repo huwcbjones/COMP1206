@@ -265,7 +265,7 @@ public class Main extends JFrame {
 
     public void renderJulia(){
         if(selectedPosition == null) return;
-        julia_drawer.draw(selectedPosition);
+        julia_drawer.render(selectedPosition);
     }
     //endregion
 
@@ -316,7 +316,7 @@ public class Main extends JFrame {
             if (mandel_drawer.hasRendered()) {
                 selectedPosition = mandel_drawer.getComplexFromPoint(e.getPoint());
                 updatedSelectedPoint(selectedPosition);
-                julia_drawer.draw(selectedPosition);
+                julia_drawer.render(selectedPosition);
             } else {
                 updatedSelectedPoint();
             }
