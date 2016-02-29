@@ -3,6 +3,7 @@ package mandelbrot.render;
 import mandelbrot.management.DrawingManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
+import utils.ImageProperties;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -16,8 +17,8 @@ import java.awt.geom.Rectangle2D;
  */
 public class JuliaTask extends RenderTask {
     Complex complex;
-    public JuliaTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations, Complex c) {
-        super(t, bounds, maxIterations);
+    public JuliaTask(DrawingManagementThread t, Rectangle2D bounds, ImageProperties properties, Complex c) {
+        super(t, bounds, properties);
         complex = c;
     }
 
@@ -35,8 +36,7 @@ public class JuliaTask extends RenderTask {
         Color colour;
 
         if (currIteration < maxIterations) {
-            double fraction = (currIteration + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
-            colour = Color.getHSBColor(Double.valueOf(fraction).floatValue(), 1, 1);
+            colour = getHSBColour(currIteration, z);
         } else {
             colour = Color.BLACK;
         }

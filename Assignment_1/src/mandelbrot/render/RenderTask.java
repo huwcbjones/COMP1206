@@ -3,12 +3,14 @@ package mandelbrot.render;
 import mandelbrot.management.DrawingManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
+import utils.ImageProperties;
 import utils.ImageSegment;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageProducer;
 import java.util.concurrent.Callable;
 
 /**
@@ -22,12 +24,17 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     protected DrawingManagementThread drawingManagementThread;
     protected Rectangle2D bounds;
     protected int maxIterations;
+    protected ImageProperties properties;
     protected BufferedImage image;
 
-    public RenderTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations) {
+    protected Point2D absolutePoint;
+    protected Point2D relativePoint;
+
+    public RenderTask(DrawingManagementThread t, Rectangle2D bounds, ImageProperties properties) {
         this.drawingManagementThread = t;
         this.bounds = bounds;
-        this.maxIterations = maxIterations;
+        this.maxIterations = properties.getIterations();
+        this.properties = properties;
     }
 
     /**
@@ -37,17 +44,17 @@ public abstract class RenderTask implements Callable<ImageSegment> {
      * @throws Exception if unable to compute a result
      */
     @Override
-    public final ImageSegment call() throws Exception {
+    public ImageSegment call() throws Exception {
         image = new BufferedImage(getImageWidth(), getImageHeight(), BufferedImage.TYPE_INT_RGB);
         ColouredPixel pixel;
         for (int y = 0; y < getImageHeight(); y++) {
             for (int x = 0; x < getImageWidth(); x++) {
-                Point2D absP = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
-                Point2D relP = new Point2D.Double(x, y);
+                absolutePoint = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
+                relativePoint = new Point2D.Double(x, y);
 
-                Complex c = drawingManagementThread.getComplexFromPoint(absP);
+                Complex c = drawingManagementThread.getComplexFromPoint(absolutePoint);
 
-                pixel = doPixelCalculation(relP, c);
+                pixel = doPixelCalculation(relativePoint, c);
                 paintPixel(pixel);
             }
         }
@@ -64,6 +71,14 @@ public abstract class RenderTask implements Callable<ImageSegment> {
         return (int)this.bounds.getWidth();
     }
     protected void adjustImage(){
+    }
+
+    protected Color getHSBColour(int iterations, Complex z){
+        return Color.getHSBColor(getHue(iterations, z), 1, 1);
+    }
+
+    protected float getHue(int iterations, Complex z){
+        return properties.getTint() + (float)(iterations + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
     }
 
     protected abstract ColouredPixel doPixelCalculation(Point2D point, Complex complex);

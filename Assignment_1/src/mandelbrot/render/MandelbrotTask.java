@@ -20,8 +20,8 @@ import java.awt.image.BufferedImage;
 public class MandelbrotTask extends RenderTask {
 
     private boolean halfHeight = true;
-    public MandelbrotTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations) {
-        super(t, bounds, maxIterations);
+    public MandelbrotTask(DrawingManagementThread t, Rectangle2D bounds, ImageProperties properties) {
+        super(t, bounds, properties);
         ImageProperties prop = drawingManagementThread.getImageProperties();
 
         halfHeight = (prop.getxShift() == 0 && prop.getyShift() == 0);
@@ -85,8 +85,7 @@ public class MandelbrotTask extends RenderTask {
         Color colour;
 
         if (currIteration < maxIterations) {
-            double fraction = (currIteration + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
-            colour = Color.getHSBColor(Double.valueOf(fraction).floatValue(), 1, 1);
+            colour = getHSBColour(currIteration, z);
         } else {
             colour = Color.BLACK;
         }
