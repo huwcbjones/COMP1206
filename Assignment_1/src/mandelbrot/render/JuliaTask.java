@@ -35,7 +35,8 @@ public class JuliaTask extends RenderTask {
         Color colour;
 
         if (currIteration < maxIterations) {
-            colour = Color.getHSBColor(currIteration / 100f, 1, 1);
+            double fraction = (currIteration + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
+            colour = Color.getHSBColor(Double.valueOf(fraction).floatValue(), 1, 1);
         } else {
             colour = Color.BLACK;
         }
