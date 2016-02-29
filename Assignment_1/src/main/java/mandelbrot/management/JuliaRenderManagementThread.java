@@ -16,11 +16,11 @@ import java.util.concurrent.Callable;
  * @author Huw Jones
  * @since 28/02/2016
  */
-public class JuliaDrawingManagementThread extends DrawingManagementThread {
+public class JuliaRenderManagementThread extends RenderManagementThread {
 
     protected Complex c;
 
-    public JuliaDrawingManagementThread(Main mainWindow, ImagePanel panel) {
+    public JuliaRenderManagementThread(Main mainWindow, ImagePanel panel) {
         super(mainWindow, panel, "Julia");
     }
 
@@ -39,7 +39,7 @@ public class JuliaDrawingManagementThread extends DrawingManagementThread {
 
     public void draw(Complex c) {
         this.c = c;
-        super.draw();
+        super.render();
     }
 
     @Override
