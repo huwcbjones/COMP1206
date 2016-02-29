@@ -52,7 +52,7 @@ public class JSliderAdvanced extends JSlider {
             lastChangeEvent = e;
         });
 
-        sliderTimer = new Timer(250, e -> {
+        sliderTimer = new Timer(60, e -> {
             fireStateChangedFinish(lastChangeEvent);
             lastChangeEvent = null;
         });
