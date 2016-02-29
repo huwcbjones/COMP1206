@@ -20,9 +20,12 @@ public class ImagePanel extends JPanel {
         this.image = image;
     }
 
-    public void setImage (BufferedImage image) {
+    public void setImage(BufferedImage image){
+        setImage(image, false);
+    }
+    public void setImage (BufferedImage image, boolean repaint) {
         this.image = image;
-        repaint();
+        if (repaint) repaint();
     }
     @Override
     protected void paintComponent(Graphics g){
