@@ -3,6 +3,7 @@ package mandelbrot.render;
 import mandelbrot.management.DrawingManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
+import utils.ImageProperties;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -18,8 +19,12 @@ import java.awt.image.BufferedImage;
  */
 public class MandelbrotTask extends RenderTask {
 
+    private boolean halfHeight = true;
     public MandelbrotTask(DrawingManagementThread t, Rectangle2D bounds, int maxIterations) {
         super(t, bounds, maxIterations);
+        ImageProperties prop = drawingManagementThread.getImageProperties();
+
+        halfHeight = (prop.getxShift() == 0 && prop.getyShift() == 0);
     }
 
     /**
@@ -29,7 +34,11 @@ public class MandelbrotTask extends RenderTask {
      */
     @Override
     protected int getImageHeight() {
-        return super.getImageHeight()/2;
+        if (halfHeight) {
+            return super.getImageHeight() / 2;
+        } else {
+            return super.getImageHeight();
+        }
     }
 
     /**
@@ -37,6 +46,8 @@ public class MandelbrotTask extends RenderTask {
      */
     @Override
     protected void adjustImage(){
+        if (!halfHeight) return;
+
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = newImage.createGraphics();
 
@@ -74,7 +85,8 @@ public class MandelbrotTask extends RenderTask {
         Color colour;
 
         if (currIteration < maxIterations) {
-            colour = Color.getHSBColor(currIteration / 100f, 1, 1);
+            double fraction = (currIteration + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
+            colour = Color.getHSBColor(Double.valueOf(fraction).floatValue(), 1, 1);
         } else {
             colour = Color.BLACK;
         }
