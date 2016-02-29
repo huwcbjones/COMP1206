@@ -56,6 +56,7 @@ public class JSliderAdvanced extends JSlider {
             fireStateChangedFinish(lastChangeEvent);
             lastChangeEvent = null;
         });
+        sliderTimer.setRepeats(false);
     }
 
     /**
