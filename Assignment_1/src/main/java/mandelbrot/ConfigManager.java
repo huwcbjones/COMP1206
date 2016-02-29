@@ -1,7 +1,10 @@
 package mandelbrot;
 
+import mandelbrot.events.AdvancedChangeAdapter;
+import mandelbrot.events.AdvancedChangeListener;
 import mandelbrot.events.ConfigChangeListener;
 import utils.ImageProperties;
+import utils.JSliderAdvanced;
 import utils.SpringUtilities;
 
 import javax.swing.*;
@@ -40,7 +43,7 @@ public class ConfigManager {
     private JSpinner spinner_scale;
 
     private JLabel label_colour;
-    private JSlider slider_colour;
+    private JSliderAdvanced slider_colour;
 
     private JProgressBar progress_render;
     private JButton btn_render;
@@ -117,11 +120,11 @@ public class ConfigManager {
         label_colour = new JLabel("Colour Shift:", JLabel.TRAILING);
         panel_labelled.add(label_colour);
 
-        slider_colour = new JSlider(0, 720, 0);
+        slider_colour = new JSliderAdvanced(0, 720, 0);
         slider_colour.setMajorTickSpacing(45);
         slider_colour.setMinorTickSpacing(1);
         slider_colour.setPaintTicks(true);
-        slider_colour.addChangeListener(new colourShiftChangeHandler());
+        slider_colour.addAdvancedChangeListener(new colourShiftChangeHandler());
         panel_labelled.add(slider_colour);
 
         SpringUtilities.makeCompactGrid(panel_labelled, 5, 2, 6, 6, 6, 6);
@@ -244,15 +247,15 @@ public class ConfigManager {
         }
     }
 
-    private class colourShiftChangeHandler implements ChangeListener {
+    private class colourShiftChangeHandler extends AdvancedChangeAdapter {
 
         /**
-         * Invoked when the target of the listener has changed its state.
+         * Invoked when the target of the listener has finished changing its state.
          *
          * @param e a ChangeEvent object
          */
         @Override
-        public void stateChanged(ChangeEvent e) {
+        public void changeFinish(ChangeEvent e) {
             colourShift = getTint();
             colourShiftChange();
         }
