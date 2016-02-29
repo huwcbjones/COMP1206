@@ -45,8 +45,12 @@ public class ConfigManager {
     private JLabel label_colour;
     private JSliderAdvanced slider_colour;
 
+    private JLabel label_openCL;
+    private JCheckBox check_openCL;
+
     private JProgressBar progress_render;
     private JButton btn_render;
+
 
     // Variables
     double xShift;
@@ -54,6 +58,7 @@ public class ConfigManager {
     double scaleFactor;
     int iterations;
     double colourShift;
+    boolean openCL;
 
     private ArrayList<ConfigChangeListener> listeners;
 
@@ -127,8 +132,15 @@ public class ConfigManager {
         slider_colour.addAdvancedChangeListener(new colourShiftChangeHandler());
         panel_labelled.add(slider_colour);
 
-        SpringUtilities.makeCompactGrid(panel_labelled, 5, 2, 6, 6, 6, 6);
+        // Use OpenCL
+        label_openCL = new JLabel("Use OpenCL:", JLabel.TRAILING);
+        panel_labelled.add(label_openCL);
+        check_openCL = new JCheckBox();
+        check_openCL.setSelected(true);
+        check_openCL.addChangeListener(new openCLChangeHandler());
+        panel_labelled.add(check_openCL);
 
+        SpringUtilities.makeCompactGrid(panel_labelled, 6, 2, 6, 6, 6, 6);
     }
 
     private void initSingletComponents(){
@@ -207,6 +219,8 @@ public class ConfigManager {
         return (float) slider_colour.getValue() / 720f;
     }
 
+    public boolean useOpenCL() { return openCL;}
+
     //endregion
 
     //region Event Handlers
@@ -258,6 +272,18 @@ public class ConfigManager {
         public void changeFinish(ChangeEvent e) {
             colourShift = getTint();
             colourShiftChange();
+        }
+    }
+
+    private class openCLChangeHandler implements ChangeListener {
+        /**
+         * Invoked when the target of the listener has changed its state.
+         *
+         * @param e a ChangeEvent object
+         */
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            openCL = check_openCL.isSelected();
         }
     }
 

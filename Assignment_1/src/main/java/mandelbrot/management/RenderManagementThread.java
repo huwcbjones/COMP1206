@@ -1,6 +1,6 @@
 package mandelbrot.management;
 
-import mandelbrot.Main;
+import mandelbrot.ConfigManager;
 import mandelbrot.events.RenderListener;
 import mandelbrot.render.TintTask;
 import utils.*;
@@ -25,19 +25,20 @@ public abstract class RenderManagementThread extends Thread {
     protected final Object runThread = new Object();
 
     protected final int numberStrips;
-    protected Main mainWindow;
     protected ImagePanel panel;
     private FractalImage image;
     protected boolean hasRendered = false;
+
+    protected final ConfigManager config;
+
+    protected double imgHeight;
+    protected double imgWidth;
 
     protected double xShift;
     protected double yShift;
     protected double scaleFactor;
     protected int iterations;
     protected float tint;
-
-    protected double imgHeight;
-    protected double imgWidth;
 
     protected double xScale;
     protected double yScale;
@@ -50,12 +51,12 @@ public abstract class RenderManagementThread extends Thread {
     /**
      * Creates a Render Management Thread
      *
-     * @param mainWindow Main Window thread is attached to
+     * @param config     Config Manager
      * @param panel      ImagePanel to output render to
      * @param threadName Name of thread
      */
-    public RenderManagementThread(Main mainWindow, ImagePanel panel, String threadName) {
-        this.mainWindow = mainWindow;
+    public RenderManagementThread(ConfigManager config, ImagePanel panel, String threadName) {
+        this.config = config;
         this.panel = panel;
         this.setName("Drawing_Management_Thread_" + threadName);
 
@@ -88,7 +89,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return int max iteration count
      */
     protected int getIterations() {
-        return mainWindow.getIterations();
+        return config.getIterations();
     }
 
     /**
@@ -97,7 +98,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return double scale factor
      */
     protected double getScaleFactor() {
-        return mainWindow.getScaleFactor();
+        return config.getScaleFactor();
     }
 
     /**
@@ -106,7 +107,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return double X axis shift
      */
     protected double getShiftX() {
-        return mainWindow.getShiftX();
+        return config.getShiftX();
     }
 
     /**
@@ -115,7 +116,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return double Y axis shift
      */
     protected double getShiftY() {
-        return mainWindow.getShiftY();
+        return config.getShiftY();
     }
 
     /**
@@ -124,7 +125,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return float image tint
      */
     protected float getTint() {
-        return mainWindow.getTint();
+        return config.getTint();
     }
 
     /**
@@ -219,8 +220,6 @@ public abstract class RenderManagementThread extends Thread {
      * Private method to do the render
      */
     private void doRender() {
-        boolean fullRender = true;
-
         // Check if cache is valid for settings
         if (!checkCacheValidity()) {
             // Recreate cache of rendered images
@@ -229,8 +228,18 @@ public abstract class RenderManagementThread extends Thread {
 
         image = FractalImage.fromBufferedImage(panel.createImage());
         updateImageProperties();
+
+        if (config.useOpenCL()) {
+            return;
+        } else {
+            runCPU_render();
+        }
+    }
+
+    private void runCPU_render() {
+        boolean fullRender = true;
+
         ImageProperties properties = getImageProperties();
-        image.setTint(properties.getTint());
 
         // Check if an image that matches our settings is in the cache
         if (imageIsCached()) {
@@ -257,13 +266,16 @@ public abstract class RenderManagementThread extends Thread {
             if (i == numberStrips - 1) {
                 bounds = new Rectangle2D.Double(start, 0, imgWidth - start, imgHeight);
             } else {
-                bounds = new Rectangle2D.Double(start, 0, stripWidth , imgHeight);
+                bounds = new Rectangle2D.Double(start, 0, stripWidth, imgHeight);
             }
 
-            if(fullRender) {
+            if (fullRender) {
                 task = createTask(properties, bounds);
-            }else{
+            } else if (image.getTint() != properties.getTint()) {
                 task = new TintTask(this, bounds, properties);
+            } else {
+                panel.setImage(image, true);
+                return;
             }
             executorService.submit(task);
         }
@@ -302,14 +314,15 @@ public abstract class RenderManagementThread extends Thread {
 
         System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
         checkCleanCache();
-        renderCache.put(properties, image);
+        image.setTint(properties.getTint());
+        cacheImage(properties, image);
+
 
         panel.setImage(image, true);
 
         fireRenderComplete();
         hasRendered = true;
     }
-
     //endregion
 
     //region Cache Management
@@ -335,6 +348,12 @@ public abstract class RenderManagementThread extends Thread {
         return renderCache.containsKey(imageProperties);
     }
 
+    private boolean cacheImage(ImageProperties properties, FractalImage image){
+        if(renderCache.containsValue(image) || renderCache.containsKey(properties)) return false;
+        renderCache.put(properties, image);
+        return true;
+    }
+
     /**
      * Displays the image that was found in the cache
      *
@@ -342,7 +361,6 @@ public abstract class RenderManagementThread extends Thread {
      */
     private void useCachedImage(ImageProperties properties) {
         System.out.println("Using cached image.");
-        if (renderCache.get(properties) == this.image) return;
         this.image = renderCache.get(properties);
     }
 

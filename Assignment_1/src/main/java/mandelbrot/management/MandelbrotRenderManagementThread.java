@@ -1,5 +1,6 @@
 package mandelbrot.management;
 
+import mandelbrot.ConfigManager;
 import mandelbrot.Main;
 import mandelbrot.render.MandelbrotTask;
 import utils.ImagePanel;
@@ -16,8 +17,8 @@ import java.util.concurrent.Callable;
  * @since 28/02/2016
  */
 public class MandelbrotRenderManagementThread extends RenderManagementThread {
-    public MandelbrotRenderManagementThread(Main mainWindow, ImagePanel panel) {
-        super(mainWindow, panel, "Mandelbrot");
+    public MandelbrotRenderManagementThread(ConfigManager config, ImagePanel panel) {
+        super(config, panel, "Mandelbrot");
     }
 
     @Override

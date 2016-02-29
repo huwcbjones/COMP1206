@@ -81,11 +81,11 @@ public class Main extends JFrame {
 
         this.pack();
 
-        mandel_drawer = new MandelbrotRenderManagementThread(this, imgPanel_image);
+        mandel_drawer = new MandelbrotRenderManagementThread(config, imgPanel_image);
         mandel_drawer.addDrawListenener(new renderCompleteHandler());
         mandel_drawer.start();
 
-        julia_drawer = new JuliaRenderManagementThread(this, imgPanel_julia);
+        julia_drawer = new JuliaRenderManagementThread(config, imgPanel_julia);
         julia_drawer.start();
 
         this.setVisible(true);
@@ -206,29 +206,6 @@ public class Main extends JFrame {
         SpringUtilities.makeCompactGrid(panel_info, 4, 2, 6, 6, 6, 6);
     }
 
-    //endregion
-
-    //region Get Config Options
-
-    public double getShiftX() {
-        return config.getShiftX();
-    }
-
-    public double getShiftY() {
-        return config.getShiftY();
-    }
-
-    public int getIterations() {
-        return config.getIterations();
-    }
-
-    public double getScaleFactor() {
-        return config.getScaleFactor();
-    }
-
-    public float getTint() {
-        return config.getTint();
-    }
     //endregion
 
     //region Update Info Sections

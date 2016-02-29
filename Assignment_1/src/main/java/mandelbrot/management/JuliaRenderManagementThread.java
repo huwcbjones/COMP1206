@@ -1,5 +1,6 @@
 package mandelbrot.management;
 
+import mandelbrot.ConfigManager;
 import mandelbrot.render.JuliaTask;
 import mandelbrot.Main;
 import utils.Complex;
@@ -20,8 +21,8 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
 
     protected Complex c;
 
-    public JuliaRenderManagementThread(Main mainWindow, ImagePanel panel) {
-        super(mainWindow, panel, "Julia");
+    public JuliaRenderManagementThread(ConfigManager config, ImagePanel panel) {
+        super(config, panel, "Julia");
     }
 
     @Override
