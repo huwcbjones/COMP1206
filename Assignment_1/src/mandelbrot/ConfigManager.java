@@ -8,7 +8,6 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -86,7 +85,7 @@ public class ConfigManager {
         label_iterations = new JLabel("Iterations:", JLabel.TRAILING);
         panel_labelled.add(label_iterations);
 
-        spinner_iterations = new JSpinner(new SpinnerNumberModel(75, 1, 1000, 1));
+        spinner_iterations = new JSpinner(new SpinnerNumberModel(75, 1, 10000, 1));
         spinner_iterations.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_iterations);
 
@@ -201,8 +200,8 @@ public class ConfigManager {
         return (double) spinner_scale.getValue();
     }
 
-    public double getColourShift() {
-        return (double) slider_colour.getValue() / 720d;
+    public float getTint () {
+        return (float) slider_colour.getValue() / 720f;
     }
 
     //endregion
@@ -254,7 +253,7 @@ public class ConfigManager {
          */
         @Override
         public void stateChanged(ChangeEvent e) {
-            colourShift = getColourShift();
+            colourShift = getTint();
             colourShiftChange();
         }
     }

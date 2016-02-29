@@ -81,7 +81,7 @@ public class Main extends JFrame {
 
         this.pack();
 
-        mandel_drawer = new MandelbrotManagementThread(Main.this, imgPanel_image);
+        mandel_drawer = new MandelbrotManagementThread(this, imgPanel_image);
         mandel_drawer.addDrawListenener(new renderCompleteHandler());
         mandel_drawer.start();
 
@@ -225,6 +225,10 @@ public class Main extends JFrame {
     public double getScaleFactor() {
         return config.getScaleFactor();
     }
+
+    public float getTint() {
+        return config.getTint();
+    }
     //endregion
 
     //region Update Info Sections
@@ -260,8 +264,17 @@ public class Main extends JFrame {
     }
 
     public void renderJulia(){
-        if(selectedPosition == null);
+        if(selectedPosition == null) return;
         julia_drawer.draw(selectedPosition);
+    }
+
+    public void tintMandelbrot(){
+        mandel_drawer.tintImage();
+    }
+
+    public void tintJulia(){
+        if(selectedPosition == null) return;
+        julia_drawer.tintImage();
     }
 
     //endregion
@@ -292,8 +305,8 @@ public class Main extends JFrame {
 
         @Override
         public void colourShiftChange(double shift) {
-            imgPanel_image.tintImage(shift);
-            imgPanel_julia.tintImage(shift);
+            tintMandelbrot();
+            tintJulia();
         }
     }
 
