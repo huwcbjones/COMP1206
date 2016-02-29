@@ -15,8 +15,8 @@ import java.util.concurrent.Callable;
  * @author Huw Jones
  * @since 28/02/2016
  */
-public class MandelbrotManagementThread extends RenderManagementThread {
-    public MandelbrotManagementThread(Main mainWindow, ImagePanel panel) {
+public class MandelbrotRenderManagementThread extends RenderManagementThread {
+    public MandelbrotRenderManagementThread(Main mainWindow, ImagePanel panel) {
         super(mainWindow, panel, "Mandelbrot");
     }
 
