@@ -85,7 +85,7 @@ public class ConfigManager {
         label_iterations = new JLabel("Iterations:", JLabel.TRAILING);
         panel_labelled.add(label_iterations);
 
-        spinner_iterations = new JSpinner(new SpinnerNumberModel(75, 1, 10000, 1));
+        spinner_iterations = new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 1));
         spinner_iterations.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_iterations);
 
@@ -93,7 +93,7 @@ public class ConfigManager {
         label_scale = new JLabel("Scale:", JLabel.TRAILING);
         panel_labelled.add(label_scale);
 
-        spinner_scale = new JSpinner(new SpinnerNumberModel(1, 0, 10000, 0.1d));
+        spinner_scale = new JSpinner(new SpinnerNumberModel(1, 0, Integer.MAX_VALUE, 0.1d));
         spinner_scale.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_scale);
 
@@ -101,7 +101,7 @@ public class ConfigManager {
         label_translateX = new JLabel("X Shift:", JLabel.TRAILING);
         panel_labelled.add(label_translateX);
 
-        spinner_shiftX = new JSpinner(new SpinnerNumberModel(0, -100, 100, 0.1));
+        spinner_shiftX = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.1));
         spinner_shiftX.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_shiftX);
 
@@ -109,7 +109,7 @@ public class ConfigManager {
         label_translateY = new JLabel("Y Shift:", JLabel.TRAILING);
         panel_labelled.add(label_translateY);
 
-        spinner_shiftY = new JSpinner(new SpinnerNumberModel(0, -100, 100, 0.1));
+        spinner_shiftY = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.1));
         spinner_shiftY.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_shiftY);
 
