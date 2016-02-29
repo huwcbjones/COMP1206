@@ -3,7 +3,7 @@ package mandelbrot;
 
 import mandelbrot.events.ConfigChangeAdapter;
 import mandelbrot.events.RenderListener;
-import mandelbrot.management.JuliaDrawingManagementThread;
+import mandelbrot.management.JuliaRenderManagementThread;
 import mandelbrot.management.MandelbrotManagementThread;
 import utils.Complex;
 import utils.ImagePanel;
@@ -37,7 +37,7 @@ public class Main extends JFrame {
     //endregion
 
     private final MandelbrotManagementThread mandel_drawer;
-    private final JuliaDrawingManagementThread julia_drawer;
+    private final JuliaRenderManagementThread julia_drawer;
 
     // Julia Set
     private ImagePanel imgPanel_julia;
@@ -85,7 +85,7 @@ public class Main extends JFrame {
         mandel_drawer.addDrawListenener(new renderCompleteHandler());
         mandel_drawer.start();
 
-        julia_drawer = new JuliaDrawingManagementThread(this, imgPanel_julia);
+        julia_drawer = new JuliaRenderManagementThread(this, imgPanel_julia);
         julia_drawer.start();
 
         this.setVisible(true);
@@ -260,7 +260,7 @@ public class Main extends JFrame {
 
     //region Render Handlers
     public void renderMandelbrot(){
-        mandel_drawer.draw();
+        mandel_drawer.render();
     }
 
     public void renderJulia(){
@@ -269,13 +269,13 @@ public class Main extends JFrame {
     }
 
     public void tintMandelbrot(){
-        if(!mandel_drawer.hasDrawn()) return;
-        mandel_drawer.tintImage();
+        if(!mandel_drawer.hasRendered()) return;
+        mandel_drawer.tint();
     }
 
     public void tintJulia(){
         if(selectedPosition == null) return;
-        julia_drawer.tintImage();
+        julia_drawer.tint();
     }
 
     //endregion
@@ -324,7 +324,7 @@ public class Main extends JFrame {
     private class mouseClickPositionHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (mandel_drawer.hasDrawn()) {
+            if (mandel_drawer.hasRendered()) {
                 selectedPosition = mandel_drawer.getComplexFromPoint(e.getPoint());
                 updatedSelectedPoint(selectedPosition);
                 julia_drawer.draw(selectedPosition);
@@ -342,7 +342,7 @@ public class Main extends JFrame {
         @Override
         public void mouseMoved(MouseEvent e) {
             super.mouseMoved(e);
-            if (mandel_drawer.hasDrawn()) {
+            if (mandel_drawer.hasRendered()) {
                 updatedCursorPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
             } else {
                 updatedCursorPoint();
