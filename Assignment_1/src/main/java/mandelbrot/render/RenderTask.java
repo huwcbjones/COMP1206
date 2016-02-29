@@ -1,6 +1,6 @@
 package mandelbrot.render;
 
-import mandelbrot.management.DrawingManagementThread;
+import mandelbrot.management.RenderManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
 import utils.ImageProperties;
@@ -10,7 +10,6 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageProducer;
 import java.util.concurrent.Callable;
 
 /**
@@ -21,7 +20,7 @@ import java.util.concurrent.Callable;
  */
 public abstract class RenderTask implements Callable<ImageSegment> {
 
-    protected DrawingManagementThread drawingManagementThread;
+    protected RenderManagementThread renderManagementThread;
     protected Rectangle2D bounds;
     protected int maxIterations;
     protected ImageProperties properties;
@@ -30,8 +29,8 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     protected Point2D absolutePoint;
     protected Point2D relativePoint;
 
-    public RenderTask(DrawingManagementThread t, Rectangle2D bounds, ImageProperties properties) {
-        this.drawingManagementThread = t;
+    public RenderTask(RenderManagementThread t, Rectangle2D bounds, ImageProperties properties) {
+        this.renderManagementThread = t;
         this.bounds = bounds;
         this.maxIterations = properties.getIterations();
         this.properties = properties;
@@ -52,7 +51,7 @@ public abstract class RenderTask implements Callable<ImageSegment> {
                 absolutePoint = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
                 relativePoint = new Point2D.Double(x, y);
 
-                Complex c = drawingManagementThread.getComplexFromPoint(absolutePoint);
+                Complex c = renderManagementThread.getComplexFromPoint(absolutePoint);
 
                 pixel = doPixelCalculation(relativePoint, c);
                 paintPixel(pixel);

@@ -1,6 +1,6 @@
 package mandelbrot.render;
 
-import mandelbrot.management.DrawingManagementThread;
+import mandelbrot.management.RenderManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
 import utils.ImageProperties;
@@ -20,9 +20,9 @@ import java.awt.image.BufferedImage;
 public class MandelbrotTask extends RenderTask {
 
     private boolean halfHeight = true;
-    public MandelbrotTask(DrawingManagementThread t, Rectangle2D bounds, ImageProperties properties) {
+    public MandelbrotTask(RenderManagementThread t, Rectangle2D bounds, ImageProperties properties) {
         super(t, bounds, properties);
-        ImageProperties prop = drawingManagementThread.getImageProperties();
+        ImageProperties prop = renderManagementThread.getImageProperties();
 
         halfHeight = (prop.getxShift() == 0 && prop.getyShift() == 0);
     }

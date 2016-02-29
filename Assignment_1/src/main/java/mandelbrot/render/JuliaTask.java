@@ -1,6 +1,6 @@
 package mandelbrot.render;
 
-import mandelbrot.management.DrawingManagementThread;
+import mandelbrot.management.RenderManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
 import utils.ImageProperties;
@@ -17,7 +17,7 @@ import java.awt.geom.Rectangle2D;
  */
 public class JuliaTask extends RenderTask {
     Complex complex;
-    public JuliaTask(DrawingManagementThread t, Rectangle2D bounds, ImageProperties properties, Complex c) {
+    public JuliaTask(RenderManagementThread t, Rectangle2D bounds, ImageProperties properties, Complex c) {
         super(t, bounds, properties);
         complex = c;
     }
