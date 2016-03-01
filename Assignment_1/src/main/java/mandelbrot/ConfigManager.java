@@ -11,6 +11,7 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -48,7 +49,6 @@ public class ConfigManager {
     private JLabel label_openCL;
     private JCheckBox check_openCL;
 
-    private JProgressBar progress_render;
     private JButton btn_render;
 
 
@@ -83,7 +83,7 @@ public class ConfigManager {
         panel_config.add(panel_labelled);
         initLabelledComponents();
 
-        panel_singlets = new JPanel(new SpringLayout());
+        panel_singlets = new JPanel(new GridBagLayout());
         panel_config.add(panel_singlets);
         initSingletComponents();
     }
@@ -145,14 +145,14 @@ public class ConfigManager {
     }
 
     private void initSingletComponents(){
-        progress_render = new JProgressBar(0);
-        progress_render.setStringPainted(false);
-        panel_singlets.add(progress_render);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(6, 6, 6, 6);
+        constraints.weightx = 1;
 
         btn_render = new JButton("Render");
         btn_render.addActionListener(new renderHandler());
-        panel_singlets.add(btn_render);
-        SpringUtilities.makeCompactGrid(panel_singlets, 2, 1, 6, 6, 6, 6);
+        panel_singlets.add(btn_render, constraints);
     }
     //endregion
 
