@@ -58,7 +58,8 @@ public abstract class RenderManagementThread extends Thread {
 
     CLContext context;
     CLQueue queue;
-    CLProgram program;
+    CLProgram oclProgram_mandelbrot;
+    CLProgram oclProgram_hueToRGB;
     private boolean openCL_support = false;
 
     /**
@@ -89,11 +90,14 @@ public abstract class RenderManagementThread extends Thread {
 
     public void initOpenCL() {
         try {
-            InputStream input = this.getClass().getResourceAsStream("/mandelbrot/mandelbrot.cl");
-            String source = IOUtils.readText(input);
+            InputStream mandelBrotIS = this.getClass().getResourceAsStream("/mandelbrot/mandelbrot.cl");
+            InputStream hueToRGBIS = this.getClass().getResourceAsStream("/mandelbrot/hueToRGB.cl");
+            String mandelSource = IOUtils.readText(mandelBrotIS);
+            String hueSource = IOUtils.readText(hueToRGBIS);
             context = createBestContext();
             queue = context.createDefaultQueue();
-            program = context.createProgram(source);
+            oclProgram_mandelbrot = context.createProgram(mandelSource);
+            oclProgram_hueToRGB = context.createProgram(hueSource);
             openCL_support = true;
 
             CLPlatform plat = context.getPlatform();
@@ -295,7 +299,7 @@ public abstract class RenderManagementThread extends Thread {
     }
 
     private void runOpenCL_render() throws CLException.OutOfResources {
-        Pointer<Float> results = Pointer.allocateFloats((int) imgHeight * (int) imgWidth);
+        Pointer<Integer> results = Pointer.allocateInts((int) imgHeight * (int) imgWidth);
 
         long startTime = System.nanoTime();
         results = buildAndExecuteKernel(iterations, config.getEscapeRadiusSquared(), new Dimension((int) imgWidth, (int) imgHeight),
@@ -306,7 +310,7 @@ public abstract class RenderManagementThread extends Thread {
         long time = System.nanoTime() - startTime;
         System.out.printf("Generation took: %.5f\n", time / 1000000000d);
 
-        int black = Color.BLACK.getRGB();
+        /*int black = Color.BLACK.getRGB();
         float[] output = results.getFloats((int) imgHeight * (int) imgWidth);
         int[] colours = new int[output.length];
         for (int i = output.length; i-- != 0;) {
@@ -315,20 +319,21 @@ public abstract class RenderManagementThread extends Thread {
             } else {
                 colours[i] = Color.HSBtoRGB(output[i], 1, 1);
             }
-        }
-        image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, colours, 0, (int)imgWidth);
+        }*/
+        image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, results.getInts(), 0, (int)imgWidth);
         panel.setImage(image, true);
     }
 
-    private Pointer<Float> buildAndExecuteKernel(int maxIterations, int escapeRadiusSquared, Dimension dimensions,
+    private Pointer<Integer> buildAndExecuteKernel(int maxIterations, int escapeRadiusSquared, Dimension dimensions,
                                        float xScale, float yScale,
                                        float xShift, float yShift,
                                        float scaleFactor,
-                                       Pointer<Float> results
+                                       Pointer<Integer> results
     ) {
+        Pointer<Float> huePointer = Pointer.allocateFloats((int) imgHeight * (int) imgWidth);
 
-        CLBuffer<Float> buffer = context.createFloatBuffer(CLMem.Usage.Output, results, false);
-        CLKernel kernel = program.createKernel(
+        CLBuffer<Float> hueBuffer = context.createFloatBuffer(CLMem.Usage.InputOutput, huePointer, false);
+        CLKernel kernel = oclProgram_mandelbrot.createKernel(
                 "mandelbrot",
                 maxIterations,
                 escapeRadiusSquared,
@@ -336,14 +341,33 @@ public abstract class RenderManagementThread extends Thread {
                 new float[] {xScale, yScale},
                 new float[] {xShift, yShift},
                 scaleFactor,
-                buffer
+                hueBuffer
         );
 
         kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
 
         queue.finish();
 
-        return buffer.read(queue);
+        CLBuffer<Integer> resultsBuffer = context.createIntBuffer(CLMem.Usage.Output, results, false);
+
+        float hueAdj = config.getTint();
+        float huePrev = image.getTint();
+
+        CLKernel hueKernel = oclProgram_hueToRGB.createKernel(
+                "hueToRGB",
+                hueBuffer,
+                (int)imgWidth,
+                1.0f,
+                1.0f,
+                hueAdj,
+                huePrev,
+                resultsBuffer
+        );
+
+        hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
+        queue.finish();
+
+        return resultsBuffer.read(queue);
     }
 
     /**
