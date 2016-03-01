@@ -1,17 +1,25 @@
 package mandelbrot.management;
 
+import static com.nativelibs4java.opencl.JavaCL.createBestContext;
+
+import com.nativelibs4java.opencl.*;
 import mandelbrot.ConfigManager;
+import mandelbrot.Main;
 import mandelbrot.events.RenderListener;
 import mandelbrot.render.TintTask;
+import org.bridj.Pointer;
 import utils.*;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 
+import com.nativelibs4java.util.IOUtils;
 /**
  * Manages and delegates drawing/calculation threads
  *
@@ -230,10 +238,71 @@ public abstract class RenderManagementThread extends Thread {
         updateImageProperties();
 
         if (config.useOpenCL()) {
-            return;
+            try {
+                runOpenCL_render();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (CLException.OutOfResources e){
+                e.printStackTrace();
+            } catch (CLBuildException e){
+                e.printStackTrace();
+            }
         } else {
             runCPU_render();
         }
+    }
+
+    private void runOpenCL_render() throws IOException, CLBuildException, CLException.OutOfResources {
+        CLContext context = createBestContext();
+        CLQueue queue = context.createDefaultQueue();
+
+        int panelResolution = (int)(imgHeight * imgWidth);
+        Complex range = getComplexFromPoint(imgWidth, imgHeight);
+        range.subtract(getComplexFromPoint(0, 0));
+
+        int virtualResolution = (int)range.modulus();
+        InputStream input = this.getClass().getResourceAsStream("/mandelbrot/mandelbrot.cl");
+
+        String source = IOUtils.readText(input);
+        Pointer<Integer> results = Pointer.allocateInts(panelResolution);
+
+        long time = buildAndExecuteKernel(queue, iterations, config.getEscapeRadiusSquared(), new Dimension((int)imgWidth, (int)imgHeight), virtualResolution,
+                (float)xScale, (float)yScale,
+                (float)xShift, (float)yShift,
+                (float)scaleFactor, results, source
+                );
+        System.out.printf("Generation took: %.5f", time / 1000000000d);
+    }
+
+    private static long buildAndExecuteKernel(CLQueue queue, int maxIterations, int escapeRadiusSquared, Dimension dimensions, int virtualResolution,
+                                              float xScale, float yScale,
+                                              float xShift, float yShift,
+                                              float scaleFactor,
+                                              Pointer<Integer> results, String source
+                                              ) throws CLBuildException, IOException {
+        CLContext context = queue.getContext();
+        long start = System.nanoTime();
+
+        CLProgram program = context.createProgram(source);
+
+        CLKernel kernel = program.createKernel(
+                "mandelbrot",
+                maxIterations,
+                escapeRadiusSquared,
+                new float[] {(float)dimensions.width, (float)dimensions.height},
+                new float[] {xScale, yScale},
+                new float[] {xShift, yShift},
+                scaleFactor,
+                context.createBuffer(CLMem.Usage.Output, results, false)
+        );
+
+        int panelResolution = dimensions.height * dimensions.width;
+
+        kernel.enqueueNDRange(queue, new int[] {panelResolution, virtualResolution}, new int[]{1,1});
+
+        queue.finish();
+
+        return System.nanoTime() - start;
     }
 
     private void runCPU_render() {
