@@ -1,7 +1,6 @@
 package mandelbrot.management;
 
 import com.nativelibs4java.opencl.*;
-import com.nativelibs4java.util.IOUtils;
 import mandelbrot.ConfigManager;
 import mandelbrot.events.RenderListener;
 import mandelbrot.render.TintTask;
@@ -11,15 +10,9 @@ import utils.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.concurrent.*;
-
-import static com.nativelibs4java.opencl.JavaCL.createBestContext;
 /**
  * Manages and delegates drawing/calculation threads
  *
@@ -56,11 +49,8 @@ public abstract class RenderManagementThread extends Thread {
 
     protected LinkedHashMap<ImageProperties, FractalImage> renderCache;
 
-    CLContext context;
-    CLQueue queue;
-    CLProgram oclProgram_mandelbrot;
-    CLProgram oclProgram_hueToRGB;
-    private boolean openCL_support = false;
+    protected boolean isOpenClAvailable;
+    OpenClRenderThread openClRenderThread;
 
     /**
      * Creates a Render Management Thread
@@ -69,8 +59,11 @@ public abstract class RenderManagementThread extends Thread {
      * @param panel      ImagePanel to output render to
      * @param threadName Name of thread
      */
-    public RenderManagementThread(ConfigManager config, ImagePanel panel, String threadName) {
+    public RenderManagementThread(ConfigManager config, OpenClRenderThread openCL, ImagePanel panel, String threadName) {
         this.config = config;
+        this.openClRenderThread = openCL;
+        isOpenClAvailable = openCL.isAvailable();
+        ocl_loadPrograms();
         this.panel = panel;
         this.setName("Drawing_Management_Thread_" + threadName);
 
@@ -84,47 +77,14 @@ public abstract class RenderManagementThread extends Thread {
         // Get an executor service for the amount of cores we have
         ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
         this.executorService = new ExecutorCompletionService<>(executorService);
-
-        initOpenCL();
     }
 
-    public void initOpenCL() {
-        try {
-            InputStream mandelBrotIS = this.getClass().getResourceAsStream("/mandelbrot/mandelbrot.cl");
-            InputStream hueToRGBIS = this.getClass().getResourceAsStream("/mandelbrot/hueToRGB.cl");
-            String mandelSource = IOUtils.readText(mandelBrotIS);
-            String hueSource = IOUtils.readText(hueToRGBIS);
-            context = createBestContext();
-            queue = context.createDefaultQueue();
-            oclProgram_mandelbrot = context.createProgram(mandelSource);
-            oclProgram_hueToRGB = context.createProgram(hueSource);
-            openCL_support = true;
-
-            CLPlatform plat = context.getPlatform();
-            System.out.println("********************************************************************************");
-            System.out.println("* OPEN CL SUPPORT                                                              *");
-            System.out.println("********************************************************************************");
-            System.out.println("* Vendor: " + plat.getBestDevice().getVendor());
-            System.out.println("* Name: " + plat.getName());
-            System.out.println("* Device: " + plat.getBestDevice().getName());
-            System.out.println("* Max Clock: " + plat.getBestDevice().getMaxClockFrequency() + "MHz");
-            System.out.println("* Version: " + plat.getBestDevice().getVersion());
-            System.out.println("* Driver Version: " + plat.getBestDevice().getDriverVersion());
-            System.out.println("* OpenCL Version: " + plat.getBestDevice().getOpenCLCVersion());
-            System.out.println("* Compute Units: " + plat.getBestDevice().getMaxComputeUnits());
-            System.out.println("* Samplers: " + plat.getBestDevice().getMaxSamplers());
-            System.out.println("* Work Group: " + plat.getBestDevice().getMaxWorkGroupSize());
-            System.out.println("* Address Bits: " + plat.getBestDevice().getAddressBits());
-            System.out.println("* GPU Memory: " + (plat.getBestDevice().getGlobalMemSize() / 1024 / 1024) + "MB");
-            System.out.println("* Profile: " + plat.getBestDevice().getProfile());
-            System.out.print("* Extensions: \n");
-            Iterator it = new ArrayList<>(Arrays.asList(plat.getExtensions())).iterator();
-            while(it.hasNext()){
-                System.out.print("*\t- " +it.next() + "\n");
-            }
-            System.out.println("********************************************************************************");
-        } catch (IOException ex) {
-            System.err.println("Failed to load 'mandelbrot.cl', OpenCL support unavailable.");
+    /**
+     * Loads programs into the OpenCL context
+     */
+    protected void ocl_loadPrograms() {
+        if (!openClRenderThread.loadProgram("hueToRGB", this.getClass().getResourceAsStream("/mandelbrot/hueToRGB.cl"))) {
+            this.isOpenClAvailable = false;
         }
     }
 
@@ -282,77 +242,94 @@ public abstract class RenderManagementThread extends Thread {
             renderCache = new LinkedHashMap<>();
         }
 
+        //TODO: Check cache here, if cached image exists, display it, otherwise check for a cached image that isn't coloured right, and recolour it
+
         image = FractalImage.fromBufferedImage(panel.createImage());
         updateImageProperties();
-        System.out.println("================================================================================");
+
         long startTime = System.nanoTime();
-        if (config.useOpenCL()) {
+        if (config.useOpenCL() && isOpenClAvailable) {
             try {
                 runOpenCL_render();
-            } catch (CLException.OutOfResources e){
+            } catch (CLException e){
                 e.printStackTrace();
-                runCPU_render();
             }
         } else {
             runCPU_render();
         }
-        this.hasRendered = true;
-        fireRenderComplete();
         long endTime = System.nanoTime();
         System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
-
-        panel.setImage(image, true);
     }
 
-    private void runOpenCL_render() throws CLException.OutOfResources {
-        Pointer<Integer> results = Pointer.allocateInts((int) imgHeight * (int) imgWidth);
+    private void runOpenCL_render() throws CLException {
+        CLQueue queue = openClRenderThread.getQueue();
+        Dimension dimensions = new Dimension((int) imgWidth, (int) imgHeight);
 
-        results = buildAndExecuteKernel(iterations, config.getEscapeRadiusSquared(), new Dimension((int) imgWidth, (int) imgHeight),
-                (float)xScale, (float)yScale,
-                (float)xShift, (float)yShift,
-                (float) scaleFactor, results
-                );
+        // Create pointers to results
+        Pointer<Float> hueResult = Pointer.allocateFloats(dimensions.height * dimensions.width);
+        Pointer<Integer> results = Pointer.allocateInts(dimensions.height * dimensions.width);
+
+        // Create buffers for results
+        CLBuffer<Float> hueBuffer = openClRenderThread.getContext().createFloatBuffer(CLMem.Usage.InputOutput, hueResult, false);
+        CLBuffer<Integer> resultsBuffer = openClRenderThread.getContext().createIntBuffer(CLMem.Usage.Input, results, false);
+
         long startTime = System.nanoTime();
-        image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, results.getInts(), 0, (int)imgWidth);
-        System.out.printf("Painting image took: %.5f\n", (System.nanoTime() - startTime)/1000000000d);
-    }
 
-    private Pointer<Integer> buildAndExecuteKernel(int maxIterations, int escapeRadiusSquared, Dimension dimensions,
-                                       float xScale, float yScale,
-                                       float xShift, float yShift,
-                                       float scaleFactor,
-                                       Pointer<Integer> results
-    ) {
-        long startTime, time;
+        // Get Render kernel, queue it, and wait for it to finish
+        CLKernel kernel = createOpenCLKernel(dimensions, hueBuffer);
+
+        if (kernel == null) {
+            this.isOpenClAvailable = false;
+            render();
+            return;
+        }
+        kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
+        queue.finish();
+
+        long time = System.nanoTime() - startTime;
+        System.out.printf("Generation took: %.5f\n", time / 1000000000d);
+
         startTime = System.nanoTime();
 
-        Pointer<Float> huePointer = Pointer.allocateFloats((int) imgHeight * (int) imgWidth);
-        CLBuffer<Float> hueBuffer = context.createFloatBuffer(CLMem.Usage.InputOutput, huePointer, false);
-        CLKernel kernel = oclProgram_mandelbrot.createKernel(
-                "mandelbrot",
-                maxIterations,
-                escapeRadiusSquared,
-                new float[] {(float)dimensions.width, (float)dimensions.height},
-                new float[] {xScale, yScale},
-                new float[] {xShift, yShift},
-                scaleFactor,
-                hueBuffer
+        // Create hue to RGB kernel
+        CLKernel hueKernel = openClRenderThread.getProgram("hueToRGB").createKernel(
+                "hueToRGB",
+                hueBuffer,
+                dimensions.width,
+                1.0f,
+                1.0f,
+                getImageProperties().getTint(),
+                image.getTint(),
+                resultsBuffer
         );
-
-        kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
-
+        // Queue it, and wait for it to finish
+        hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
         queue.finish();
 
         time = System.nanoTime() - startTime;
-        System.out.printf("Calculations took: %.5f\n", time / 1000000000d);
+        System.out.printf("Colouring took: %.5f\n", time / 1000000000d);
 
-        startTime = System.nanoTime();
+        // Paint the colours onto the image
+        image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, results.getInts(), 0, (int)imgWidth);
+        panel.setImage(image, true);
+    }
+
+    /**
+     * Creates the CL Kernel for execution
+     *
+     * @param dimension    Dimensions of image to render
+     * @param results Buffer to put results into
+     * @return CLKernel to execute
+     */
+    protected abstract CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results);
+
+    /*private void recolourImage(int[] pixels) {
         CLBuffer<Integer> resultsBuffer = context.createIntBuffer(CLMem.Usage.Output, results, false);
 
         float hueAdj = config.getTint();
         float huePrev = image.getTint();
 
-        CLKernel hueKernel = oclProgram_hueToRGB.createKernel(
+        CLKernel hueKernel = openClRenderThread.getProgram("hueToRGB").createKernel(
                 "hueToRGB",
                 hueBuffer,
                 (int)imgWidth,
@@ -366,11 +343,8 @@ public abstract class RenderManagementThread extends Thread {
         hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
         queue.finish();
 
-        time = System.nanoTime() - startTime;
-        System.out.printf("Colouring took: %.5f\n", time / 1000000000d);
-
         return resultsBuffer.read(queue);
-    }
+    }*/
 
     /**
      * Runs the render on the CPU
@@ -390,7 +364,6 @@ public abstract class RenderManagementThread extends Thread {
         Rectangle2D bounds;
         int start;
 
-        long startTime = System.nanoTime();
         Callable<ImageSegment> task;
         // Queue up strips to be calculated
         for (int i = 0; i < numberStrips; i++) {
@@ -448,13 +421,14 @@ public abstract class RenderManagementThread extends Thread {
                 break;
             }
         }
-        long time = System.nanoTime() - startTime;
-        System.out.printf("Generation took: %.5f\n", time / 1000000000d);
         g.dispose();
 
         checkCleanCache();
         image.setTint(properties.getTint());
         cacheImage(properties, image);
+
+
+        panel.setImage(image, true);
 
         fireRenderComplete();
         hasRendered = true;
