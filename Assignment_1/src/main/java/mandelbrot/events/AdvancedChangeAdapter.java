@@ -17,7 +17,6 @@ public class AdvancedChangeAdapter implements AdvancedChangeListener {
      */
     @Override
     public void changeStarted(ChangeEvent e) {
-
     }
 
     /**
@@ -27,7 +26,6 @@ public class AdvancedChangeAdapter implements AdvancedChangeListener {
      */
     @Override
     public void changeFinish(ChangeEvent e) {
-
     }
 
     /**
@@ -37,6 +35,5 @@ public class AdvancedChangeAdapter implements AdvancedChangeListener {
      */
     @Override
     public void stateChanged(ChangeEvent e) {
-
     }
 }
