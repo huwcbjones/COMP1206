@@ -76,6 +76,7 @@ public class Main extends JFrame {
         } catch (Exception ex) {
 
         }
+
         openClRenderThread = new OpenClRenderThread();
 
         config = new ConfigManager(this);
@@ -105,9 +106,8 @@ public class Main extends JFrame {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
 
-        SpringLayout layout = new SpringLayout();
         panel_display = new JPanel();
-        panel_display.setLayout(layout);
+        panel_display.setLayout(new BorderLayout());
         panel_display.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Mandelbrot Set"));
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -119,11 +119,7 @@ public class Main extends JFrame {
 
         imgPanel_image = new ImagePanel();
         imgPanel_image.setBackground(Color.WHITE);
-        panel_display.add(imgPanel_image);
-        layout.putConstraint(SpringLayout.NORTH, imgPanel_image, 5, SpringLayout.NORTH, panel_display);
-        layout.putConstraint(SpringLayout.EAST, imgPanel_image, -5, SpringLayout.EAST, panel_display);
-        layout.putConstraint(SpringLayout.SOUTH, imgPanel_image, -5, SpringLayout.SOUTH, panel_display);
-        layout.putConstraint(SpringLayout.WEST, imgPanel_image, 5, SpringLayout.WEST, panel_display);
+        panel_display.add(imgPanel_image, BorderLayout.CENTER);
         imgPanel_image.addMouseListener(new mouseClickPositionHandler());
         imgPanel_image.addMouseMotionListener(new mousePositionHandler());
 
@@ -158,8 +154,10 @@ public class Main extends JFrame {
         c.gridy = 2;
         pane.add(panel_bookmarks, c);
 
-        SpringLayout layout = new SpringLayout();
-        panel_julia = new JPanel(layout);
+        BorderLayout juliaLayout = new BorderLayout();
+        juliaLayout.setHgap(3);
+        juliaLayout.setVgap(3);
+        panel_julia = new JPanel(juliaLayout);
         panel_julia.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Julia Set"));
         c.gridy = 3;
         pane.add(panel_julia, c);
@@ -167,11 +165,7 @@ public class Main extends JFrame {
 
         imgPanel_julia = new ImagePanel();
         imgPanel_julia.setBackground(Color.WHITE);
-        panel_julia.add(imgPanel_julia);
-        layout.putConstraint(SpringLayout.NORTH, imgPanel_julia, 5, SpringLayout.NORTH, panel_julia);
-        layout.putConstraint(SpringLayout.EAST, imgPanel_julia, -5, SpringLayout.EAST, panel_julia);
-        layout.putConstraint(SpringLayout.SOUTH, imgPanel_julia, -5, SpringLayout.SOUTH, panel_julia);
-        layout.putConstraint(SpringLayout.WEST, imgPanel_julia, 5, SpringLayout.WEST, panel_julia);
+        panel_julia.add(imgPanel_julia, BorderLayout.CENTER);
     }
 
     private void initInfoPanel() {
