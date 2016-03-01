@@ -58,13 +58,20 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results) {
 
         CLProgram mandelbrot = openClRenderThread.getProgram("mandelbrot");
+        int iterations = this.iterations;
+        int escapeRadius = config.getEscapeRadiusSquared();
+        float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
+        float[] scales = new float[]{(float) xScale, (float) yScale};
+        float[] shifts = new float[]{(float) xShift, (float) yShift};
+        float scaleFactor = (float)this.scaleFactor;
+
         return mandelbrot.createKernel(
                 "mandelbrot",
                 iterations,
-                config.getEscapeRadiusSquared(),
-                new float[]{(float) dimension.width, (float) dimension.height},
-                new float[]{(float) xScale, (float) yScale},
-                new float[]{(float) xShift, (float) yShift},
+                escapeRadius,
+                dimensions,
+                scales,
+                shifts,
                 scaleFactor,
                 results
         );
