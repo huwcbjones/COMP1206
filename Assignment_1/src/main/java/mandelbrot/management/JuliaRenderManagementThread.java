@@ -2,6 +2,7 @@ package mandelbrot.management;
 
 import com.nativelibs4java.opencl.CLBuffer;
 import com.nativelibs4java.opencl.CLKernel;
+import com.nativelibs4java.opencl.CLProgram;
 import mandelbrot.ConfigManager;
 import mandelbrot.render.JuliaTask;
 import mandelbrot.Main;
@@ -49,7 +50,26 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
      */
     @Override
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results) {
-        return null;
+        CLProgram julia = openClRenderThread.getProgram("julia");
+        int iterations = this.iterations;
+        int escapeRadius = config.getEscapeRadiusSquared();
+        float[] complex = new float[]{(float) c.getReal(), (float) c.getImaginary()};
+        float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
+        float[] scales = new float[]{(float) xScale, (float) yScale};
+        float[] shifts = new float[]{(float) xShift, (float) yShift};
+        float scaleFactor = (float)this.scaleFactor;
+
+        return julia.createKernel(
+                "julia",
+                iterations,
+                escapeRadius,
+                complex,
+                dimensions,
+                scales,
+                shifts,
+                scaleFactor,
+                results
+        );
     }
 
 
@@ -66,6 +86,17 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     @Override
     protected double getShiftY() {
         return 0;
+    }
+
+    /**
+     * Loads programs into the OpenCL context
+     */
+    @Override
+    protected void ocl_loadPrograms() {
+        super.ocl_loadPrograms();
+        if (!openClRenderThread.loadProgram("julia", this.getClass().getResourceAsStream("/mandelbrot/julia.cl"))) {
+            this.isOpenClAvailable = false;
+        }
     }
 
     @Override
