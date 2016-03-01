@@ -14,6 +14,7 @@ import javax.swing.event.EventListenerList;
  */
 public class JSliderAdvanced extends JSlider {
 
+    private static int TIMEOUT = 20;
     private Timer sliderTimer;
     private ChangeEvent lastChangeEvent;
 
@@ -52,7 +53,7 @@ public class JSliderAdvanced extends JSlider {
             lastChangeEvent = e;
         });
 
-        sliderTimer = new Timer(60, e -> {
+        sliderTimer = new Timer(TIMEOUT, e -> {
             fireStateChangedFinish(lastChangeEvent);
             lastChangeEvent = null;
         });
