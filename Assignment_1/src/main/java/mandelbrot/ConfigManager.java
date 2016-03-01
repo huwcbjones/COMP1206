@@ -58,7 +58,8 @@ public class ConfigManager {
     double scaleFactor;
     int iterations;
     double colourShift;
-    boolean openCL;
+    boolean openCL = true;
+    int escapeRadius = 2;
 
     private ArrayList<ConfigChangeListener> listeners;
 
@@ -218,6 +219,8 @@ public class ConfigManager {
     public float getTint () {
         return (float) slider_colour.getValue() / 720f;
     }
+
+    public int getEscapeRadiusSquared() { return escapeRadius * escapeRadius; }
 
     public boolean useOpenCL() { return openCL;}
 
