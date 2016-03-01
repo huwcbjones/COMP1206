@@ -50,10 +50,6 @@ public abstract class RenderManagementThread extends Thread {
     protected LinkedHashMap<ImageProperties, FractalImage> renderCache;
 
     protected boolean isOpenClAvailable;
-    CLContext context;
-    CLQueue queue;
-    CLProgram oclProgram_mandelbrot;
-    CLProgram oclProgram_hueToRGB;
     OpenClRenderThread openClRenderThread;
 
     /**
@@ -255,7 +251,7 @@ public abstract class RenderManagementThread extends Thread {
         if (config.useOpenCL() && isOpenClAvailable) {
             try {
                 runOpenCL_render();
-            } catch (CLException.OutOfResources e){
+            } catch (CLException e){
                 e.printStackTrace();
             }
         } else {
@@ -265,23 +261,55 @@ public abstract class RenderManagementThread extends Thread {
         System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
     }
 
-    private void runOpenCL_render() throws CLException.OutOfResources {
+    private void runOpenCL_render() throws CLException {
+        CLQueue queue = openClRenderThread.getQueue();
         Dimension dimensions = new Dimension((int) imgWidth, (int) imgHeight);
 
-        Pointer<Integer> results = Pointer.allocateInts(dimensions.height * dimensions.width);
+        // Create pointers to results
         Pointer<Float> hueResult = Pointer.allocateFloats(dimensions.height * dimensions.width);
+        Pointer<Integer> results = Pointer.allocateInts(dimensions.height * dimensions.width);
+
+        // Create buffers for results
         CLBuffer<Float> hueBuffer = openClRenderThread.getContext().createFloatBuffer(CLMem.Usage.InputOutput, hueResult, false);
+        CLBuffer<Integer> resultsBuffer = openClRenderThread.getContext().createIntBuffer(CLMem.Usage.Input, results, false);
+
         long startTime = System.nanoTime();
 
+        // Get Render kernel, queue it, and wait for it to finish
         CLKernel kernel = createOpenCLKernel(dimensions, hueBuffer);
+
+        if (kernel == null) {
+            this.isOpenClAvailable = false;
+            render();
+            return;
+        }
         kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
         queue.finish();
-
-        results = recolourImage();
 
         long time = System.nanoTime() - startTime;
         System.out.printf("Generation took: %.5f\n", time / 1000000000d);
 
+        startTime = System.nanoTime();
+
+        // Create hue to RGB kernel
+        CLKernel hueKernel = openClRenderThread.getProgram("hueToRGB").createKernel(
+                "hueToRGB",
+                hueBuffer,
+                dimensions.width,
+                1.0f,
+                1.0f,
+                getImageProperties().getTint(),
+                image.getTint(),
+                resultsBuffer
+        );
+        // Queue it, and wait for it to finish
+        hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
+        queue.finish();
+
+        time = System.nanoTime() - startTime;
+        System.out.printf("Colouring took: %.5f\n", time / 1000000000d);
+
+        // Paint the colours onto the image
         image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, results.getInts(), 0, (int)imgWidth);
         panel.setImage(image, true);
     }
@@ -295,7 +323,7 @@ public abstract class RenderManagementThread extends Thread {
      */
     protected abstract CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results);
 
-    private Pointer<Integer> recolourImage(int[] pixels) {
+    /*private void recolourImage(int[] pixels) {
         CLBuffer<Integer> resultsBuffer = context.createIntBuffer(CLMem.Usage.Output, results, false);
 
         float hueAdj = config.getTint();
@@ -316,7 +344,7 @@ public abstract class RenderManagementThread extends Thread {
         queue.finish();
 
         return resultsBuffer.read(queue);
-    }
+    }*/
 
     /**
      * Runs the render on the CPU

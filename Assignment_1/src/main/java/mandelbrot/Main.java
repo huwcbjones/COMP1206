@@ -84,11 +84,11 @@ public class Main extends JFrame {
 
         this.pack();
 
-        mandel_drawer = new MandelbrotRenderManagementThread(config, imgPanel_image);
+        mandel_drawer = new MandelbrotRenderManagementThread(config, openClRenderThread, imgPanel_image);
         mandel_drawer.addDrawListenener(new renderCompleteHandler());
         mandel_drawer.start();
 
-        julia_drawer = new JuliaRenderManagementThread(config, imgPanel_julia);
+        julia_drawer = new JuliaRenderManagementThread(config, openClRenderThread, imgPanel_julia);
         julia_drawer.start();
 
         this.setVisible(true);

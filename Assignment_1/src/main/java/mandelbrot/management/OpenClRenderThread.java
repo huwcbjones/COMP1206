@@ -8,7 +8,7 @@ import com.nativelibs4java.util.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
 
 import static com.nativelibs4java.opencl.JavaCL.createBestContext;
 
@@ -87,6 +87,9 @@ public class OpenClRenderThread extends Thread {
         return programs.get(programName);
     }
 
+    public CLQueue getQueue() {
+        return queue;
+    }
     public CLContext getContext() {
         return context;
     }
