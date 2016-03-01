@@ -5,6 +5,7 @@ import com.nativelibs4java.opencl.CLPlatform;
 import com.nativelibs4java.opencl.CLProgram;
 import com.nativelibs4java.opencl.CLQueue;
 import com.nativelibs4java.util.IOUtils;
+import utils.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,30 +38,30 @@ public class OpenClRenderThread extends Thread {
             queue = context.createDefaultQueue();
 
             CLPlatform plat = context.getPlatform();
-            System.out.println("********************************************************************************");
-            System.out.println("* OPEN CL SUPPORT                                                              *");
-            System.out.println("********************************************************************************");
-            System.out.println("* Vendor: " + plat.getBestDevice().getVendor());
-            System.out.println("* Name: " + plat.getName());
-            System.out.println("* Device: " + plat.getBestDevice().getName());
-            System.out.println("* Version: " + plat.getBestDevice().getVersion());
-            System.out.println("* Driver Version: " + plat.getBestDevice().getDriverVersion());
-            System.out.println("* OpenCL Version: " + plat.getBestDevice().getOpenCLCVersion());
-            System.out.println("* Compute Units: " + plat.getBestDevice().getMaxComputeUnits());
-            System.out.println("* Samplers: " + plat.getBestDevice().getMaxSamplers());
-            System.out.println("* Work Group: " + plat.getBestDevice().getMaxWorkGroupSize());
-            System.out.println("* Address Bits: " + plat.getBestDevice().getAddressBits());
-            System.out.println("* GPU Memory: " + (plat.getBestDevice().getGlobalMemSize() / 1024 / 1024) + "MB");
-            System.out.println("* Profile: " + plat.getBestDevice().getProfile());
-            System.out.print("* Extensions: \n");
+            Log.Information("********************************************************************************");
+            Log.Information("* OPEN CL SUPPORT                                                              *");
+            Log.Information("********************************************************************************");
+            Log.Information("* Vendor:\t\t\t" + plat.getBestDevice().getVendor());
+            Log.Information("* Name:\t\t\t\t" + plat.getName());
+            Log.Information("* Device:\t\t\t" + plat.getBestDevice().getName());
+            Log.Information("* Version:\t\t\t" + plat.getBestDevice().getVersion());
+            Log.Information("* Driver Version:\t" + plat.getBestDevice().getDriverVersion());
+            Log.Information("* OpenCL Version:\t" + plat.getBestDevice().getOpenCLCVersion());
+            Log.Information("* Compute Units:\t" + plat.getBestDevice().getMaxComputeUnits());
+            Log.Information("* Samplers:\t\t\t" + plat.getBestDevice().getMaxSamplers());
+            Log.Information("* Work Group:\t\t" + plat.getBestDevice().getMaxWorkGroupSize());
+            Log.Information("* Address Bits:\t\t" + plat.getBestDevice().getAddressBits());
+            Log.Information("* GPU Memory:\t\t" + (plat.getBestDevice().getGlobalMemSize() / 1024 / 1024) + "MB");
+            Log.Information("* Profile:\t\t\t" + plat.getBestDevice().getProfile());
+            Log.Information("* Extensions:");
             for (String s : plat.getExtensions()) {
-                System.out.print("*\t- " + s + "\n");
+                Log.Information("*\t- " + s);
             }
-            System.out.println("********************************************************************************");
+            Log.Information("********************************************************************************");
         } catch (Exception ex) {
             isAvailable = false;
-            System.err.println("OpenCL support unavailable.");
-            System.err.println(ex.getCause().toString());
+            Log.Warning("OpenCL support unavailable.");
+            Log.Warning(ex.getCause().toString());
         }
     }
 

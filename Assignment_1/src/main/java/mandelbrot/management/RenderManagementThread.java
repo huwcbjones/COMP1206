@@ -236,44 +236,72 @@ public abstract class RenderManagementThread extends Thread {
      * Private method to do the render
      */
     private void doRender() {
+        // Create image
+        image = FractalImage.fromBufferedImage(panel.createImage());
+
         // Check if cache is valid for settings
         if (!checkCacheValidity()) {
+
             // Recreate cache of rendered images
             renderCache = new LinkedHashMap<>();
         }
 
-        //TODO: Check cache here, if cached image exists, display it, otherwise check for a cached image that isn't coloured right, and recolour it
-
-        image = FractalImage.fromBufferedImage(panel.createImage());
+        // Get a fresh copy of the image properties
         updateImageProperties();
+        ImageProperties properties = getImageProperties();
 
-        long startTime = System.nanoTime();
+        // Check if image is cached
+        boolean fullRender = true;
+        if (imageIsCached()) {
+            useCachedImage(properties);
+            fullRender = false;
+        }
+        if(image.getTint() == properties.hashCode()){
+            Log.Information("Using cached image.");
+            return;
+        }
+
         if (config.useOpenCL() && isOpenClAvailable) {
             try {
-                runOpenCL_render();
+                runOpenCL_render(fullRender);
             } catch (CLException e){
+                isOpenClAvailable = false;
                 e.printStackTrace();
             }
         } else {
-            runCPU_render();
+            runCPU_render(fullRender);
         }
-        long endTime = System.nanoTime();
-        System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
+
+        checkCleanCache();
+        image.setTint(properties.getTint());
+        cacheImage(properties, image);
+
+        panel.setImage(image, true);
+
+        fireRenderComplete();
+        hasRendered = true;
     }
 
-    private void runOpenCL_render() throws CLException {
+    /**
+     * Renders the image using OpenCL
+     * @throws CLException Throw if there was an error whilst executing
+     */
+    private void runOpenCL_render(boolean fullRender) throws CLException {
+        if(!fullRender){
+            recolourImage();
+            return;
+        }
+
         CLQueue queue = openClRenderThread.getQueue();
         Dimension dimensions = new Dimension((int) imgWidth, (int) imgHeight);
 
         // Create pointers to results
-        Pointer<Float> hueResult = Pointer.allocateFloats(dimensions.height * dimensions.width);
+        Pointer<Float> huePointer = Pointer.allocateFloats(dimensions.height * dimensions.width);
         Pointer<Integer> results = Pointer.allocateInts(dimensions.height * dimensions.width);
 
         // Create buffers for results
-        CLBuffer<Float> hueBuffer = openClRenderThread.getContext().createFloatBuffer(CLMem.Usage.InputOutput, hueResult, false);
-        CLBuffer<Integer> resultsBuffer = openClRenderThread.getContext().createIntBuffer(CLMem.Usage.Input, results, false);
-
-        long startTime = System.nanoTime();
+        CLBuffer<Float> hueBuffer = openClRenderThread.getContext().createFloatBuffer(CLMem.Usage.InputOutput, huePointer, false);
+        CLBuffer<Integer> resultsBuffer = openClRenderThread.getContext().createIntBuffer(CLMem.Usage.Output, results, false);
 
         // Get Render kernel, queue it, and wait for it to finish
         CLKernel kernel = createOpenCLKernel(dimensions, hueBuffer);
@@ -283,13 +311,9 @@ public abstract class RenderManagementThread extends Thread {
             render();
             return;
         }
+
         kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
         queue.finish();
-
-        long time = System.nanoTime() - startTime;
-        System.out.printf("Generation took: %.5f\n", time / 1000000000d);
-
-        startTime = System.nanoTime();
 
         // Create hue to RGB kernel
         CLKernel hueKernel = openClRenderThread.getProgram("hueToRGB").createKernel(
@@ -306,12 +330,8 @@ public abstract class RenderManagementThread extends Thread {
         hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
         queue.finish();
 
-        time = System.nanoTime() - startTime;
-        System.out.printf("Colouring took: %.5f\n", time / 1000000000d);
-
         // Paint the colours onto the image
-        image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, results.getInts(), 0, (int)imgWidth);
-        panel.setImage(image, true);
+        image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, resultsBuffer.read(queue).getInts(), 0, (int)imgWidth);
     }
 
     /**
@@ -323,8 +343,8 @@ public abstract class RenderManagementThread extends Thread {
      */
     protected abstract CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results);
 
-    /*private void recolourImage(int[] pixels) {
-        CLBuffer<Integer> resultsBuffer = context.createIntBuffer(CLMem.Usage.Output, results, false);
+    private void recolourImage() {
+       /* CLBuffer<Integer> resultsBuffer = context.createIntBuffer(CLMem.Usage.Output, results, false);
 
         float hueAdj = config.getTint();
         float huePrev = image.getTint();
@@ -343,30 +363,24 @@ public abstract class RenderManagementThread extends Thread {
         hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
         queue.finish();
 
-        return resultsBuffer.read(queue);
-    }*/
+        return resultsBuffer.read(queue);*/
+    }
 
     /**
      * Runs the render on the CPU
      */
-    private void runCPU_render() {
-        boolean fullRender = true;
-
+    private void runCPU_render(boolean fullRender) {
         ImageProperties properties = getImageProperties();
-
-        // Check if an image that matches our settings is in the cache
-        if (imageIsCached()) {
-            useCachedImage(properties);
-            fullRender = false;
-        }
 
         int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
         Rectangle2D bounds;
         int start;
 
         Callable<ImageSegment> task;
+
         // Queue up strips to be calculated
         for (int i = 0; i < numberStrips; i++) {
+
             // If first strip, start at 0
             if (i == 0) {
                 start = 0;
@@ -383,11 +397,8 @@ public abstract class RenderManagementThread extends Thread {
             // Dispatch task to execution service
             if (fullRender) {
                 task = createTask(properties, bounds);
-            } else if (image.getTint() != properties.getTint()) {
-                task = new TintTask(this, bounds, properties);
             } else {
-                panel.setImage(image, true);
-                return;
+                task = new TintTask(this, bounds, properties);
             }
             executorService.submit(task);
         }
@@ -404,7 +415,7 @@ public abstract class RenderManagementThread extends Thread {
 
                 // If result failed, skip it
                 if (!result.isDone()) {
-                    System.err.println("Failed to calculate segment. (not done)");
+                    Log.Warning("Failed to calculate segment.");
                     continue;
                 }
 
@@ -413,8 +424,7 @@ public abstract class RenderManagementThread extends Thread {
                     imgSeg = result.get();
                     g.drawImage(imgSeg.getImage(), (int) imgSeg.getBounds().getX(), (int) imgSeg.getBounds().getY(), null);
                 } catch (ExecutionException ex) {
-                    ex.printStackTrace(System.err);
-                    System.err.println("Failed to calculate segment.\n" + ex.getMessage());
+                    Log.Warning("Failed to calculate segment.\n" + ex.getMessage());
                 }
 
             } catch (InterruptedException e) {
@@ -422,16 +432,6 @@ public abstract class RenderManagementThread extends Thread {
             }
         }
         g.dispose();
-
-        checkCleanCache();
-        image.setTint(properties.getTint());
-        cacheImage(properties, image);
-
-
-        panel.setImage(image, true);
-
-        fireRenderComplete();
-        hasRendered = true;
     }
     //endregion
 
@@ -470,7 +470,7 @@ public abstract class RenderManagementThread extends Thread {
      * @param properties Properties of image to display
      */
     private void useCachedImage(ImageProperties properties) {
-        System.out.println("Using cached image.");
+        Log.Information("Using cached image.");
         this.image = renderCache.get(properties);
     }
 
