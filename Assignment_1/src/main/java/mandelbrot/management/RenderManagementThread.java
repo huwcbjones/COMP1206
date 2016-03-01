@@ -60,12 +60,13 @@ public abstract class RenderManagementThread extends Thread {
      * @param threadName Name of thread
      */
     public RenderManagementThread(ConfigManager config, OpenClRenderThread openCL, ImagePanel panel, String threadName) {
+        Log.Information("Loading Render Management Thread: '" + threadName + "'");
         this.config = config;
         this.openClRenderThread = openCL;
         isOpenClAvailable = openCL.isAvailable();
         ocl_loadPrograms();
         this.panel = panel;
-        this.setName("Drawing_Management_Thread_" + threadName);
+        this.setName("Render_Management_Thread_" + threadName);
 
         renderCache = new LinkedHashMap<>();
 
@@ -74,9 +75,12 @@ public abstract class RenderManagementThread extends Thread {
         numberThreads = Runtime.getRuntime().availableProcessors();
         numberStrips = numberThreads * 2;
 
+        Log.Information("Multicore Processing: Using " + numberThreads + ", and " + numberStrips + " workers.");
+
         // Get an executor service for the amount of cores we have
         ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
         this.executorService = new ExecutorCompletionService<>(executorService);
+        Log.Information("Starting execution pool...");
     }
 
     /**
@@ -198,6 +202,7 @@ public abstract class RenderManagementThread extends Thread {
 
     @Override
     public final void run() {
+        Log.Information(this.getName() + " started!");
         while (!this.isInterrupted()) {
             // Dispatch render method as appropriate to notify
             synchronized (this.runThread) {
@@ -478,15 +483,21 @@ public abstract class RenderManagementThread extends Thread {
      * Checks if the cache needs cleaning and if so, cleans the cache
      */
     private void checkCleanCache() {
-        long total = Runtime.getRuntime().totalMemory();
+        long total = Runtime.getRuntime().maxMemory();
         long free = Runtime.getRuntime().freeMemory();
+        double percentageFree = free * 100.0d / total;
+
+        long totalMB = total / 1048576;
+        long freeMB = free / 1048576;
 
         if (renderCache.size() == 0) {
             return;
         }
-        if (free * 100d / total >= 80) {
+        if (percentageFree >= 80) {
+            Log.Warning("Removed oldest image from cache.");
             renderCache.remove(renderCache.entrySet().iterator().next().getKey());
         }
+        Log.Information("JVM using " + freeMB + "/" + totalMB + "MB (" + String.format("%02.1f", percentageFree) + "% free)");
     }
 
     //endregion
@@ -507,13 +518,13 @@ public abstract class RenderManagementThread extends Thread {
         imgWidth = image.getWidth();
 
         double aspectRatio = imgWidth / imgHeight;
-        double xRange = 4;
-        double yRange = 3.2;
+        double xRange = 3.8;
+        double yRange = 2.6;
 
         if (aspectRatio * yRange < 4) {
-            yRange = 4 / aspectRatio;
+            yRange = xRange / aspectRatio;
         } else {
-            xRange = 3.2 * aspectRatio;
+            xRange = yRange * aspectRatio;
         }
 
         xScale = xRange / imgWidth;

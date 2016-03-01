@@ -28,6 +28,7 @@ public class OpenClRenderThread extends Thread {
 
     public OpenClRenderThread(){
         super("OpenCL_Render_Thread");
+        Log.Information("Loading OpenCL Render Thread...");
         init();
         programs = new HashMap<>();
     }
@@ -58,6 +59,7 @@ public class OpenClRenderThread extends Thread {
                 Log.Information("*\t- " + s);
             }
             Log.Information("********************************************************************************");
+            Log.Warning("OpenCL support available!");
         } catch (Exception ex) {
             isAvailable = false;
             Log.Warning("OpenCL support unavailable.");
@@ -68,6 +70,7 @@ public class OpenClRenderThread extends Thread {
     public boolean loadProgram(String programName, String source){
         try {
             CLProgram program = context.createProgram(source);
+            Log.Information("Loaded OpenCL program, " + programName + ".");
             programs.put(programName, program);
         } catch (Exception ex){
             return false;
