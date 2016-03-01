@@ -15,7 +15,7 @@ __kernel void mandelbrot(
 
     float2 coords = convert_float2((int2)(get_global_id(0), get_global_id(1)));
 
-    float2 complex = ((coords - dimensions / (float2)(2,2)) * scale + shift) / (float2)(scaleFactor, scaleFactor);
+    float2 complex = ((coords - dimensions / 2.0f) * scale + shift) / scaleFactor;
 
     float2 z_square = complex * complex;
     float2 z = complex;
