@@ -1,10 +1,8 @@
 package mandelbrot.management;
 
-import static com.nativelibs4java.opencl.JavaCL.createBestContext;
-
 import com.nativelibs4java.opencl.*;
+import com.nativelibs4java.util.IOUtils;
 import mandelbrot.ConfigManager;
-import mandelbrot.Main;
 import mandelbrot.events.RenderListener;
 import mandelbrot.render.TintTask;
 import org.bridj.Pointer;
@@ -19,7 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 
-import com.nativelibs4java.util.IOUtils;
+import static com.nativelibs4java.opencl.JavaCL.createBestContext;
 /**
  * Manages and delegates drawing/calculation threads
  *
@@ -56,6 +54,11 @@ public abstract class RenderManagementThread extends Thread {
 
     protected LinkedHashMap<ImageProperties, FractalImage> renderCache;
 
+    CLContext context;
+    CLQueue queue;
+    CLProgram program;
+    private boolean openCL_support = false;
+
     /**
      * Creates a Render Management Thread
      *
@@ -78,6 +81,21 @@ public abstract class RenderManagementThread extends Thread {
         // Get an executor service for the amount of cores we have
         ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
         this.executorService = new ExecutorCompletionService<>(executorService);
+
+        initOpenCL();
+    }
+
+    public void initOpenCL() {
+        try {
+            InputStream input = this.getClass().getResourceAsStream("/mandelbrot/mandelbrot.cl");
+            String source = IOUtils.readText(input);
+            context = createBestContext();
+            queue = context.createDefaultQueue();
+            program = context.createProgram(source);
+            openCL_support = true;
+        } catch (IOException ex) {
+            System.err.println("Failed to load 'mandelbrot.cl', OpenCL support unavailable.");
+        }
     }
 
     //region Get Methods
@@ -240,11 +258,7 @@ public abstract class RenderManagementThread extends Thread {
         if (config.useOpenCL()) {
             try {
                 runOpenCL_render();
-            } catch (IOException e) {
-                e.printStackTrace();
             } catch (CLException.OutOfResources e){
-                e.printStackTrace();
-            } catch (CLBuildException e){
                 e.printStackTrace();
             }
         } else {
@@ -252,39 +266,40 @@ public abstract class RenderManagementThread extends Thread {
         }
     }
 
-    private void runOpenCL_render() throws IOException, CLBuildException, CLException.OutOfResources {
-        CLContext context = createBestContext();
-        CLQueue queue = context.createDefaultQueue();
+    private void runOpenCL_render() throws CLException.OutOfResources {
+        Pointer<Float> results = Pointer.allocateFloats((int) imgHeight * (int) imgWidth);
 
-        int panelResolution = (int)(imgHeight * imgWidth);
-        Complex range = getComplexFromPoint(imgWidth, imgHeight);
-        range.subtract(getComplexFromPoint(0, 0));
-
-        int virtualResolution = (int)range.modulus();
-        InputStream input = this.getClass().getResourceAsStream("/mandelbrot/mandelbrot.cl");
-
-        String source = IOUtils.readText(input);
-        Pointer<Integer> results = Pointer.allocateInts(panelResolution);
-
-        long time = buildAndExecuteKernel(queue, iterations, config.getEscapeRadiusSquared(), new Dimension((int)imgWidth, (int)imgHeight), virtualResolution,
+        long startTime = System.nanoTime();
+        results = buildAndExecuteKernel(iterations, config.getEscapeRadiusSquared(), new Dimension((int) imgWidth, (int) imgHeight),
                 (float)xScale, (float)yScale,
                 (float)xShift, (float)yShift,
-                (float)scaleFactor, results, source
+                (float) scaleFactor, results
                 );
-        System.out.printf("Generation took: %.5f", time / 1000000000d);
+        long time = System.nanoTime() - startTime;
+        System.out.printf("Generation took: %.5f\n", time / 1000000000d);
+
+        int black = Color.BLACK.getRGB();
+        float[] output = results.getFloats((int) imgHeight * (int) imgWidth);
+        int[] colours = new int[output.length];
+        for (int i = output.length; i-- != 0;) {
+            if (output[i] == Float.POSITIVE_INFINITY || output[i] == Float.NEGATIVE_INFINITY) {
+                colours[i] = black;
+            } else {
+                colours[i] = Color.HSBtoRGB(output[i], 1, 1);
+            }
+        }
+        image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, colours, 0, (int)imgWidth);
+        panel.setImage(image, true);
     }
 
-    private static long buildAndExecuteKernel(CLQueue queue, int maxIterations, int escapeRadiusSquared, Dimension dimensions, int virtualResolution,
-                                              float xScale, float yScale,
-                                              float xShift, float yShift,
-                                              float scaleFactor,
-                                              Pointer<Integer> results, String source
-                                              ) throws CLBuildException, IOException {
-        CLContext context = queue.getContext();
-        long start = System.nanoTime();
+    private Pointer<Float> buildAndExecuteKernel(int maxIterations, int escapeRadiusSquared, Dimension dimensions,
+                                       float xScale, float yScale,
+                                       float xShift, float yShift,
+                                       float scaleFactor,
+                                       Pointer<Float> results
+    ) {
 
-        CLProgram program = context.createProgram(source);
-
+        CLBuffer<Float> buffer = context.createFloatBuffer(CLMem.Usage.Output, results, false);
         CLKernel kernel = program.createKernel(
                 "mandelbrot",
                 maxIterations,
@@ -293,18 +308,19 @@ public abstract class RenderManagementThread extends Thread {
                 new float[] {xScale, yScale},
                 new float[] {xShift, yShift},
                 scaleFactor,
-                context.createBuffer(CLMem.Usage.Output, results, false)
+                buffer
         );
 
-        int panelResolution = dimensions.height * dimensions.width;
-
-        kernel.enqueueNDRange(queue, new int[] {panelResolution, virtualResolution}, new int[]{1,1});
+        kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
 
         queue.finish();
 
-        return System.nanoTime() - start;
+        return buffer.read(queue);
     }
 
+    /**
+     * Runs the render on the CPU
+     */
     private void runCPU_render() {
         boolean fullRender = true;
 
@@ -338,6 +354,7 @@ public abstract class RenderManagementThread extends Thread {
                 bounds = new Rectangle2D.Double(start, 0, stripWidth, imgHeight);
             }
 
+            // Dispatch task to execution service
             if (fullRender) {
                 task = createTask(properties, bounds);
             } else if (image.getTint() != properties.getTint()) {
