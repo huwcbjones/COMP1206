@@ -35,7 +35,7 @@ public class MandelbrotTask extends RenderTask {
     @Override
     protected int getImageHeight() {
         if (halfHeight) {
-            return super.getImageHeight() / 2;
+            return super.getImageHeight() / 2 + 2;
         } else {
             return super.getImageHeight();
         }
@@ -56,7 +56,7 @@ public class MandelbrotTask extends RenderTask {
         at.concatenate(AffineTransform.getScaleInstance(1 ,-1));
         at.concatenate(AffineTransform.getTranslateInstance(0, -image.getHeight()));
         g.transform(at);
-        g.drawImage(image, 0, -image.getHeight(), null);
+        g.drawImage(image, 0, 2 -image.getHeight(), null);
         g.dispose();
 
         image = newImage;
