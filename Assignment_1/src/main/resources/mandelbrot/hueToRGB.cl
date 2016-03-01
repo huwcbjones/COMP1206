@@ -15,6 +15,8 @@ __kernel void hueToRGB(
     if(hue == INFINITY){
         saturation = 0;
         brightness = 0;
+    } else {
+        hue = hue + hueAdj - huePrev;
     }
     float r = 0, g = 0, b = 0;
     if (saturation == 0) {
