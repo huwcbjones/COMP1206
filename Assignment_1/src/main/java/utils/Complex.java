@@ -54,9 +54,19 @@ public class Complex implements Cloneable {
         return (real * real) + (imaginary * imaginary);
     }
 
+    public double modulus(){
+        double modulusSquared =  modulusSquared();
+        return modulusSquared * modulusSquared;
+    }
+
     public void add(Complex d){
         real += d.getReal();
         imaginary += d.getImaginary();
+    }
+
+    public void subtract(Complex d){
+        real -= d.getReal();
+        imaginary -= d.getImaginary();
     }
 
     public double getReal(){
