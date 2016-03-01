@@ -14,6 +14,8 @@ import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 
@@ -93,6 +95,29 @@ public abstract class RenderManagementThread extends Thread {
             queue = context.createDefaultQueue();
             program = context.createProgram(source);
             openCL_support = true;
+
+            CLPlatform plat = context.getPlatform();
+            System.out.println("********************************************************************************");
+            System.out.println("* OPEN CL SUPPORT                                                              *");
+            System.out.println("********************************************************************************");
+            System.out.println("* Vendor: " + plat.getBestDevice().getVendor());
+            System.out.println("* Name: " + plat.getName());
+            System.out.println("* Device: " + plat.getBestDevice().getName());
+            System.out.println("* Version: " + plat.getBestDevice().getVersion());
+            System.out.println("* Driver Version: " + plat.getBestDevice().getDriverVersion());
+            System.out.println("* OpenCL Version: " + plat.getBestDevice().getOpenCLCVersion());
+            System.out.println("* Compute Units: " + plat.getBestDevice().getMaxComputeUnits());
+            System.out.println("* Samplers: " + plat.getBestDevice().getMaxSamplers());
+            System.out.println("* Work Group: " + plat.getBestDevice().getMaxWorkGroupSize());
+            System.out.println("* Address Bits: " + plat.getBestDevice().getAddressBits());
+            System.out.println("* GPU Memory: " + (plat.getBestDevice().getGlobalMemSize() / 1024 / 1024) + "MB");
+            System.out.println("* Profile: " + plat.getBestDevice().getProfile());
+            System.out.print("* Extensions: \n");
+            Iterator it = new ArrayList<>(Arrays.asList(plat.getExtensions())).iterator();
+            while(it.hasNext()){
+                System.out.print("*\t- " +it.next() + "\n");
+            }
+            System.out.println("********************************************************************************");
         } catch (IOException ex) {
             System.err.println("Failed to load 'mandelbrot.cl', OpenCL support unavailable.");
         }
