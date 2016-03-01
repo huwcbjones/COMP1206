@@ -21,8 +21,8 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
 
     protected Complex c;
 
-    public JuliaRenderManagementThread(ConfigManager config, ImagePanel panel) {
-        super(config, panel, "Julia");
+    public JuliaRenderManagementThread(ConfigManager config, OpenClRenderThread thread, ImagePanel panel) {
+        super(config, thread, panel, "Julia");
     }
 
     @Override

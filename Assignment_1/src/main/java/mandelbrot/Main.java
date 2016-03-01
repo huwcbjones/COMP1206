@@ -5,6 +5,7 @@ import mandelbrot.events.ConfigChangeAdapter;
 import mandelbrot.events.RenderListener;
 import mandelbrot.management.JuliaRenderManagementThread;
 import mandelbrot.management.MandelbrotRenderManagementThread;
+import mandelbrot.management.OpenClRenderThread;
 import utils.Complex;
 import utils.ImagePanel;
 import utils.SpringUtilities;
@@ -36,6 +37,7 @@ public class Main extends JFrame {
 
     //endregion
 
+    private final OpenClRenderThread openClRenderThread;
     private final MandelbrotRenderManagementThread mandel_drawer;
     private final JuliaRenderManagementThread julia_drawer;
 
@@ -73,6 +75,7 @@ public class Main extends JFrame {
         } catch (Exception ex) {
 
         }
+        openClRenderThread = new OpenClRenderThread();
 
         config = new ConfigManager(this);
         config.addConfigChangeListener(new configChangeHandler());
