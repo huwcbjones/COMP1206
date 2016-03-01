@@ -280,6 +280,7 @@ public abstract class RenderManagementThread extends Thread {
         image = FractalImage.fromBufferedImage(panel.createImage());
         updateImageProperties();
 
+        long startTime = System.nanoTime();
         if (config.useOpenCL()) {
             try {
                 runOpenCL_render();
@@ -289,6 +290,8 @@ public abstract class RenderManagementThread extends Thread {
         } else {
             runCPU_render();
         }
+        long endTime = System.nanoTime();
+        System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
     }
 
     private void runOpenCL_render() throws CLException.OutOfResources {
@@ -361,8 +364,6 @@ public abstract class RenderManagementThread extends Thread {
         Rectangle2D bounds;
         int start;
 
-        long startTime = System.nanoTime();
-
         Callable<ImageSegment> task;
         // Queue up strips to be calculated
         for (int i = 0; i < numberStrips; i++) {
@@ -420,10 +421,8 @@ public abstract class RenderManagementThread extends Thread {
                 break;
             }
         }
-        long endTime = System.nanoTime();
         g.dispose();
 
-        System.out.printf("Image rendered in: %.5f\n", ((endTime - startTime) / 1000000000.0));
         checkCleanCache();
         image.setTint(properties.getTint());
         cacheImage(properties, image);
