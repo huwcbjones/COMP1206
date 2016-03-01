@@ -26,6 +26,7 @@ public class Main extends JFrame {
     private static final double DISPLAY_CONSTRAINT = 0.9;
 
     private ConfigManager config;
+    private BookmarkManager bookmarks;
 
     //region Main Panels
     private JPanel panel_display;
@@ -79,6 +80,8 @@ public class Main extends JFrame {
 
         config = new ConfigManager(this);
         config.addConfigChangeListener(new configChangeHandler());
+
+        bookmarks = new BookmarkManager(this);
 
         initComponents();
 
@@ -150,11 +153,9 @@ public class Main extends JFrame {
         c.fill = GridBagConstraints.BOTH;
         c.weighty = 0.5;
 
-        panel_bookmarks = new JPanel();
-        panel_bookmarks.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Bookmarks"));
+        panel_bookmarks = bookmarks.getBookmarkPanel();
+        panel_bookmarks.setOpaque(false);
         c.gridy = 2;
-
-
         pane.add(panel_bookmarks, c);
 
         SpringLayout layout = new SpringLayout();
