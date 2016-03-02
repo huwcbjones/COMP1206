@@ -19,6 +19,10 @@ public class Log {
         System.exit(-1);
     }
 
+    public static void Error(String message) {
+        message("[ERROR]\t" + message, true);
+    }
+
     public static void Warning(String message) {
         message("[WARN]\t" + message, true);
     }
