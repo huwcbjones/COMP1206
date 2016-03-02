@@ -93,7 +93,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     @Override
     protected void ocl_loadPrograms() {
         super.ocl_loadPrograms();
-        if (!openClRenderThread.loadProgram("julia", this.getClass().getResourceAsStream("/mandelbrot/julia.cl"))) {
+        if (!openClRenderThread.loadProgram("julia", this.getClass().getResourceAsStream("/mandelbrot/opencl/julia.cl"))) {
             this.isOpenClAvailable = false;
         }
     }

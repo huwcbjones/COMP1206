@@ -90,7 +90,7 @@ public abstract class RenderManagementThread extends Thread {
      * Loads programs into the OpenCL context
      */
     protected void ocl_loadPrograms() {
-        if (!openClRenderThread.loadProgram("hueToRGB", this.getClass().getResourceAsStream("/mandelbrot/hueToRGB.cl"))) {
+        if (!openClRenderThread.loadProgram("hueToRGB", this.getClass().getResourceAsStream("/mandelbrot/opencl/hueToRGB.cl"))) {
             this.isOpenClAvailable = false;
         }
     }

@@ -30,7 +30,7 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     @Override
     protected void ocl_loadPrograms() {
         super.ocl_loadPrograms();
-        if (!openClRenderThread.loadProgram("mandelbrot", this.getClass().getResourceAsStream("/mandelbrot/mandelbrot.cl"))) {
+        if (!openClRenderThread.loadProgram("mandelbrot", this.getClass().getResourceAsStream("/mandelbrot/opencl/mandelbrot.cl"))) {
             this.isOpenClAvailable = false;
         }
     }
