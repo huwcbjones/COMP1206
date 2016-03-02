@@ -103,7 +103,7 @@ public class HintTextFieldUI extends BasicTextFieldUI implements FocusListener {
                 g.setColor(comp.getForeground().brighter().brighter().brighter());
             }
             int padding = (comp.getHeight() - comp.getFont().getSize()) / 2;
-            g.drawString(hint, 4, comp.getHeight() - padding - 1);
+            g.drawString(hint, 3, comp.getHeight() - padding - 2);
         }
     }
 }
