@@ -3,7 +3,7 @@ package mandelbrot.management;
 import com.nativelibs4java.opencl.CLBuffer;
 import com.nativelibs4java.opencl.CLKernel;
 import com.nativelibs4java.opencl.CLProgram;
-import mandelbrot.ConfigManager;
+import mandelbrot.Main;
 import mandelbrot.render.MandelbrotTask;
 import utils.ImagePanel;
 import utils.ImageProperties;
@@ -20,8 +20,8 @@ import java.util.concurrent.Callable;
  * @since 28/02/2016
  */
 public class MandelbrotRenderManagementThread extends RenderManagementThread {
-    public MandelbrotRenderManagementThread(ConfigManager config, OpenClRenderThread thread, ImagePanel panel) {
-        super(config, thread, panel, "Mandelbrot");
+    public MandelbrotRenderManagementThread(Main mainWindow, OpenClRenderThread thread, ImagePanel panel) {
+        super(mainWindow, thread, panel, "Mandelbrot");
     }
 
     /**

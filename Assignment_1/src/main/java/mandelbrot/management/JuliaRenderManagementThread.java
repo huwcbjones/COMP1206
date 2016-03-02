@@ -3,7 +3,6 @@ package mandelbrot.management;
 import com.nativelibs4java.opencl.CLBuffer;
 import com.nativelibs4java.opencl.CLKernel;
 import com.nativelibs4java.opencl.CLProgram;
-import mandelbrot.ConfigManager;
 import mandelbrot.render.JuliaTask;
 import mandelbrot.Main;
 import utils.Complex;
@@ -25,8 +24,8 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
 
     protected Complex c;
 
-    public JuliaRenderManagementThread(ConfigManager config, OpenClRenderThread thread, ImagePanel panel) {
-        super(config, thread, panel, "Julia");
+    public JuliaRenderManagementThread(Main mainWindow, OpenClRenderThread thread, ImagePanel panel) {
+        super(mainWindow, thread, panel, "Julia");
     }
 
     @Override

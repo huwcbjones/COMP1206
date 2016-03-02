@@ -1,6 +1,7 @@
 package mandelbrot;
 
 
+import mandelbrot.events.AdvancedComponentAdapter;
 import mandelbrot.events.ConfigChangeAdapter;
 import mandelbrot.events.RenderListener;
 import mandelbrot.management.JuliaRenderManagementThread;
@@ -8,6 +9,7 @@ import mandelbrot.management.MandelbrotRenderManagementThread;
 import mandelbrot.management.OpenClRenderThread;
 import utils.Complex;
 import utils.ImagePanel;
+import utils.JFrameAdvanced;
 import utils.SpringUtilities;
 
 import javax.swing.*;
@@ -21,7 +23,7 @@ import java.awt.event.*;
  * @author Huw Jones
  * @since 22/02/2016
  */
-public class Main extends JFrame {
+public class Main extends JFrameAdvanced {
 
     private static final double DISPLAY_CONSTRAINT = 0.9;
 
@@ -88,14 +90,19 @@ public class Main extends JFrame {
 
         this.pack();
 
-        mandel_drawer = new MandelbrotRenderManagementThread(config, openClRenderThread, imgPanel_image);
+        mandel_drawer = new MandelbrotRenderManagementThread(this, openClRenderThread, imgPanel_image);
         mandel_drawer.addDrawListenener(new renderCompleteHandler());
         mandel_drawer.start();
 
-        julia_drawer = new JuliaRenderManagementThread(config, openClRenderThread, imgPanel_julia);
+        julia_drawer = new JuliaRenderManagementThread(this, openClRenderThread, imgPanel_julia);
         julia_drawer.start();
 
         this.setVisible(true);
+        this.addAdvancedComponentListener(new resizeHandler());
+    }
+
+    public ConfigManager getConfigManager(){
+        return config;
     }
 
     //region Initialise Components
@@ -245,6 +252,19 @@ public class Main extends JFrame {
     //endregion
 
     //region Event Handlers
+
+    private class resizeHandler extends AdvancedComponentAdapter {
+        /**
+         * Invoked when the component's size stops changing.
+         *
+         * @param e
+         */
+        @Override
+        public void componentResizeEnd(ComponentEvent e) {
+            renderMandelbrot();
+            renderJulia();
+        }
+    }
 
     private class configChangeHandler extends ConfigChangeAdapter {
         @Override

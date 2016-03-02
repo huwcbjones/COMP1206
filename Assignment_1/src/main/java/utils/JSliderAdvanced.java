@@ -61,8 +61,8 @@ public class JSliderAdvanced extends JSlider {
     }
 
     /**
-     * Send a {@code ChangeEvent}, whose source is this {@code JSlider}, to
-     * all {@code ChangeListener}s that have registered interest in
+     * Send a {@code ChangeEvent}, whose source is this {@code JSliderAdvanced}, to
+     * all {@code AdvancedChangeListener}s that have registered interest in
      * {@code AdvancedChangeEvent}s.
      * This method is called each time a {@code ChangeEvent} is received from
      * the model timer.
@@ -83,8 +83,8 @@ public class JSliderAdvanced extends JSlider {
     }
 
     /**
-     * Send a {@code ChangeEvent}, whose source is this {@code JSlider}, to
-     * all {@code ChangeListener}s that have registered interest in
+     * Send a {@code ChangeEvent}, whose source is this {@code JSliderAdvanced}, to
+     * all {@code AdvancedChangeListener}s that have registered interest in
      * {@code AdvancedChangeEvent}s.
      * This method is called each time a {@code ChangeEvent} is received from
      * the model timer.
@@ -139,7 +139,7 @@ public class JSliderAdvanced extends JSlider {
      *
      * @param listener the <code>AdvancedChangeListener</code> to remove
      * @see #fireStateChanged
-     * @see #addChangeListener
+     * @see #removeChangeListener
      */
     public void removeAdvancedChangeListener(AdvancedChangeListener listener) {
         listenerList.remove(AdvancedChangeListener.class, listener);

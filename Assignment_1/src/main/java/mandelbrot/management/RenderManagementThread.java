@@ -2,12 +2,15 @@ package mandelbrot.management;
 
 import com.nativelibs4java.opencl.*;
 import mandelbrot.ConfigManager;
+import mandelbrot.Main;
+import mandelbrot.events.AdvancedComponentAdapter;
 import mandelbrot.events.RenderListener;
 import mandelbrot.render.TintTask;
 import org.bridj.Pointer;
 import utils.*;
 
 import java.awt.*;
+import java.awt.event.ComponentEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -54,14 +57,13 @@ public abstract class RenderManagementThread extends Thread {
 
     /**
      * Creates a Render Management Thread
-     *
-     * @param config     Config Manager
+     *  @param mainWindow     Config Manager
      * @param panel      ImagePanel to output render to
      * @param threadName Name of thread
      */
-    public RenderManagementThread(ConfigManager config, OpenClRenderThread openCL, ImagePanel panel, String threadName) {
+    public RenderManagementThread(Main mainWindow, OpenClRenderThread openCL, ImagePanel panel, String threadName) {
         Log.Information("Loading Render Management Thread: '" + threadName + "'");
-        this.config = config;
+        this.config = mainWindow.getConfigManager();
         this.openClRenderThread = openCL;
         isOpenClAvailable = openCL.isAvailable();
         ocl_loadPrograms();
@@ -69,8 +71,9 @@ public abstract class RenderManagementThread extends Thread {
         this.setName("Render_Management_Thread_" + threadName);
 
         renderCache = new LinkedHashMap<>();
-
         listeners = new ArrayList<>();
+
+        mainWindow.addAdvancedComponentListener(new resizeHandler());
 
         numberThreads = Runtime.getRuntime().availableProcessors();
         numberStrips = numberThreads * 2;
@@ -192,6 +195,17 @@ public abstract class RenderManagementThread extends Thread {
         listeners.forEach(RenderListener::renderComplete);
     }
 
+    private class resizeHandler extends AdvancedComponentAdapter {
+        /**
+         * Invoked when the component's size stops changing.
+         *
+         * @param e
+         */
+        @Override
+        public void componentResizeEnd(ComponentEvent e) {
+            clearCache();
+        }
+    }
     //endregion
 
     //region Public Thread Unblocking
@@ -441,6 +455,13 @@ public abstract class RenderManagementThread extends Thread {
     //endregion
 
     //region Cache Management
+
+    /**
+     * Clears the cache
+     */
+    protected void clearCache(){
+        renderCache = new LinkedHashMap<>();
+    }
 
     /**
      * Checks to see if the cache is valid for these settings
