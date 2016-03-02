@@ -191,6 +191,7 @@ public class BookmarkManager {
         @Override
         public void valueChanged(ListSelectionEvent e) {
             List selectedObj = list_bookmarks.getSelectedValuesList();
+            btn_delete.setEnabled(selectedObj.size() == 1);
             if (selectedObj.size() != 1) return;
 
             Bookmark bookmark = (Bookmark) selectedObj.get(0);

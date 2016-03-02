@@ -48,7 +48,7 @@ public class FractalImage extends BufferedImage {
         return img;
     }
 
-    public float getTint() {
+    public float getHue() {
         return tint;
     }
 

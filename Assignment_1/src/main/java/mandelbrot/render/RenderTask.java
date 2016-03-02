@@ -73,7 +73,7 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     }
 
     protected Color getHSBColour(int iterations, Complex z){
-        return Color.getHSBColor(getHue(iterations, z), 1, 1);
+        return Color.getHSBColor(getHue(iterations, z), properties.getSaturation(), properties.getBrightness());
     }
 
     protected float getHue(int iterations, Complex z){

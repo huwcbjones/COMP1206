@@ -159,7 +159,7 @@ public class ConfigManager {
         label_brightness = new JLabel("Brightness:", JLabel.TRAILING);
         panel_labelled.add(label_brightness);
 
-        slider_brightness = new JSliderAdvanced(0, 100, 0);
+        slider_brightness = new JSliderAdvanced(0, 100, 100);
         slider_brightness.setMajorTickSpacing(10);
         slider_brightness.setMinorTickSpacing(1);
         slider_brightness.setPaintTicks(true);
@@ -262,7 +262,7 @@ public class ConfigManager {
 
     public float getSaturation() { return (float)slider_saturation.getValue() / 100f; }
 
-    public float getBrightness() { return 1f - (float)slider_brightness.getValue() / 100f; }
+    public float getBrightness() { return (float)slider_brightness.getValue() / 100f; }
 
     public int getEscapeRadiusSquared() { return escapeRadius * escapeRadius; }
 

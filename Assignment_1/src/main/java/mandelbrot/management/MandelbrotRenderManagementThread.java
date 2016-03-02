@@ -55,15 +55,19 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
      * @return CLKernel to execute
      */
     @Override
-    protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results) {
-
+    protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
         CLProgram mandelbrot = openClRenderThread.getProgram("mandelbrot");
+        ImageProperties p = getImageProperties();
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
         float[] scales = new float[]{(float) xScale, (float) yScale};
         float[] shifts = new float[]{(float) xShift, (float) yShift};
         float scaleFactor = (float)this.scaleFactor;
+        float huePrev = getImageHue();
+        float hueAdj = p.getHue();
+        float saturation = p.getSaturation();
+        float brightness = p.getBrightness();
 
         return mandelbrot.createKernel(
                 "mandelbrot",
@@ -73,6 +77,10 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
                 scales,
                 shifts,
                 scaleFactor,
+                huePrev,
+                hueAdj,
+                saturation,
+                brightness,
                 results
         );
     }

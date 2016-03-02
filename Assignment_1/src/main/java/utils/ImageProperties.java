@@ -1,11 +1,8 @@
 package utils;
 
 
-import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * Creates a unique key for an image's settings
@@ -18,7 +15,9 @@ public class ImageProperties {
     private double scale;
     private double xShift;
     private double yShift;
-    private float tint = -1;
+    private float hue = -1;
+    private float saturation = 1;
+    private float brightness = 1;
 
     private Complex complex;
 
@@ -29,12 +28,14 @@ public class ImageProperties {
         this.yShift = yShift;
     }
 
-    public ImageProperties(int iterations, double scale, double xShift, double yShift, float tint) {
+    public ImageProperties(int iterations, double scale, double xShift, double yShift, float hue, float saturation, float brightness) {
         this.iterations = iterations;
         this.scale = scale;
         this.xShift = xShift;
         this.yShift = yShift;
-        this.tint = tint;
+        this.hue = hue;
+        this.saturation = saturation;
+        this.brightness = brightness;
     }
 
     public ImageProperties(int iterations, double scale, double xShift, double yShift, Complex complex) {
@@ -92,7 +93,7 @@ public class ImageProperties {
         int h_scale = (int)(scale * 503);
         int h_xShift = (int)(xShift * 509);
         int h_yShift = (int)(xShift * 521);
-        int h_tint = (int)(tint * 523);
+        int h_tint = (int) (hue * 523);
 
         int code = h_iteration ^ h_scale ^ h_xShift ^ h_yShift ^ h_tint;
         if(complex != null) code ^= complex.hashCode();
@@ -114,13 +115,16 @@ public class ImageProperties {
         if (!(obj instanceof ImageProperties)) return false;
         ImageProperties p = (ImageProperties) obj;
 
-        return equalsNotTint(p) && tint == p.getTint();
+        return equalsNotTint(p) &&
+                hue == p.getHue() &&
+                saturation == p.getSaturation() &&
+                brightness == p.getBrightness();
     }
 
     public boolean equalsNotTint(ImageProperties p) {
         // If these values are unset in either property, return false
         if (p.getComplex() == null && complex != null) return false;
-        if (p.getTint() == -1 && tint != -1) return false;
+        if (p.getHue() == -1 && hue != -1) return false;
 
         boolean complex = (this.complex == null) || this.complex.equals(p.getComplex());
         return iterations == p.getIterations() &&
@@ -129,11 +133,28 @@ public class ImageProperties {
                 yShift == p.getyShift() &&
                 complex;
     }
-    public float getTint () {
-        return tint;
+
+    public float getHue() {
+        return hue;
     }
 
-    public void setTint (float tint) {
-        this.tint = tint;
+    public void setHue(float hue) {
+        this.hue = hue;
+    }
+
+    public float getSaturation() {
+        return saturation;
+    }
+
+    public void setSaturation(float saturation) {
+        this.saturation = saturation;
+    }
+
+    public float getBrightness() {
+        return brightness;
+    }
+
+    public void setBrightness(float brightness) {
+        this.brightness = brightness;
     }
 }

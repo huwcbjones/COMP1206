@@ -48,7 +48,17 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
      * @return CLKernel to execute
      */
     @Override
-    protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results) {
+    protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
+        return null;
+    }
+
+    /**
+     * Creates the CL Kernel for execution
+     *
+     * @param dimension Dimensions of image to render
+     * @return CLKernel to execute
+     */
+    protected CLKernel createOpenCLKernel(Dimension dimension) {
         CLProgram julia = openClRenderThread.getProgram("julia");
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
@@ -66,8 +76,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
                 dimensions,
                 scales,
                 shifts,
-                scaleFactor,
-                results
+                scaleFactor
         );
     }
 
