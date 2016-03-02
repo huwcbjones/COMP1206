@@ -1,11 +1,13 @@
 package mandelbrot;
 
+import mandelbrot.events.ConfigChangeAdapter;
 import mandelbrot.events.DocumentAdapter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import utils.Bookmark;
+import utils.Complex;
 import utils.HintTextFieldUI;
 import utils.Log;
 
@@ -52,6 +54,7 @@ public class BookmarkManager {
     public BookmarkManager(Main mainWindow){
         this.mainWindow = mainWindow;
         this.config = mainWindow.getConfigManager();
+        this.config.addConfigChangeListener(new selectedPointHandler());
 
         loadBookmarks();
 
@@ -165,6 +168,13 @@ public class BookmarkManager {
     }
 
     //region Event Handling
+    private void setBtnAddState() {
+        boolean btn_enabled = !text_name.getText().equals("");
+        btn_enabled &= !bookmarks.containsKey(text_name.getText());
+        btn_enabled &= config.getSelectedPoint() != null;
+        btn_add.setEnabled(btn_enabled);
+    }
+
     private class textChangeHandler extends DocumentAdapter {
 
         /**
@@ -174,10 +184,14 @@ public class BookmarkManager {
          */
         @Override
         public void allUpdate(DocumentEvent e) {
-            boolean btn_enabled = !text_name.getText().equals("");
-            btn_enabled &= !bookmarks.containsKey(text_name.getText());
-            btn_enabled &= config.getSelectedPoint() != null;
-            btn_add.setEnabled(btn_enabled);
+            setBtnAddState();
+        }
+    }
+
+    private class selectedPointHandler extends ConfigChangeAdapter {
+        @Override
+        public void selectedPointChange(Complex complex) {
+            setBtnAddState();
         }
     }
 
@@ -198,6 +212,7 @@ public class BookmarkManager {
             config.setSelectedPoint(bookmark.getComplex());
         }
     }
+
 
     private class addClickHandler implements ActionListener {
 
