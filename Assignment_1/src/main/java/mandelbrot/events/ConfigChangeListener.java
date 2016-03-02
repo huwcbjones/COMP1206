@@ -19,7 +19,7 @@ public interface ConfigChangeListener {
 
     void scaleChange(double scale);
 
-    void colourShiftChange(double shift);
+    void colourChange(float hue, float saturation, float brightness);
 
     void configChange(ImageProperties properties);
 

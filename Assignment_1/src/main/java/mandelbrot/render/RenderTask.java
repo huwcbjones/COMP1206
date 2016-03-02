@@ -77,7 +77,7 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     }
 
     protected float getHue(int iterations, Complex z){
-        return properties.getTint() + (float)(iterations + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
+        return properties.getHue() + (float)(iterations + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
     }
 
     protected abstract ColouredPixel doPixelCalculation(Point2D point, Complex complex);

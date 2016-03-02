@@ -30,6 +30,6 @@ public class TintTask extends RenderTask {
         int rgb = renderManagementThread.getImage().getRGB((int)absolutePoint.getX(), (int)absolutePoint.getY());
 
         Color.RGBtoHSB((rgb >> 16) & 0xff, (rgb >> 8) & 0xff , rgb & 0xff, hsb);
-        return new ColouredPixel(point, Color.getHSBColor(properties.getTint() + hsb[0] -  originalTint, hsb[1], hsb[2]));
+        return new ColouredPixel(point, Color.getHSBColor(properties.getHue() + hsb[0] -  originalTint, hsb[1], hsb[2]));
     }
 }

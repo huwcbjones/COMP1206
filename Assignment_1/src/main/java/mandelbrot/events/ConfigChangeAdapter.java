@@ -28,7 +28,7 @@ public class ConfigChangeAdapter implements ConfigChangeListener {
     }
 
     @Override
-    public void colourShiftChange(double shift) {
+    public void colourChange(float shift, float saturation, float brightness) {
     }
 
     @Override

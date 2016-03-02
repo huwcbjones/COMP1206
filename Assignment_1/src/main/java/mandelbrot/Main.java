@@ -287,7 +287,7 @@ public class Main extends JFrameAdvanced {
         }
 
         @Override
-        public void colourShiftChange(double shift) {
+        public void colourChange(float shift, float saturation, float brightness) {
             renderMandelbrot();
             renderJulia();
         }

@@ -1,7 +1,6 @@
 package mandelbrot;
 
 import mandelbrot.events.AdvancedChangeAdapter;
-import mandelbrot.events.AdvancedChangeListener;
 import mandelbrot.events.ConfigChangeListener;
 import utils.Complex;
 import utils.ImageProperties;
@@ -48,6 +47,12 @@ public class ConfigManager {
     private JLabel label_colour;
     private JSliderAdvanced slider_colour;
 
+    private JLabel label_saturation;
+    private JSliderAdvanced slider_saturation;
+
+    private JLabel label_brightness;
+    private JSliderAdvanced slider_brightness;
+
     private JLabel label_openCL;
     private JCheckBox check_openCL;
 
@@ -59,7 +64,9 @@ public class ConfigManager {
     double yShift;
     double scaleFactor;
     int iterations;
-    double colourShift;
+    float hueShift;
+    float saturation;
+    float brightness;
     Complex selectedPoint;
     int escapeRadius = 2;
 
@@ -126,16 +133,38 @@ public class ConfigManager {
         spinner_shiftY.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_shiftY);
 
-        // Colour Shift
-        label_colour = new JLabel("Colour Shift:", JLabel.TRAILING);
+        // Hue Shift
+        label_colour = new JLabel("Hue Shift:", JLabel.TRAILING);
         panel_labelled.add(label_colour);
 
-        slider_colour = new JSliderAdvanced(0, 720, 0);
-        slider_colour.setMajorTickSpacing(45);
+        slider_colour = new JSliderAdvanced(0, 360, 0);
+        slider_colour.setMajorTickSpacing(36);
         slider_colour.setMinorTickSpacing(1);
         slider_colour.setPaintTicks(true);
         slider_colour.addAdvancedChangeListener(new colourShiftChangeHandler());
         panel_labelled.add(slider_colour);
+
+        // Saturation
+        label_saturation = new JLabel("Saturation:", JLabel.TRAILING);
+        panel_labelled.add(label_saturation);
+
+        slider_saturation = new JSliderAdvanced(0, 100, 100);
+        slider_saturation.setMajorTickSpacing(10);
+        slider_saturation.setMinorTickSpacing(1);
+        slider_saturation.setPaintTicks(true);
+        slider_saturation.addAdvancedChangeListener(new colourShiftChangeHandler());
+        panel_labelled.add(slider_saturation);
+
+        // Brightness
+        label_brightness = new JLabel("Brightness:", JLabel.TRAILING);
+        panel_labelled.add(label_brightness);
+
+        slider_brightness = new JSliderAdvanced(0, 100, 0);
+        slider_brightness.setMajorTickSpacing(10);
+        slider_brightness.setMinorTickSpacing(1);
+        slider_brightness.setPaintTicks(true);
+        slider_brightness.addAdvancedChangeListener(new colourShiftChangeHandler());
+        panel_labelled.add(slider_brightness);
 
         // Use OpenCL
         label_openCL = new JLabel("Use OpenCL:", JLabel.TRAILING);
@@ -145,7 +174,7 @@ public class ConfigManager {
         check_openCL.addChangeListener(new openCLChangeHandler());
         panel_labelled.add(check_openCL);
 
-        SpringUtilities.makeCompactGrid(panel_labelled, 6, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(panel_labelled, 8, 2, 6, 6, 6, 6);
     }
 
     private void initSingletComponents(){
@@ -193,9 +222,9 @@ public class ConfigManager {
         }
     }
 
-    private void colourShiftChange(){
+    private void colourChange(){
         for(ConfigChangeListener l : listeners){
-            l.colourShiftChange(colourShift);
+            l.colourChange(hueShift, saturation, brightness);
         }
     }
 
@@ -227,9 +256,13 @@ public class ConfigManager {
         return (double) spinner_scale.getValue();
     }
 
-    public float getTint () {
-        return (float) slider_colour.getValue() / 720f;
+    public float getHue() {
+        return (float) slider_colour.getValue() / 360f;
     }
+
+    public float getSaturation() { return (float)slider_saturation.getValue() / 100f; }
+
+    public float getBrightness() { return 1f - (float)slider_brightness.getValue() / 100f; }
 
     public int getEscapeRadiusSquared() { return escapeRadius * escapeRadius; }
 
@@ -294,8 +327,10 @@ public class ConfigManager {
          */
         @Override
         public void changeFinish(ChangeEvent e) {
-            colourShift = getTint();
-            colourShiftChange();
+            hueShift = getHue();
+            saturation = getSaturation();
+            brightness = getBrightness();
+            colourChange();
         }
     }
 

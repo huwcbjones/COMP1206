@@ -42,7 +42,9 @@ public abstract class RenderManagementThread extends Thread {
     protected double yShift;
     protected double scaleFactor;
     protected int iterations;
-    protected float tint;
+    protected float hue;
+    protected float saturation;
+    protected float brightness;
 
     protected double xScale;
     protected double yScale;
@@ -143,12 +145,86 @@ public abstract class RenderManagementThread extends Thread {
     }
 
     /**
-     * Gets image tint offset
-     *
-     * @return float image tint
+     * Private method to do the render
      */
-    protected float getTint() {
-        return config.getTint();
+    private void doRender() {
+        // Create image
+        image = FractalImage.fromBufferedImage(panel.createImage());
+
+        // Check if cache is valid for settings
+        if (!checkCacheValidity()) {
+
+            // Recreate cache of rendered images
+            renderCache = new LinkedHashMap<>();
+        }
+
+        // Get a fresh copy of the image properties
+        updateImageProperties();
+        ImageProperties properties = getImageProperties();
+
+        // Check if image is cached
+        boolean fullRender = true;
+        if (imageIsCached()) {
+            useCachedImage(properties);
+            fullRender = false;
+        }
+        if(image.getTint() == properties.hashCode()){
+            Log.Information("Using cached image.");
+            return;
+        }
+
+        if (config.useOpenCL() && isOpenClAvailable) {
+            try {
+                runOpenCL_render(fullRender);
+            } catch (CLException e){
+                isOpenClAvailable = false;
+                e.printStackTrace();
+            }
+        } else {
+            runCPU_render(fullRender);
+        }
+
+        checkCleanCache();
+        image.setTint(properties.getHue());
+        cacheImage(properties, image);
+
+        panel.setImage(image, true);
+
+        fireRenderComplete();
+        hasRendered = true;
+    }
+
+    /**
+     * Updates the properties of the image
+     */
+    private void updateImageProperties() {
+        iterations = this.getIterations();
+        scaleFactor = this.getScaleFactor();
+        xShift = this.getShiftX();
+        yShift = this.getShiftY();
+        hue = this.getHue();
+        saturation = this.getSaturation();
+        brightness = this.getBrightness();
+
+        imgHeight = image.getHeight();
+        imgWidth = image.getWidth();
+
+        double aspectRatio = imgWidth / imgHeight;
+        double xRange = 4.0;
+        double yRange = 2.6;
+
+        if (aspectRatio * yRange < 4) {
+            yRange = xRange / aspectRatio;
+        } else {
+            xRange = yRange * aspectRatio;
+        }
+
+        xScale = xRange / imgWidth;
+        yScale = yRange / imgHeight;
+    }
+
+    public ImageProperties getImageProperties() {
+        return new ImageProperties(iterations, scaleFactor, xShift, yShift, hue, saturation, brightness);
     }
 
     /**
@@ -252,56 +328,6 @@ public abstract class RenderManagementThread extends Thread {
     protected abstract Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds);
 
     /**
-     * Private method to do the render
-     */
-    private void doRender() {
-        // Create image
-        image = FractalImage.fromBufferedImage(panel.createImage());
-
-        // Check if cache is valid for settings
-        if (!checkCacheValidity()) {
-
-            // Recreate cache of rendered images
-            renderCache = new LinkedHashMap<>();
-        }
-
-        // Get a fresh copy of the image properties
-        updateImageProperties();
-        ImageProperties properties = getImageProperties();
-
-        // Check if image is cached
-        boolean fullRender = true;
-        if (imageIsCached()) {
-            useCachedImage(properties);
-            fullRender = false;
-        }
-        if(image.getTint() == properties.hashCode()){
-            Log.Information("Using cached image.");
-            return;
-        }
-
-        if (config.useOpenCL() && isOpenClAvailable) {
-            try {
-                runOpenCL_render(fullRender);
-            } catch (CLException e){
-                isOpenClAvailable = false;
-                e.printStackTrace();
-            }
-        } else {
-            runCPU_render(fullRender);
-        }
-
-        checkCleanCache();
-        image.setTint(properties.getTint());
-        cacheImage(properties, image);
-
-        panel.setImage(image, true);
-
-        fireRenderComplete();
-        hasRendered = true;
-    }
-
-    /**
      * Renders the image using OpenCL
      * @throws CLException Throw if there was an error whilst executing
      */
@@ -339,9 +365,9 @@ public abstract class RenderManagementThread extends Thread {
                 "hueToRGB",
                 hueBuffer,
                 dimensions.width,
-                1.0f,
-                1.0f,
-                getImageProperties().getTint(),
+                config.getBrightness(),
+                config.getSaturation(),
+                getImageProperties().getHue(),
                 image.getTint(),
                 resultsBuffer
         );
@@ -354,6 +380,15 @@ public abstract class RenderManagementThread extends Thread {
     }
 
     /**
+     * Gets image hue offset
+     *
+     * @return float image hue
+     */
+    protected float getHue() {
+        return config.getHue();
+    }
+
+    /**
      * Creates the CL Kernel for execution
      *
      * @param dimension    Dimensions of image to render
@@ -362,27 +397,13 @@ public abstract class RenderManagementThread extends Thread {
      */
     protected abstract CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Float> results);
 
-    private void recolourImage() {
-       /* CLBuffer<Integer> resultsBuffer = context.createIntBuffer(CLMem.Usage.Output, results, false);
-
-        float hueAdj = config.getTint();
-        float huePrev = image.getTint();
-
-        CLKernel hueKernel = openClRenderThread.getProgram("hueToRGB").createKernel(
-                "hueToRGB",
-                hueBuffer,
-                (int)imgWidth,
-                1.0f,
-                1.0f,
-                hueAdj,
-                huePrev,
-                resultsBuffer
-        );
-
-        hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
-        queue.finish();
-
-        return resultsBuffer.read(queue);*/
+    /**
+     * Gets image saturation
+     *
+     * @return float image saturation
+     */
+    protected float getSaturation() {
+        return config.getSaturation();
     }
 
     /**
@@ -526,35 +547,35 @@ public abstract class RenderManagementThread extends Thread {
     //region Image Properties
 
     /**
-     * Updates the properties of the image
+     * Gets image brightness
+     *
+     * @return float image brightness
      */
-    private void updateImageProperties() {
-        iterations = this.getIterations();
-        scaleFactor = this.getScaleFactor();
-        xShift = this.getShiftX();
-        yShift = this.getShiftY();
-        tint = this.getTint();
-
-        imgHeight = image.getHeight();
-        imgWidth = image.getWidth();
-
-        double aspectRatio = imgWidth / imgHeight;
-        double xRange = 4.0;
-        double yRange = 2.6;
-
-        if (aspectRatio * yRange < 4) {
-            yRange = xRange / aspectRatio;
-        } else {
-            xRange = yRange * aspectRatio;
-        }
-
-        xScale = xRange / imgWidth;
-        yScale = yRange / imgHeight;
+    protected float getBrightness() {
+        return config.getBrightness();
     }
 
+    private void recolourImage() {
+       /* CLBuffer<Integer> resultsBuffer = context.createIntBuffer(CLMem.Usage.Output, results, false);
 
-    public ImageProperties getImageProperties() {
-        return new ImageProperties(iterations, scaleFactor, xShift, yShift, tint);
+        float hueAdj = config.getHue();
+        float huePrev = image.getHue();
+
+        CLKernel hueKernel = openClRenderThread.getProgram("hueToRGB").createKernel(
+                "hueToRGB",
+                hueBuffer,
+                (int)imgWidth,
+                1.0f,
+                1.0f,
+                hueAdj,
+                huePrev,
+                resultsBuffer
+        );
+
+        hueKernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
+        queue.finish();
+
+        return resultsBuffer.read(queue);*/
     }
 
     //endregion
