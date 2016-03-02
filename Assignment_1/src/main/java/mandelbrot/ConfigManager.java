@@ -15,6 +15,7 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 /**
@@ -113,7 +114,7 @@ public class ConfigManager {
         label_translateX = new JLabel("X Shift:", JLabel.TRAILING);
         panel_labelled.add(label_translateX);
 
-        spinner_shiftX = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.1));
+        spinner_shiftX = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.05));
         spinner_shiftX.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_shiftX);
 
@@ -121,7 +122,7 @@ public class ConfigManager {
         label_translateY = new JLabel("Y Shift:", JLabel.TRAILING);
         panel_labelled.add(label_translateY);
 
-        spinner_shiftY = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.1));
+        spinner_shiftY = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.05));
         spinner_shiftY.addChangeListener(new optionChangeHandler());
         panel_labelled.add(spinner_shiftY);
 
@@ -154,6 +155,7 @@ public class ConfigManager {
         constraints.weightx = 1;
 
         btn_render = new JButton("Render");
+        btn_render.setMnemonic(KeyEvent.VK_R);
         btn_render.addActionListener(new renderHandler());
         panel_singlets.add(btn_render, constraints);
     }
