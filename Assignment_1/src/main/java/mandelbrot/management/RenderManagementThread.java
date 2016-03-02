@@ -539,7 +539,7 @@ public abstract class RenderManagementThread extends Thread {
         imgWidth = image.getWidth();
 
         double aspectRatio = imgWidth / imgHeight;
-        double xRange = 3.8;
+        double xRange = 4.0;
         double yRange = 2.6;
 
         if (aspectRatio * yRange < 4) {
