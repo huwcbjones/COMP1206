@@ -42,7 +42,7 @@ public class Main extends JFrameAdvanced {
 
     private final OpenClRenderThread openClRenderThread;
     private final MandelbrotRenderManagementThread mandel_drawer;
-    private final JuliaRenderManagementThread julia_drawer;
+    private final JuliaRenderManagementThread juliaRenderer;
 
     // Julia Set
     private ImagePanel imgPanel_julia;
@@ -60,8 +60,6 @@ public class Main extends JFrameAdvanced {
     private JLabel label_selectedPoint;
     private JTextField text_selectedPoint;
 
-    private Complex selectedPosition;
-
     //endregion
 
 
@@ -72,7 +70,7 @@ public class Main extends JFrameAdvanced {
         super("Fractal Explorer");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        this.setMinimumSize(new Dimension(800, 600));
+        this.setMinimumSize(new Dimension(1024, 768));
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
@@ -94,8 +92,8 @@ public class Main extends JFrameAdvanced {
         mandel_drawer.addDrawListenener(new renderCompleteHandler());
         mandel_drawer.start();
 
-        julia_drawer = new JuliaRenderManagementThread(this, openClRenderThread, imgPanel_julia);
-        julia_drawer.start();
+        juliaRenderer = new JuliaRenderManagementThread(this, openClRenderThread, imgPanel_julia);
+        juliaRenderer.start();
 
         this.setVisible(true);
         this.addAdvancedComponentListener(new resizeHandler());
@@ -154,7 +152,6 @@ public class Main extends JFrameAdvanced {
         pane.add(panel_controls, c);
 
         c.fill = GridBagConstraints.BOTH;
-        c.weighty = 0.5;
 
         panel_bookmarks = bookmarks.getBookmarkPanel();
         panel_bookmarks.setOpaque(false);
@@ -166,6 +163,7 @@ public class Main extends JFrameAdvanced {
         juliaLayout.setVgap(3);
         panel_julia = new JPanel(juliaLayout);
         panel_julia.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Julia Set"));
+        c.weighty = 1;
         c.gridy = 3;
         pane.add(panel_julia, c);
 
@@ -223,11 +221,11 @@ public class Main extends JFrameAdvanced {
     }
 
     private void updatedSelectedPoint() {
-        text_selectedPoint.setText("-");
-    }
-
-    private void updatedSelectedPoint(Complex c) {
-        text_selectedPoint.setText(c.toString());
+        String text = "-";
+        if(config.getSelectedPoint() != null){
+            text = config.getSelectedPoint().toString();
+        }
+        text_selectedPoint.setText(text);
     }
 
     private void updatedCursorPoint() {
@@ -246,8 +244,8 @@ public class Main extends JFrameAdvanced {
     }
 
     public void renderJulia(){
-        if(selectedPosition == null) return;
-        julia_drawer.render(selectedPosition);
+        if(config.getSelectedPoint() == null) return;
+        juliaRenderer.render();
     }
     //endregion
 
@@ -293,6 +291,11 @@ public class Main extends JFrameAdvanced {
             renderMandelbrot();
             renderJulia();
         }
+
+        @Override
+        public void selectedPointChange(Complex complex) {
+            renderJulia();
+        }
     }
 
     private class renderCompleteHandler implements RenderListener {
@@ -309,12 +312,9 @@ public class Main extends JFrameAdvanced {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (mandel_drawer.hasRendered()) {
-                selectedPosition = mandel_drawer.getComplexFromPoint(e.getPoint());
-                updatedSelectedPoint(selectedPosition);
-                julia_drawer.render(selectedPosition);
-            } else {
-                updatedSelectedPoint();
+                config.setSelectedPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
             }
+            updatedSelectedPoint();
         }
     }
 

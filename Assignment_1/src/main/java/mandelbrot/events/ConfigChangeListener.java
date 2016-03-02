@@ -1,5 +1,6 @@
 package mandelbrot.events;
 
+import utils.Complex;
 import utils.ImageProperties;
 
 /**
@@ -21,4 +22,6 @@ public interface ConfigChangeListener {
     void colourShiftChange(double shift);
 
     void configChange(ImageProperties properties);
+
+    void selectedPointChange(Complex complex);
 }

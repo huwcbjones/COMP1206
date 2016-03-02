@@ -72,8 +72,8 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     }
 
 
-    public void render(Complex c) {
-        this.c = c;
+    public void render() {
+        this.c = config.getSelectedPoint();
         super.render();
     }
 

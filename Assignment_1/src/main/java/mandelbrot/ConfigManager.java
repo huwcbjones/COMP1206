@@ -3,6 +3,7 @@ package mandelbrot;
 import mandelbrot.events.AdvancedChangeAdapter;
 import mandelbrot.events.AdvancedChangeListener;
 import mandelbrot.events.ConfigChangeListener;
+import utils.Complex;
 import utils.ImageProperties;
 import utils.JSliderAdvanced;
 import utils.SpringUtilities;
@@ -58,8 +59,10 @@ public class ConfigManager {
     double scaleFactor;
     int iterations;
     double colourShift;
-    boolean openCL = true;
+    Complex selectedPoint;
     int escapeRadius = 2;
+
+    boolean openCL = true;
 
     private ArrayList<ConfigChangeListener> listeners;
 
@@ -193,9 +196,15 @@ public class ConfigManager {
             l.colourShiftChange(colourShift);
         }
     }
+
+    private void selectedPointChange(){
+        for(ConfigChangeListener l : listeners){
+            l.selectedPointChange(selectedPoint);
+        }
+    }
     //endregion
 
-    //region Get Methods
+    //region Get/Set Methods
     public JPanel getConfigPanel(){
         return this.panel_config;
     }
@@ -221,6 +230,16 @@ public class ConfigManager {
     }
 
     public int getEscapeRadiusSquared() { return escapeRadius * escapeRadius; }
+
+    public Complex getSelectedPoint() {
+        if(selectedPoint == null) return null;
+        return selectedPoint.clone();
+    }
+    public void setSelectedPoint(Complex complex){
+        this.selectedPoint = complex;
+        selectedPointChange();
+    }
+
 
     public boolean useOpenCL() { return openCL;}
 
