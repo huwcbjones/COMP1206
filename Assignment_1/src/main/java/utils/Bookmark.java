@@ -12,6 +12,12 @@ public class Bookmark implements Comparable<Bookmark> {
     private double real;
     private double imaginary;
 
+    public Bookmark(String name, Complex complex){
+        this.name = name;
+        this.real = complex.getReal();
+        this.imaginary = complex.getImaginary();
+    }
+
     public Bookmark(String name, double real, double imaginary) {
         this.name = name;
         this.real = real;
