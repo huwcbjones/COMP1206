@@ -5,6 +5,7 @@ import com.nativelibs4java.opencl.CLKernel;
 import com.nativelibs4java.opencl.CLProgram;
 import mandelbrot.Main;
 import mandelbrot.render.MandelbrotTask;
+import utils.ImageColourProperties;
 import utils.ImagePanel;
 import utils.ImageProperties;
 import utils.ImageSegment;
@@ -31,20 +32,19 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     protected void ocl_loadPrograms() {
         super.ocl_loadPrograms();
         if (!openClRenderThread.loadProgram("mandelbrot", this.getClass().getResourceAsStream("/mandelbrot/opencl/mandelbrot.cl"))) {
-            this.isOpenClAvailable = false;
+            config.disableOpenCL();
         }
     }
 
     /**
      * Creates the task to dispatch to the workers
      *
-     * @param properties Properties of image to render
      * @param bounds     Bounds of render area
      * @return ImageSegment with result of render
      */
     @Override
-    protected Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds) {
-        return new MandelbrotTask(this, bounds, properties);
+    protected Callable<ImageSegment> createTask(Rectangle2D bounds) {
+        return new MandelbrotTask(this, bounds);
     }
 
     /**
@@ -57,7 +57,6 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     @Override
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
         CLProgram mandelbrot = openClRenderThread.getProgram("mandelbrot");
-        ImageProperties p = getImageProperties();
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
@@ -65,9 +64,9 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
         float[] shifts = new float[]{(float) xShift, (float) yShift};
         float scaleFactor = (float)this.scaleFactor;
         float huePrev = getImageHue();
-        float hueAdj = p.getHue();
-        float saturation = p.getSaturation();
-        float brightness = p.getBrightness();
+        float hueAdj = getHue();
+        float saturation = getSaturation();
+        float brightness = getBrightness();
 
         return mandelbrot.createKernel(
                 "mandelbrot",

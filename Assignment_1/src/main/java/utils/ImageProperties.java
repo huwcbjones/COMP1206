@@ -11,36 +11,33 @@ import java.math.RoundingMode;
  * @since 28/02/2016
  */
 public class ImageProperties {
+    private int width;
+    private int height;
+
     private int iterations;
     private double scale;
     private double xShift;
     private double yShift;
-    private float hue = -1;
-    private float saturation = 1;
-    private float brightness = 1;
 
     private Complex complex;
 
-    public ImageProperties(int iterations, double scale, double xShift, double yShift) {
+    public ImageProperties(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public ImageProperties(int width, int height, int iterations, double scale, double xShift, double yShift) {
+        this(width, height);
         this.iterations = iterations;
         this.scale = scale;
         this.xShift = xShift;
         this.yShift = yShift;
     }
 
-    public ImageProperties(int iterations, double scale, double xShift, double yShift, float hue, float saturation, float brightness) {
+    public ImageProperties(int width, int height, int iterations, double scale, double xShift, double yShift, Complex complex) {
+        this(width, height);
         this.iterations = iterations;
         this.scale = scale;
-        this.xShift = xShift;
-        this.yShift = yShift;
-        this.hue = hue;
-        this.saturation = saturation;
-        this.brightness = brightness;
-    }
-
-    public ImageProperties(int iterations, double scale, double xShift, double yShift, Complex complex) {
-        this.iterations = iterations;
-        this.scale = ImageProperties.round(scale, 4);
         this.xShift = xShift;
         this.yShift = yShift;
         this.complex = complex;
@@ -58,8 +55,12 @@ public class ImageProperties {
         return scale;
     }
 
+    public double getScale(int decimalPlaces) {
+        return round(scale, decimalPlaces);
+    }
+
     public void setScale(double scale) {
-        this.scale = ImageProperties.round(scale, 4);
+        this.scale = scale;
     }
 
     public double getxShift() {
@@ -88,14 +89,14 @@ public class ImageProperties {
 
     @Override
     public int hashCode() {
-
+        int h_width = width * 487;
+        int h_height = height * 491;
         int h_iteration = iterations * 499;
         int h_scale = (int)(scale * 503);
         int h_xShift = (int)(xShift * 509);
         int h_yShift = (int)(xShift * 521);
-        int h_tint = (int) (hue * 523);
 
-        int code = h_iteration ^ h_scale ^ h_xShift ^ h_yShift ^ h_tint;
+        int code = h_width ^ h_height ^ h_iteration ^ h_scale ^ h_xShift ^ h_yShift;
         if(complex != null) code ^= complex.hashCode();
 
         return code;
@@ -115,46 +116,43 @@ public class ImageProperties {
         if (!(obj instanceof ImageProperties)) return false;
         ImageProperties p = (ImageProperties) obj;
 
-        return equalsNotTint(p) &&
-                hue == p.getHue() &&
-                saturation == p.getSaturation() &&
-                brightness == p.getBrightness();
-    }
-
-    public boolean equalsNotTint(ImageProperties p) {
         // If these values are unset in either property, return false
         if (p.getComplex() == null && complex != null) return false;
-        if (p.getHue() == -1 && hue != -1) return false;
 
         boolean complex = (this.complex == null) || this.complex.equals(p.getComplex());
-        return iterations == p.getIterations() &&
+        return
+                width == p.getWidth() &&
+                height == p.getHeight() &&
+                iterations == p.getIterations() &&
                 scale == p.getScale() &&
                 xShift == p.getxShift() &&
                 yShift == p.getyShift() &&
                 complex;
     }
 
-    public float getHue() {
-        return hue;
+    public int getWidth() {
+        return width;
     }
 
-    public void setHue(float hue) {
-        this.hue = hue;
+    public void setWidth(int width) {
+        this.width = width;
     }
 
-    public float getSaturation() {
-        return saturation;
+    public int getHeight() {
+        return height;
     }
 
-    public void setSaturation(float saturation) {
-        this.saturation = saturation;
+    public void setHeight(int height) {
+        this.height = height;
     }
 
-    public float getBrightness() {
-        return brightness;
-    }
 
-    public void setBrightness(float brightness) {
-        this.brightness = brightness;
+    @Override
+    public String toString() {
+        String str = "W: " + width + ", H: " + height + ", I:" + iterations + ", S: " + scale + ", X:" + xShift + ", Y:" + yShift;
+        if(complex != null) {
+            str += ", C:(" + complex.toString() + ")";
+        }
+        return str;
     }
 }

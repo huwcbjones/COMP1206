@@ -21,7 +21,5 @@ public interface ConfigChangeListener {
 
     void colourChange(float hue, float saturation, float brightness);
 
-    void configChange(ImageProperties properties);
-
     void selectedPointChange(Complex complex);
 }

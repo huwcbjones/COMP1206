@@ -17,21 +17,21 @@ import java.awt.geom.Rectangle2D;
  */
 public class JuliaTask extends RenderTask {
     Complex complex;
-    public JuliaTask(RenderManagementThread t, Rectangle2D bounds, ImageProperties properties, Complex c) {
-        super(t, bounds, properties);
-        complex = c;
+    public JuliaTask(RenderManagementThread t, Rectangle2D bounds, Complex complex) {
+        super(t, bounds);
+        this.complex = complex;
     }
 
     @Override
-    protected ColouredPixel doPixelCalculation(Point2D point, Complex c) {
+    protected ColouredPixel doPixelCalculation(Point2D point, Complex complex) {
         int currIteration = 0;
-        Complex z = c;
+        Complex z = complex;
         Complex prevPoint;
 
         while (z.squareReal() + z.squareImaginary() <= 4 && currIteration < maxIterations) {
             prevPoint = z.clone();
             z = z.square();
-            z.add(complex);
+            z.add(this.complex);
 
             // Apply period detection
             if(z.equals(prevPoint)){

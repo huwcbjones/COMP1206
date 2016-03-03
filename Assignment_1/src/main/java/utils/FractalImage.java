@@ -11,7 +11,8 @@ import java.awt.image.BufferedImage;
  */
 public class FractalImage extends BufferedImage {
 
-    private float tint;
+    private ImageColourProperties colourProperties;
+    private ImageProperties properties;
 
     /**
      * Constructs a <code>BufferedImage</code> of one of the predefined
@@ -21,7 +22,6 @@ public class FractalImage extends BufferedImage {
      * @param width     width of the created image
      * @param height    height of the created image
      * @param imageType type of the created image
-     * @see ColorSpace
      * @see #TYPE_INT_RGB
      * @see #TYPE_INT_ARGB
      * @see #TYPE_INT_ARGB_PRE
@@ -38,6 +38,8 @@ public class FractalImage extends BufferedImage {
      */
     public FractalImage(int width, int height, int imageType) {
         super(width, height, imageType);
+        this.properties = new ImageProperties(width, height);
+        this.colourProperties = new ImageColourProperties();
     }
 
     public static FractalImage fromBufferedImage(BufferedImage image) {
@@ -48,11 +50,19 @@ public class FractalImage extends BufferedImage {
         return img;
     }
 
-    public float getHue() {
-        return tint;
+    public ImageColourProperties getColourProperties() {
+        return colourProperties;
     }
 
-    public void setTint(float tint) {
-        this.tint = tint;
+    public void setColourProperties(ImageColourProperties colourProperties) {
+        this.colourProperties = colourProperties;
+    }
+
+    public ImageProperties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(ImageProperties properties) {
+        this.properties = properties;
     }
 }

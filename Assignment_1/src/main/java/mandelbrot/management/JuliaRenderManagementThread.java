@@ -22,22 +22,27 @@ import java.util.concurrent.Callable;
  */
 public class JuliaRenderManagementThread extends RenderManagementThread {
 
-    protected Complex c;
+    protected Complex complex;
 
     public JuliaRenderManagementThread(Main mainWindow, OpenClRenderThread thread, ImagePanel panel) {
         super(mainWindow, thread, panel, "Julia");
     }
 
+    /**
+     * Gets properties for this render
+     *
+     * @return ImageProperties
+     */
     @Override
-    public ImageProperties getImageProperties() {
-        ImageProperties img = super.getImageProperties();
-        img.setComplex(c);
-        return img;
+    protected ImageProperties getRenderProperties() {
+        ImageProperties properties = super.getRenderProperties();
+        properties.setComplex(complex);
+        return properties;
     }
 
     @Override
-    protected Callable<ImageSegment> createTask(ImageProperties properties, Rectangle2D bounds) {
-        return new JuliaTask(this, bounds, properties, properties.getComplex());
+    protected Callable<ImageSegment> createTask(Rectangle2D bounds) {
+        return new JuliaTask(this, bounds, complex);
     }
 
     /**
@@ -47,26 +52,19 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
      * @param results   Buffer to put results into
      * @return CLKernel to execute
      */
-    @Override
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
-        return null;
-    }
-
-    /**
-     * Creates the CL Kernel for execution
-     *
-     * @param dimension Dimensions of image to render
-     * @return CLKernel to execute
-     */
-    protected CLKernel createOpenCLKernel(Dimension dimension) {
         CLProgram julia = openClRenderThread.getProgram("julia");
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
-        float[] complex = new float[]{(float) c.getReal(), (float) c.getImaginary()};
+        float[] complex = new float[]{(float)this.complex.getReal(), (float)this.complex.getImaginary()};
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
         float[] scales = new float[]{(float) xScale, (float) yScale};
         float[] shifts = new float[]{(float) xShift, (float) yShift};
         float scaleFactor = (float)this.scaleFactor;
+        float huePrev = getImageHue();
+        float hueAdj = getHue();
+        float saturation = getSaturation();
+        float brightness = getBrightness();
 
         return julia.createKernel(
                 "julia",
@@ -76,23 +74,33 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
                 dimensions,
                 scales,
                 shifts,
-                scaleFactor
+                scaleFactor,
+                huePrev,
+                hueAdj,
+                saturation,
+                brightness,
+                results
         );
     }
 
-
+    @Override
     public void render() {
-        this.c = config.getSelectedPoint();
+        this.complex = config.getSelectedPoint();
         super.render();
     }
 
     @Override
-    protected double getShiftX() {
+    public double getScale() {
+        return 1;
+    }
+
+    @Override
+    public double getShiftX() {
         return 0;
     }
 
     @Override
-    protected double getShiftY() {
+    public double getShiftY() {
         return 0;
     }
 
@@ -103,12 +111,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     protected void ocl_loadPrograms() {
         super.ocl_loadPrograms();
         if (!openClRenderThread.loadProgram("julia", this.getClass().getResourceAsStream("/mandelbrot/opencl/julia.cl"))) {
-            this.isOpenClAvailable = false;
+            config.disableOpenCL();
         }
-    }
-
-    @Override
-    protected double getScaleFactor() {
-        return 1;
     }
 }

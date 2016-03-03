@@ -7,10 +7,7 @@ import mandelbrot.events.RenderListener;
 import mandelbrot.management.JuliaRenderManagementThread;
 import mandelbrot.management.MandelbrotRenderManagementThread;
 import mandelbrot.management.OpenClRenderThread;
-import utils.Complex;
-import utils.ImagePanel;
-import utils.JFrameAdvanced;
-import utils.SpringUtilities;
+import utils.*;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -89,7 +86,7 @@ public class Main extends JFrameAdvanced {
         this.pack();
 
         mandel_drawer = new MandelbrotRenderManagementThread(this, openClRenderThread, imgPanel_image);
-        mandel_drawer.addDrawListenener(new renderCompleteHandler());
+        mandel_drawer.addRenderListener(new renderCompleteHandler());
         mandel_drawer.start();
 
         juliaRenderer = new JuliaRenderManagementThread(this, openClRenderThread, imgPanel_julia);
@@ -114,6 +111,7 @@ public class Main extends JFrameAdvanced {
         panel_display = new JPanel();
         panel_display.setLayout(new BorderLayout());
         panel_display.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Mandelbrot Set"));
+        panel_display.setMinimumSize(new Dimension(700, 700));
         constraints.gridx = 0;
         constraints.gridy = 0;
         constraints.weightx = DISPLAY_CONSTRAINT;
@@ -138,7 +136,7 @@ public class Main extends JFrameAdvanced {
         c.gridx = 1;
         c.gridheight = 1;
         c.gridwidth = 1;
-        c.weighty = 0;
+        c.weighty = 0.01;
         c.fill = GridBagConstraints.HORIZONTAL;
 
         panel_info = new JPanel();
@@ -159,8 +157,6 @@ public class Main extends JFrameAdvanced {
         pane.add(panel_bookmarks, c);
 
         BorderLayout juliaLayout = new BorderLayout();
-        juliaLayout.setHgap(3);
-        juliaLayout.setVgap(3);
         panel_julia = new JPanel(juliaLayout);
         panel_julia.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Julia Set"));
         c.weighty = 1;
@@ -259,6 +255,7 @@ public class Main extends JFrameAdvanced {
          */
         @Override
         public void componentResizeEnd(ComponentEvent e) {
+            Log.Information("Resize handled");
             renderMandelbrot();
             renderJulia();
         }

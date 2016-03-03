@@ -3,7 +3,6 @@ package mandelbrot.render;
 import mandelbrot.management.RenderManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
-import utils.ImageProperties;
 import utils.ImageSegment;
 
 import java.awt.*;
@@ -20,20 +19,20 @@ import java.util.concurrent.Callable;
  */
 public abstract class RenderTask implements Callable<ImageSegment> {
 
-    protected RenderManagementThread renderManagementThread;
+    public static final float M_LN2_F = (float)Math.log(2);
+
+    protected RenderManagementThread mgmtThread;
     protected Rectangle2D bounds;
     protected int maxIterations;
-    protected ImageProperties properties;
     protected BufferedImage image;
 
     protected Point2D absolutePoint;
     protected Point2D relativePoint;
 
-    public RenderTask(RenderManagementThread t, Rectangle2D bounds, ImageProperties properties) {
-        this.renderManagementThread = t;
+    public RenderTask(RenderManagementThread t, Rectangle2D bounds) {
+        this.mgmtThread = t;
         this.bounds = bounds;
-        this.maxIterations = properties.getIterations();
-        this.properties = properties;
+        this.maxIterations = mgmtThread.getIterations();
     }
 
     /**
@@ -51,7 +50,7 @@ public abstract class RenderTask implements Callable<ImageSegment> {
                 absolutePoint = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
                 relativePoint = new Point2D.Double(x, y);
 
-                Complex c = renderManagementThread.getComplexFromPoint(absolutePoint);
+                Complex c = mgmtThread.getComplexFromPoint(absolutePoint);
 
                 pixel = doPixelCalculation(relativePoint, c);
                 paintPixel(pixel);
@@ -73,21 +72,17 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     }
 
     protected Color getHSBColour(int iterations, Complex z){
-        return Color.getHSBColor(getHue(iterations, z), properties.getSaturation(), properties.getBrightness());
+        return Color.getHSBColor(getHue(iterations, z), mgmtThread.getSaturation(), mgmtThread.getBrightness());
     }
 
     protected float getHue(int iterations, Complex z){
-        return properties.getHue() + (float)(iterations + 1 - Math.log(Math.log(Math.sqrt(z.modulusSquared()))) / Math.log(2)) / 100f;
+        // sqrt of inner term removed using log simplification rules. log(x^(1/2)) = (1/2)*log(x) = log(x) / 2
+        double log_z = Math.log((z.getReal() * z.getReal()) + (z.getImaginary() * z.getImaginary())) / 2.0d;
+        double nu = Math.log( log_z / M_LN2_F ) / M_LN2_F;
+        return mgmtThread.getHue() + (iterations + 1 - (float)nu ) / 110f;
     }
 
     protected abstract ColouredPixel doPixelCalculation(Point2D point, Complex complex);
-
-    private void paintPixel(Point2D p, Color c) {
-        int x = Double.valueOf(p.getX()).intValue();
-        int y = Double.valueOf(p.getY()).intValue();
-
-        this.image.setRGB(x, y, c.getRGB());
-    }
 
     private void paintPixel(ColouredPixel p) {
         int x = Double.valueOf(p.getPoint().getX()).intValue();

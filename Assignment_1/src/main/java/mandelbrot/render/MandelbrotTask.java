@@ -3,7 +3,6 @@ package mandelbrot.render;
 import mandelbrot.management.RenderManagementThread;
 import utils.ColouredPixel;
 import utils.Complex;
-import utils.ImageProperties;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -20,11 +19,10 @@ import java.awt.image.BufferedImage;
 public class MandelbrotTask extends RenderTask {
 
     private boolean halfHeight = true;
-    public MandelbrotTask(RenderManagementThread t, Rectangle2D bounds, ImageProperties properties) {
-        super(t, bounds, properties);
-        ImageProperties prop = renderManagementThread.getImageProperties();
+    public MandelbrotTask(RenderManagementThread t, Rectangle2D bounds) {
+        super(t, bounds);
 
-        halfHeight = (prop.getxShift() == 0 && prop.getyShift() == 0);
+        halfHeight = (mgmtThread.getShiftX() == 0);
     }
 
     /**

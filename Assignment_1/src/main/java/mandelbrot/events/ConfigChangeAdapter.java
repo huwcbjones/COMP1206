@@ -32,10 +32,6 @@ public class ConfigChangeAdapter implements ConfigChangeListener {
     }
 
     @Override
-    public void configChange(ImageProperties properties) {
-    }
-
-    @Override
     public void selectedPointChange(Complex complex) {
     }
 }
