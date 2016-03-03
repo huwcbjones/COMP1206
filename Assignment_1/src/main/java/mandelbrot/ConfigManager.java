@@ -3,8 +3,8 @@ package mandelbrot;
 import mandelbrot.events.AdvancedChangeAdapter;
 import mandelbrot.events.ConfigChangeListener;
 import utils.Complex;
-import utils.ImageProperties;
 import utils.JSliderAdvanced;
+import utils.Log;
 import utils.SpringUtilities;
 
 import javax.swing.*;
@@ -28,11 +28,12 @@ public class ConfigManager {
     private Main mainWindow;
 
     private JPanel panel_config;
-    private JPanel panel_labelled;
+    boolean useOpenCL = true;
+    boolean isCacheDisabled = false;
+    private JPanel panel_controls;
     private JPanel panel_singlets;
-
-    // Control Panel
-    private JLabel label_iterations;
+    private JPanel panel_colouring;
+    private JPanel panel_advanced;
     private JSpinner spinner_iterations;
 
     private JLabel label_translateX;
@@ -43,21 +44,25 @@ public class ConfigManager {
 
     private JLabel label_scale;
     private JSpinner spinner_scale;
-
-    private JLabel label_colour;
-    private JSliderAdvanced slider_colour;
+    private JTabbedPane tabbedPane;
+    //region Controls
+    private JLabel label_iterations;
 
     private JLabel label_saturation;
     private JSliderAdvanced slider_saturation;
 
     private JLabel label_brightness;
     private JSliderAdvanced slider_brightness;
-
-    private JLabel label_openCL;
+    //endregion
+    //region Colouring
+    private JLabel label_hue;
     private JCheckBox check_openCL;
-
-    private JButton btn_render;
-
+    private JSliderAdvanced slider_hue;
+    //endregion
+    //region Advanced
+    private JLabel label_openCL;
+    private JLabel label_disableCache;
+    //endregion
 
     // Variables
     double xShift;
@@ -69,8 +74,10 @@ public class ConfigManager {
     float brightness;
     Complex selectedPoint;
     int escapeRadius = 2;
-
-    boolean openCL = true;
+    private JCheckBox check_disableCache;
+    //endregion
+    //region Singlets
+    private JButton btn_render;
 
     private ArrayList<ConfigChangeListener> listeners;
 
@@ -87,94 +94,122 @@ public class ConfigManager {
     //region Initialise Components
     private void initPanel(){
         panel_config = new JPanel();
-        panel_config.setLayout(new BoxLayout(panel_config, BoxLayout.PAGE_AXIS));
+        panel_config.setLayout(new BorderLayout());
         panel_config.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Controls"));
 
-        panel_labelled = new JPanel(new SpringLayout());
-        panel_config.add(panel_labelled);
-        initLabelledComponents();
+        tabbedPane = new JTabbedPane();
+        panel_config.add(tabbedPane, BorderLayout.CENTER);
+
+        panel_controls = new JPanel(new SpringLayout());
+        panel_colouring = new JPanel(new SpringLayout());
+        panel_advanced = new JPanel(new SpringLayout());
+
+        initControlComponents();
+        initColouringComponents();
+        initAdvancedComponents();
 
         panel_singlets = new JPanel(new GridBagLayout());
-        panel_config.add(panel_singlets);
+        panel_config.add(panel_singlets, BorderLayout.PAGE_END);
         initSingletComponents();
     }
 
-    private void initLabelledComponents(){
+    private void initControlComponents() {
 
         // Iterations
         label_iterations = new JLabel("Iterations:", JLabel.TRAILING);
-        panel_labelled.add(label_iterations);
+        panel_controls.add(label_iterations);
 
         spinner_iterations = new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 1));
         spinner_iterations.addChangeListener(new optionChangeHandler());
-        panel_labelled.add(spinner_iterations);
+        panel_controls.add(spinner_iterations);
 
         // Scale
         label_scale = new JLabel("Scale:", JLabel.TRAILING);
-        panel_labelled.add(label_scale);
+        panel_controls.add(label_scale);
 
         spinner_scale = new JSpinner(new SpinnerNumberModel(1, 0, Integer.MAX_VALUE, 0.1d));
         spinner_scale.addChangeListener(new optionChangeHandler());
-        panel_labelled.add(spinner_scale);
+        panel_controls.add(spinner_scale);
 
         // x shift
         label_translateX = new JLabel("X Shift:", JLabel.TRAILING);
-        panel_labelled.add(label_translateX);
+        panel_controls.add(label_translateX);
 
         spinner_shiftX = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.05));
         spinner_shiftX.addChangeListener(new optionChangeHandler());
-        panel_labelled.add(spinner_shiftX);
+        panel_controls.add(spinner_shiftX);
 
         // y shift
         label_translateY = new JLabel("Y Shift:", JLabel.TRAILING);
-        panel_labelled.add(label_translateY);
+        panel_controls.add(label_translateY);
 
         spinner_shiftY = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0.05));
         spinner_shiftY.addChangeListener(new optionChangeHandler());
-        panel_labelled.add(spinner_shiftY);
+        panel_controls.add(spinner_shiftY);
 
+        SpringUtilities.makeCompactGrid(panel_controls, 4, 2, 6, 6, 6, 6);
+        tabbedPane.addTab("Controls", panel_controls);
+    }
+
+    private void initColouringComponents() {
         // Hue Shift
-        label_colour = new JLabel("Hue Shift:", JLabel.TRAILING);
-        panel_labelled.add(label_colour);
+        label_hue = new JLabel("Hue Shift:", JLabel.TRAILING);
+        panel_colouring.add(label_hue);
 
-        slider_colour = new JSliderAdvanced(0, 360, 0);
-        slider_colour.setMajorTickSpacing(36);
-        slider_colour.setMinorTickSpacing(1);
-        slider_colour.setPaintTicks(true);
-        slider_colour.addAdvancedChangeListener(new colourShiftChangeHandler());
-        panel_labelled.add(slider_colour);
+        slider_hue = new JSliderAdvanced(0, 360, 0);
+        slider_hue.setMajorTickSpacing(36);
+        slider_hue.setMinorTickSpacing(1);
+        slider_hue.setPaintTicks(true);
+        slider_hue.addAdvancedChangeListener(new colourShiftChangeHandler());
+        panel_colouring.add(slider_hue);
 
         // Saturation
         label_saturation = new JLabel("Saturation:", JLabel.TRAILING);
-        panel_labelled.add(label_saturation);
+        panel_colouring.add(label_saturation);
 
         slider_saturation = new JSliderAdvanced(0, 100, 100);
         slider_saturation.setMajorTickSpacing(10);
         slider_saturation.setMinorTickSpacing(1);
         slider_saturation.setPaintTicks(true);
         slider_saturation.addAdvancedChangeListener(new colourShiftChangeHandler());
-        panel_labelled.add(slider_saturation);
+        panel_colouring.add(slider_saturation);
 
         // Brightness
         label_brightness = new JLabel("Brightness:", JLabel.TRAILING);
-        panel_labelled.add(label_brightness);
+        panel_colouring.add(label_brightness);
 
         slider_brightness = new JSliderAdvanced(0, 100, 100);
         slider_brightness.setMajorTickSpacing(10);
         slider_brightness.setMinorTickSpacing(1);
         slider_brightness.setPaintTicks(true);
         slider_brightness.addAdvancedChangeListener(new colourShiftChangeHandler());
-        panel_labelled.add(slider_brightness);
+        panel_colouring.add(slider_brightness);
 
+        SpringUtilities.makeCompactGrid(panel_colouring, 3, 2, 6, 6, 6, 6);
+        tabbedPane.addTab("Colouring", panel_colouring);
+    }
+
+    private void initAdvancedComponents() {
         // Use OpenCL
         label_openCL = new JLabel("Use OpenCL:", JLabel.TRAILING);
-        panel_labelled.add(label_openCL);
+        panel_advanced.add(label_openCL);
+
         check_openCL = new JCheckBox();
         check_openCL.setSelected(true);
         check_openCL.addChangeListener(new openCLChangeHandler());
-        panel_labelled.add(check_openCL);
+        panel_advanced.add(check_openCL);
 
-        SpringUtilities.makeCompactGrid(panel_labelled, 8, 2, 6, 6, 6, 6);
+        // Disable Cache
+        label_disableCache = new JLabel("Disable Cache:", JLabel.TRAILING);
+        panel_advanced.add(label_disableCache);
+
+        check_disableCache = new JCheckBox();
+        check_disableCache.setSelected(false);
+        check_disableCache.addChangeListener(new disableCacheHandler());
+        panel_advanced.add(check_disableCache);
+
+        SpringUtilities.makeCompactGrid(panel_advanced, 2, 2, 6, 6, 6, 6);
+        tabbedPane.addTab("Advanced", panel_advanced);
     }
 
     private void initSingletComponents(){
@@ -215,13 +250,6 @@ public class ConfigManager {
         }
     }
 
-    private void configChange(){
-        ImageProperties p = new ImageProperties(iterations, scaleFactor, xShift, yShift);
-        for(ConfigChangeListener l :listeners){
-            l.configChange(p);
-        }
-    }
-
     private void colourChange(){
         for(ConfigChangeListener l : listeners){
             l.colourChange(hueShift, saturation, brightness);
@@ -257,7 +285,7 @@ public class ConfigManager {
     }
 
     public float getHue() {
-        return (float) slider_colour.getValue() / 360f;
+        return (float) slider_hue.getValue() / 360f;
     }
 
     public float getSaturation() { return (float)slider_saturation.getValue() / 100f; }
@@ -275,8 +303,24 @@ public class ConfigManager {
         selectedPointChange();
     }
 
+    public void setUseOpenCL(boolean useOpenCL) {
+        this.useOpenCL = useOpenCL;
+    }
 
-    public boolean useOpenCL() { return openCL;}
+    public void disableOpenCL() {
+        Log.Warning("OpenCL disabled!");
+        this.useOpenCL = false;
+        check_openCL.setSelected(false);
+        check_openCL.setEnabled(false);
+    }
+
+    public boolean useOpenCL() {
+        return useOpenCL;
+    }
+
+    public boolean isCacheDisabled() {
+        return isCacheDisabled;
+    }
 
     //endregion
 
@@ -314,7 +358,6 @@ public class ConfigManager {
                 yShift = getShiftY();
                 yShiftChange();
             }
-            configChange();
         }
     }
 
@@ -342,7 +385,19 @@ public class ConfigManager {
          */
         @Override
         public void stateChanged(ChangeEvent e) {
-            openCL = check_openCL.isSelected();
+            useOpenCL = check_openCL.isSelected();
+        }
+    }
+
+    private class disableCacheHandler implements ChangeListener {
+        /**
+         * Invoked when the target of the listener has changed its state.
+         *
+         * @param e a ChangeEvent object
+         */
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            isCacheDisabled = check_disableCache.isSelected();
         }
     }
 
