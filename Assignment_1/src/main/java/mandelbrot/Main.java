@@ -13,6 +13,8 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 /**
  * Main Application Window
@@ -125,6 +127,10 @@ public class Main extends JFrameAdvanced {
         panel_display.add(imgPanel_image, BorderLayout.CENTER);
         imgPanel_image.addMouseListener(new mouseClickPositionHandler());
         imgPanel_image.addMouseMotionListener(new mousePositionHandler());
+
+        zoomBoxHandler zoomBoxHandler = new zoomBoxHandler();
+        imgPanel_image.addMouseListener(zoomBoxHandler);
+        imgPanel_image.addMouseMotionListener(zoomBoxHandler);
 
         initSidePanels(constraints);
         initInfoPanel();
@@ -302,9 +308,73 @@ public class Main extends JFrameAdvanced {
         }
     }
 
+    private class zoomBoxHandler extends MouseAdapter implements MouseMotionListener {
+        private boolean dragging = false;
+        private Point2D startPos;
+        private Rectangle2D rectangle2D;
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (dragging) return;
+
+            startPos = e.getPoint();
+            dragging = true;
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            dragging = false;
+            imgPanel_image.drawZoomBox(null);
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (!dragging) return;
+
+            rectangle2D = getRectangle(e.getPoint());
+
+            Log.Information(rectangle2D.toString());
+            imgPanel_image.drawZoomBox(rectangle2D);
+        }
+
+        private Rectangle2D getRectangle(Point2D e){
+            // QUADRANTS (where startPos = (0, 0))
+            //  3 | 2
+            // ---|---
+            //  4 | 1
+
+            // Quadrant 1:
+            if(startPos.getX() < e.getX() && startPos.getY() < e.getY()){
+                rectangle2D = new Rectangle2D.Double(startPos.getX(), startPos.getY(),
+                        e.getX() - startPos.getX(), e.getY() - startPos.getY()
+                );
+
+                // Quadrant 2:
+            } else if(startPos.getX() < e.getX() && startPos.getY() > e.getY()){
+                rectangle2D = new Rectangle2D.Double(startPos.getX(), e.getY(),
+                        e.getX() - startPos.getX(), startPos.getY() - e.getY()
+                );
+
+                // Quadrant 3:
+            } else if(startPos.getX() > e.getX() && startPos.getY() > e.getY()){
+                rectangle2D = new Rectangle2D.Double(e.getX(), e.getY(),
+                        startPos.getX() - e.getX(), startPos.getY() - e.getY()
+                );
+
+                // Quadrant 4:
+            } else if(startPos.getX() > e.getX() && startPos.getY() < e.getY()){
+                rectangle2D = new Rectangle2D.Double(e.getX(), startPos.getY(),
+                        startPos.getX() - e.getX(), e.getY() - startPos.getY()
+                );
+            }
+            return rectangle2D;
+        }
+
+    }
     /**
      * Updates display of selected position when mouse clicked
      */
+
     private class mouseClickPositionHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
