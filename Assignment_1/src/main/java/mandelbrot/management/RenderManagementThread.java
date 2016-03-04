@@ -198,8 +198,8 @@ public abstract class RenderManagementThread extends Thread {
      * @return Complex number
      */
     public final Complex getComplexFromPoint(double x, double y) {
-        x = ((x - imgWidth / 2d) * xScale + xShift) / scaleFactor;
-        y = ((y - imgHeight / 2d) * yScale + yShift) / scaleFactor;
+        x = ((x - imgWidth / 2d) * xScale) / scaleFactor + xShift;
+        y = ((y - imgHeight / 2d) * yScale) / scaleFactor + yShift;
 
         return new Complex(x, y);
     }
