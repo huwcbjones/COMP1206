@@ -272,8 +272,18 @@ public class BookmarkManager {
             if (selectedObj.size() != 1) return;
 
             Bookmark bookmark = (Bookmark) selectedObj.get(0);
-            lm_bookmarks.removeElement(bookmark);
-            bookmarks.remove(bookmark.getName());
+
+            int option = JOptionPane.showConfirmDialog(
+                    mainWindow,
+                    "Are you sure want to delete the bookmark\n" +
+                            "\"" + bookmark.getName() + "\"?",
+                    "Delete Bookmark",
+                    JOptionPane.YES_NO_OPTION
+            );
+            if(option == JOptionPane.YES_OPTION) {
+                lm_bookmarks.removeElement(bookmark);
+                bookmarks.remove(bookmark.getName());
+            }
         }
     }
     //endregion
