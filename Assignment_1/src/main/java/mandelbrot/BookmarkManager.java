@@ -21,13 +21,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Manages Bookmarks
@@ -67,42 +65,6 @@ public class BookmarkManager {
         init();
     }
 
-    private void loadBookmarks() {
-        Log.Information("Loading bookmarks...");
-        bookmarks = new HashMap<>();
-
-        InputStream inputStream = this.getClass().getResourceAsStream("/mandelbrot/bookmarks.json");
-        if (inputStream == null) {
-            Log.Warning("Failed to find bookmarks.json!");
-            return;
-        }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        JSONParser parser = new JSONParser();
-
-        try {
-            JSONObject root = (JSONObject) parser.parse(reader);
-            JSONArray bookmarkArray = (JSONArray) root.get("bookmarks");
-
-            Iterator jsonIterator = bookmarkArray.iterator();
-            JSONObject bookmark;
-            while (jsonIterator.hasNext()) {
-                bookmark = (JSONObject) jsonIterator.next();
-                String name = (String) bookmark.get("name");
-                double real = Double.parseDouble((String) bookmark.get("real"));
-                double imaginary = Double.parseDouble((String) bookmark.get("imaginary"));
-
-                bookmarks.put(name, new Bookmark(name, real, imaginary));
-            }
-
-        } catch (IOException e) {
-            Log.Error(e.getMessage());
-        } catch (ParseException e) {
-            Log.Error("Failed to parse JSON." + e.getMessage());
-        }
-    }
-
-    //region Saving/Loading
-
     private void init() {
         // Create list model and add elements to it
         lm_bookmarks = new DefaultListModel<>();
@@ -134,7 +96,7 @@ public class BookmarkManager {
         btn_delete = new JButton("Delete");
         btn_delete.setMnemonic(KeyEvent.VK_D);
         btn_delete.setEnabled(false);
-        //btn_delete.addActionListener(new deleteClickHandler()); //TODO: Implement delete button
+        btn_delete.addActionListener(new deleteClickHandler());
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -152,9 +114,75 @@ public class BookmarkManager {
         panel_add.add(btn_delete, constraints);
     }
 
+
+    //region Saving/Loading
+
+    private void loadBookmarks() {
+        Log.Information("Loading bookmarks...");
+        bookmarks = new HashMap<>();
+
+        InputStream inputStream = this.getClass().getResourceAsStream("/mandelbrot/bookmarks.json");
+        if (inputStream == null) {
+            Log.Warning("Failed to find bookmarks.json!");
+            return;
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        JSONParser parser = new JSONParser();
+
+        try {
+            JSONObject root = (JSONObject) parser.parse(reader);
+            JSONArray bookmarkArray = (JSONArray) root.get("bookmarks");
+
+            Iterator jsonIterator = bookmarkArray.iterator();
+            JSONObject bookmark;
+            while (jsonIterator.hasNext()) {
+                bookmark = (JSONObject) jsonIterator.next();
+                String name = (String) bookmark.get("name");
+                double real = Double.parseDouble((String) bookmark.get("real").toString());
+                double imaginary = Double.parseDouble((String) bookmark.get("imaginary").toString());
+
+                bookmarks.put(name, new Bookmark(name, real, imaginary));
+            }
+
+        } catch (IOException e) {
+            Log.Error(e.getMessage());
+        } catch (ParseException e) {
+            Log.Error("Failed to parse JSON." + e.getMessage());
+        }
+    }
+
+
     //TODO: Save bookmarks to JSON file
     public void saveBookmarks() {
+        Log.Information("Saving bookmarks...");
+        try {
+            PrintWriter writer = new PrintWriter(new File(this.getClass().getResource("/mandelbrot/bookmarks.json").getPath()));
 
+            JSONObject bookmarks = new JSONObject();
+            JSONObject bookmark;
+            JSONArray bookmarksArray = new JSONArray();
+
+            Bookmark bookmarkObj;
+            for(Map.Entry<String, Bookmark> b: this.bookmarks.entrySet()){
+                bookmarkObj = b.getValue();
+                bookmark = new JSONObject();
+                bookmark.put("name", bookmarkObj.getName());
+                bookmark.put("real", bookmarkObj.getReal());
+                bookmark.put("imaginary", bookmarkObj.getImaginary());
+                bookmarksArray.add(bookmark);
+            }
+
+            bookmarks.put("bookmarks", bookmarksArray);
+            StringWriter out = new StringWriter();
+            bookmarks.writeJSONString(out);
+
+            writer.write(out.toString());
+            writer.close();
+        } catch (FileNotFoundException e) {
+            Log.Warning("Could not find file to write to!");
+        } catch (IOException e) {
+            Log.Error("Failed to write output!");
+        }
     }
 
     //endregion
@@ -213,7 +241,6 @@ public class BookmarkManager {
         }
     }
 
-
     private class addClickHandler implements ActionListener {
 
         /**
@@ -231,6 +258,23 @@ public class BookmarkManager {
         }
     }
 
+    private class deleteClickHandler implements ActionListener {
 
+        /**
+         * Invoked when an action occurs.
+         *
+         * @param e
+         */
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            List selectedObj = list_bookmarks.getSelectedValuesList();
+            btn_delete.setEnabled(selectedObj.size() == 1);
+            if (selectedObj.size() != 1) return;
+
+            Bookmark bookmark = (Bookmark) selectedObj.get(0);
+            lm_bookmarks.removeElement(bookmark);
+            bookmarks.remove(bookmark.getName());
+        }
+    }
     //endregion
 }
