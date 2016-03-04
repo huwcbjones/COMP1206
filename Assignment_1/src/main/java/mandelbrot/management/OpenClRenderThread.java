@@ -9,6 +9,8 @@ import utils.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import static com.nativelibs4java.opencl.JavaCL.createBestContext;
@@ -21,6 +23,7 @@ import static com.nativelibs4java.opencl.JavaCL.createBestContext;
  */
 public class OpenClRenderThread extends Thread {
     private boolean isAvailable = true;
+    private boolean useDouble = false;
     private CLContext context;
     private CLQueue queue;
 
@@ -37,8 +40,10 @@ public class OpenClRenderThread extends Thread {
         try {
             context = createBestContext();
             queue = context.createDefaultQueue();
-
             CLPlatform plat = context.getPlatform();
+            ArrayList<String> extensions = new ArrayList<>(Arrays.asList(plat.getExtensions()));
+            useDouble = extensions.contains("cl_khr_fp64");
+
             Log.Information("********************************************************************************");
             Log.Information("* OPEN CL SUPPORT                                                              *");
             Log.Information("********************************************************************************");
@@ -54,12 +59,15 @@ public class OpenClRenderThread extends Thread {
             Log.Information("* Address Bits:\t\t" + plat.getBestDevice().getAddressBits());
             Log.Information("* GPU Memory:\t\t" + (plat.getBestDevice().getGlobalMemSize() / 1024 / 1024) + "MB");
             Log.Information("* Profile:\t\t\t" + plat.getBestDevice().getProfile());
+            Log.Information("* Double Support:\t" + (useDouble ? "Enabled" : "Disabled"));
             Log.Information("* Extensions:");
-            for (String s : plat.getExtensions()) {
+            for (String s : extensions) {
                 Log.Information("*\t- " + s);
             }
             Log.Information("********************************************************************************");
             Log.Warning("OpenCL support available!");
+
+
         } catch (Exception ex) {
             isAvailable = false;
             Log.Warning("OpenCL support unavailable.");
@@ -103,6 +111,15 @@ public class OpenClRenderThread extends Thread {
      */
     public boolean isAvailable() {
         return isAvailable;
+    }
+
+    /**
+     * Returns true if the OpenCL device supports doubles
+     *
+     * @return boolean
+     */
+    public boolean useDouble() {
+        return useDouble;
     }
 
 }
