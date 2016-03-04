@@ -78,6 +78,7 @@ public class ConfigManager {
     //endregion
     //region Singlets
     private JButton btn_render;
+    private JButton btn_reset;
 
     private ArrayList<ConfigChangeListener> listeners;
 
@@ -215,13 +216,19 @@ public class ConfigManager {
     private void initSingletComponents(){
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.insets = new Insets(6, 6, 6, 6);
-        constraints.weightx = 1;
+        constraints.insets = new Insets(3, 0, 3, 0);
+        constraints.weightx = 0.5;
 
         btn_render = new JButton("Render");
         btn_render.setMnemonic(KeyEvent.VK_R);
         btn_render.addActionListener(new renderHandler());
         panel_singlets.add(btn_render, constraints);
+
+        constraints.gridy = 1;
+        btn_reset = new JButton("Reset to Default");
+        btn_reset.setMnemonic(KeyEvent.VK_T);
+        btn_reset.addActionListener(new resetHandler());
+        panel_singlets.add(btn_reset, constraints);
     }
     //endregion
 
@@ -359,6 +366,29 @@ public class ConfigManager {
         @Override
         public void actionPerformed(ActionEvent e) {
             mainWindow.renderMandelbrot();
+            mainWindow.renderJulia();
+        }
+    }
+
+    private class resetHandler implements ActionListener {
+
+        /**
+         * Invoked when an action occurs.
+         *
+         * @param e
+         */
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            spinner_iterations.setValue(100);
+            spinner_scale.setValue(1.0);
+            spinner_shiftX.setValue(0.0);
+            spinner_shiftY.setValue(0.0);
+            slider_hue.setValue(0);
+            slider_saturation.setValue(100);
+            slider_brightness.setValue(100);
+
+            mainWindow.renderMandelbrot();
+            mainWindow.renderJulia();
         }
     }
 
