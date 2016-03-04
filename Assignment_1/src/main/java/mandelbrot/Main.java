@@ -332,49 +332,67 @@ public class Main extends JFrameAdvanced {
             if (!dragging) return;
 
             rectangle2D = getRectangle(e.getPoint());
-
-            Log.Information(rectangle2D.toString());
             imgPanel_image.drawZoomBox(rectangle2D);
         }
 
+        /**
+         * Uses the startPos and parameter e to create the Rectangle2D Zoom Box to draw
+         * @param e MouseEvent e, with coordinates
+         * @return Rectangle2D representing the zoom box to draw
+         */
         private Rectangle2D getRectangle(Point2D e){
             // QUADRANTS (where startPos = (0, 0))
             //  3 | 2
             // ---|---
             //  4 | 1
 
-            // Quadrant 1:
-            if(startPos.getX() < e.getX() && startPos.getY() < e.getY()){
-                rectangle2D = new Rectangle2D.Double(startPos.getX(), startPos.getY(),
-                        e.getX() - startPos.getX(), e.getY() - startPos.getY()
-                );
+            double aspectRatio = (double) imgPanel_image.getWidth() / (double) imgPanel_image.getHeight();
+            double width = Math.abs(e.getX() - startPos.getX());
+            double height = Math.abs(e.getY() - startPos.getY());
+            double x, y;
 
-                // Quadrant 2:
-            } else if(startPos.getX() < e.getX() && startPos.getY() > e.getY()){
-                rectangle2D = new Rectangle2D.Double(startPos.getX(), e.getY(),
-                        e.getX() - startPos.getX(), startPos.getY() - e.getY()
-                );
-
-                // Quadrant 3:
-            } else if(startPos.getX() > e.getX() && startPos.getY() > e.getY()){
-                rectangle2D = new Rectangle2D.Double(e.getX(), e.getY(),
-                        startPos.getX() - e.getX(), startPos.getY() - e.getY()
-                );
-
-                // Quadrant 4:
-            } else if(startPos.getX() > e.getX() && startPos.getY() < e.getY()){
-                rectangle2D = new Rectangle2D.Double(e.getX(), startPos.getY(),
-                        startPos.getX() - e.getX(), e.getY() - startPos.getY()
-                );
+            if (width / aspectRatio < height) {
+                height = width / aspectRatio;
+            } else {
+                width = height * aspectRatio;
             }
-            return rectangle2D;
+
+            // Check which quadrant we are in
+            // Then set the top left coordinate, whilst fixing one coordinate to the start position
+
+            // Quadrant 1:
+            if (startPos.getX() < e.getX() && startPos.getY() < e.getY()) {
+                x = startPos.getX();
+                y = startPos.getY();
+
+            // Quadrant 2:
+            } else if (startPos.getX() < e.getX() && startPos.getY() > e.getY()) {
+                x = startPos.getX();
+                y = startPos.getY() - height;
+
+            // Quadrant 3:
+            } else if (startPos.getX() > e.getX() && startPos.getY() > e.getY()) {
+                x = startPos.getX() - width;
+                y = startPos.getY() - height;
+
+            // Quadrant 4:
+            } else if (startPos.getX() > e.getX() && startPos.getY() < e.getY()) {
+                x = startPos.getX() - width;
+                y = startPos.getY();
+            } else {
+
+            // Width and/or height are 0, don't draw a box
+                return null;
+            }
+
+            return new Rectangle2D.Double(x, y, width, height);
         }
 
     }
+
     /**
      * Updates display of selected position when mouse clicked
      */
-
     private class mouseClickPositionHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {

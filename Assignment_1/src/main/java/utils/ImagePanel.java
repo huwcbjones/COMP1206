@@ -37,7 +37,6 @@ public class ImagePanel extends JPanel {
         g.drawImage(image, 0, 0, null);
 
         if(zoomBox == null) return;
-        Log.Information("Drawing zoom box...");
 
         g2d.setColor(new Color(0, 0, 255, 96));
         g2d.fill(zoomBox);
