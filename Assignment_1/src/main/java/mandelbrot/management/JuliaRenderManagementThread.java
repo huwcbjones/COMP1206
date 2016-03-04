@@ -59,8 +59,8 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
         float[] complex = new float[]{(float)this.complex.getReal(), (float)this.complex.getImaginary()};
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
         float[] scales = new float[]{(float) xScale, (float) yScale};
-        float[] shifts = new float[]{(float) xShift, (float) yShift};
-        float scaleFactor = (float)this.scaleFactor;
+        float[] shifts = new float[]{(float)getShiftX(), (float)getShiftY()};
+        float scaleFactor = (float)getScale();
         float huePrev = getImageHue();
         float hueAdj = getHue();
         float saturation = getSaturation();
