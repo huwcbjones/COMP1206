@@ -19,7 +19,7 @@ __global int* outputi
     float2 coords = convert_float2((int2)(get_global_id(0), get_global_id(1)));
     int pixelID = convert_int(coords.y * dimensions.x + coords.x);
 
-    float2 complex = ((coords - dimensions / 2.0f) * scale + shift) / scaleFactor;
+    float2 complex = ((coords - dimensions / 2.0f) * scale) / scaleFactor + shift;
 
     float2 z_square = complex * complex;
     float2 z = complex;
