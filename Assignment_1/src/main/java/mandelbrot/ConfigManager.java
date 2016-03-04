@@ -272,8 +272,24 @@ public class ConfigManager {
         return (double) spinner_shiftX.getValue();
     }
 
+    public void setShiftX(double xShift, boolean triggerEvent){
+        spinner_shiftX.setValue(xShift);
+        this.xShift = xShift;
+        if(triggerEvent){
+            xShiftChange();
+        }
+    }
+
     public double getShiftY() {
         return (double) spinner_shiftY.getValue();
+    }
+
+    public void setShiftY(double yShift, boolean triggerEvent){
+        spinner_shiftY.setValue(yShift);
+        this.yShift = yShift;
+        if(triggerEvent){
+            yShiftChange();
+        }
     }
 
     public int getIterations() {
@@ -282,6 +298,14 @@ public class ConfigManager {
 
     public double getScaleFactor() {
         return (double) spinner_scale.getValue();
+    }
+
+    public void setScaleFactor(double scaleFactor, boolean triggerEvent){
+        spinner_scale.setValue(scaleFactor);
+        this.scaleFactor = scaleFactor;
+        if(triggerEvent){
+            scaleChange();
+        }
     }
 
     public float getHue() {
