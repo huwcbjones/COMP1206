@@ -435,6 +435,7 @@ public class Main extends JFrameAdvanced {
 
     }
 
+    //TODO: Add mouse wheel listener! Mouse wheel zoom in/out
     private class mouseClickHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -455,6 +456,12 @@ public class Main extends JFrameAdvanced {
                 updatedCursorPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
             } else {
                 updatedCursorPoint();
+            }
+            if(config.juliaDisplayOnMove()) {
+                if (mandel_drawer.hasRendered()) {
+                    config.setSelectedPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
+                }
+                updateSelection();
             }
         }
     }

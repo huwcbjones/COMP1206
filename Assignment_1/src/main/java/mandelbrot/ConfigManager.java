@@ -32,7 +32,26 @@ public class ConfigManager {
     private JPanel panel_singlets;
     private JPanel panel_colouring;
     private JPanel panel_advanced;
+    private JTabbedPane tabbedPane;
 
+    //region Variables
+    private int escapeRadius = 2;
+    private int iterations;
+    private double scaleFactor;
+    private double xShift;
+    private double yShift;
+
+    private float hueShift;
+    private float saturation;
+    private float brightness;
+
+    private boolean displayJuliaMoveCursor = false;
+    private boolean useOpenCL = true;
+    private boolean useOpenCLDouble = false;
+    private boolean isCacheDisabled = true;
+
+    Complex selectedPoint;
+    //endregion
     //region Controls
     private JLabel label_iterations;
     private JSpinner spinner_iterations;
@@ -45,7 +64,6 @@ public class ConfigManager {
 
     private JLabel label_scale;
     private JSpinner spinner_scale;
-    private JTabbedPane tabbedPane;
     //endregion
     //region Colouring
     private JLabel label_hue;
@@ -58,38 +76,22 @@ public class ConfigManager {
     private JSliderAdvanced slider_brightness;
     //endregion
     //region Advanced
+    private JLabel label_juliaCursor;
+    private JCheckBox check_juliaCursor;
+
     private JLabel label_openCL;
     private JCheckBox check_openCL;
 
     private JLabel label_openCL_double;
-    private JCheckBox check_openCL_double;
+    private JCheckBox check_openCLDouble;
 
     private JLabel label_disableCache;
     private JCheckBox check_disableCache;
     //endregion
-
-    // Variables
-    int escapeRadius = 2;
-    int iterations;
-    double scaleFactor;
-    double xShift;
-    double yShift;
-
-    float hueShift;
-    float saturation;
-    float brightness;
-
-    Complex selectedPoint;
-
-    boolean useOpenCL = true;
-    boolean useOpenCL_double = false;
-    boolean isCacheDisabled = false;
-
-    //endregion
     //region Singlets
     private JButton btn_render;
     private JButton btn_reset;
-
+    //endregion
     private ArrayList<ConfigChangeListener> listeners;
 
     public ConfigManager(Main mainWindow){
@@ -201,6 +203,15 @@ public class ConfigManager {
     }
 
     private void initAdvancedComponents() {
+        // Display Julia Set under cursor
+        label_juliaCursor = new JLabel("Display Julia on move:", JLabel.TRAILING);
+        panel_advanced.add(label_juliaCursor);
+
+        check_juliaCursor = new JCheckBox();
+        check_juliaCursor.setSelected(false);
+        check_juliaCursor.addChangeListener(new juliaCursorChangeHandler());
+        panel_advanced.add(check_juliaCursor);
+
         // Use OpenCL
         label_openCL = new JLabel("Use OpenCL:", JLabel.TRAILING);
         panel_advanced.add(label_openCL);
@@ -214,22 +225,22 @@ public class ConfigManager {
         label_openCL_double = new JLabel("OpenCL use Double:", JLabel.TRAILING);
         panel_advanced.add(label_openCL_double);
 
-        check_openCL_double = new JCheckBox();
-        check_openCL_double.setSelected(false);
-        check_openCL_double.addChangeListener(new openCLdoubleChangeHandler());
-        panel_advanced.add(check_openCL_double);
+        check_openCLDouble = new JCheckBox();
+        check_openCLDouble.setSelected(false);
+        check_openCLDouble.addChangeListener(new openCLDoubleChangeHandler());
+        panel_advanced.add(check_openCLDouble);
 
         // Disable Cache
         label_disableCache = new JLabel("Disable Cache:", JLabel.TRAILING);
         panel_advanced.add(label_disableCache);
 
         check_disableCache = new JCheckBox();
-        check_disableCache.setSelected(false);
+        check_disableCache.setSelected(true);
 
         check_disableCache.addChangeListener(new disableCacheHandler());
         panel_advanced.add(check_disableCache);
 
-        SpringUtilities.makeCompactGrid(panel_advanced, 3, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(panel_advanced, 4, 2, 6, 6, 6, 6);
         tabbedPane.addTab("Advanced", panel_advanced);
     }
 
@@ -354,6 +365,10 @@ public class ConfigManager {
         selectedPointChange();
     }
 
+    public boolean juliaDisplayOnMove() {
+        return this.displayJuliaMoveCursor;
+    }
+
     public void setUseOpenCL(boolean useOpenCL) {
         this.useOpenCL = useOpenCL;
     }
@@ -367,9 +382,9 @@ public class ConfigManager {
 
     public void disableOpenCL_double() {
         Log.Warning("OpenCL doubles disabled!");
-        this.useOpenCL_double = false;
-        check_openCL_double.setSelected(false);
-        check_openCL_double.setEnabled(false);
+        this.useOpenCLDouble = false;
+        check_openCLDouble.setSelected(false);
+        check_openCLDouble.setEnabled(false);
     }
 
     public boolean useOpenCL() {
@@ -377,7 +392,7 @@ public class ConfigManager {
     }
 
     public boolean useOpenCL_double() {
-        return useOpenCL_double;
+        return useOpenCLDouble;
     }
 
     public boolean isCacheDisabled() {
@@ -462,6 +477,18 @@ public class ConfigManager {
         }
     }
 
+    private class juliaCursorChangeHandler implements ChangeListener {
+        /**
+         * Invoked when the target of the listener has changed its state.
+         *
+         * @param e a ChangeEvent object
+         */
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            displayJuliaMoveCursor = check_juliaCursor.isSelected();
+        }
+    }
+
     private class openCLChangeHandler implements ChangeListener {
         /**
          * Invoked when the target of the listener has changed its state.
@@ -474,7 +501,7 @@ public class ConfigManager {
         }
     }
 
-    private class openCLdoubleChangeHandler implements ChangeListener {
+    private class openCLDoubleChangeHandler implements ChangeListener {
         /**
          * Invoked when the target of the listener has changed its state.
          *
@@ -482,7 +509,7 @@ public class ConfigManager {
          */
         @Override
         public void stateChanged(ChangeEvent e) {
-            useOpenCL_double = check_openCL_double.isSelected();
+            useOpenCLDouble = check_openCLDouble.isSelected();
         }
     }
 
