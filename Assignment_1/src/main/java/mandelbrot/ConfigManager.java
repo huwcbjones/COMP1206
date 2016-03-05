@@ -100,6 +100,10 @@ public class ConfigManager {
         initPanel();
     }
 
+    /**
+     * Adds a config change listener to this ConfigManager
+     * @param listener Listener to add
+     */
     public void addConfigChangeListener(ConfigChangeListener listener){
         listeners.add(listener);
     }
@@ -302,14 +306,28 @@ public class ConfigManager {
     //endregion
 
     //region Get/Set Methods
+
+    /**
+     * Gets the config panel
+     * @return JPanel
+     */
     public JPanel getConfigPanel(){
         return this.panel_config;
     }
 
+    /**
+     * Gets the shift in the x axis
+     * @return x shift
+     */
     public double getShiftX() {
         return (double) spinner_shiftX.getValue();
     }
 
+    /**
+     * Sets the x shift
+     * @param xShift New X Shift
+     * @param triggerEvent Trigger the xShiftChange event
+     */
     public void setShiftX(double xShift, boolean triggerEvent){
         spinner_shiftX.setValue(xShift);
         this.xShift = xShift;
@@ -318,10 +336,19 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Gets the shift in the y axis
+     * @return y shift
+     */
     public double getShiftY() {
         return (double) spinner_shiftY.getValue();
     }
 
+    /**
+     * Sets the y shift
+     * @param yShift New y shift
+     * @param triggerEvent Trigger the yShiftChange event
+     */
     public void setShiftY(double yShift, boolean triggerEvent){
         spinner_shiftY.setValue(yShift);
         this.yShift = yShift;
@@ -330,14 +357,27 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Gets number of iterations
+     * @return iterations
+     */
     public int getIterations() {
         return (int) spinner_iterations.getValue();
     }
 
+    /**
+     * Gets the scale factor
+     * @return scale factor
+     */
     public double getScaleFactor() {
         return (double) spinner_scale.getValue();
     }
 
+    /**
+     * Sets the scale factor
+     * @param scaleFactor new scale factor
+     * @param triggerEvent Trigger the scaleChange event
+     */
     public void setScaleFactor(double scaleFactor, boolean triggerEvent){
         spinner_scale.setValue(scaleFactor);
         this.scaleFactor = scaleFactor;
@@ -346,33 +386,68 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Gets the image hue
+     * @return image hue
+     */
     public float getHue() {
         return (float) slider_hue.getValue() / 360f;
     }
-
+    /**
+     * Gets the image saturation
+     * @return image saturation
+     */
     public float getSaturation() { return (float)slider_saturation.getValue() / 100f; }
 
+    /**
+     * Gets the image brightness
+     * @return image brightness
+     */
     public float getBrightness() { return (float)slider_brightness.getValue() / 100f; }
 
+    /**
+     * Gets the escape radius
+     * @return escape radius squared
+     */
     public int getEscapeRadiusSquared() { return escapeRadius * escapeRadius; }
 
+    /**
+     * Gets the currently selected complex on the Mandelbrot set
+     * @return Complex, current selected point
+     */
     public Complex getSelectedPoint() {
         if(selectedPoint == null) return null;
         return selectedPoint.clone();
     }
+
+    /**
+     * Sets the currently selected complex on the Mandelbrot set
+     * @param complex new selected point
+     */
     public void setSelectedPoint(Complex complex){
         this.selectedPoint = complex;
         selectedPointChange();
     }
 
+    /**
+     * Display the Julia set when the cursor is moved
+     * @return true if when the cursor moves, the julia set should be updated
+     */
     public boolean juliaDisplayOnMove() {
         return this.displayJuliaMoveCursor;
     }
 
+    /**
+     * Sets whether OpenCL should be used
+     * @param useOpenCL
+     */
     public void setUseOpenCL(boolean useOpenCL) {
         this.useOpenCL = useOpenCL;
     }
 
+    /**
+     * Disables OpenCL until the application is restarted
+     */
     public void disableOpenCL() {
         Log.Warning("OpenCL disabled!");
         this.useOpenCL = false;
@@ -380,6 +455,9 @@ public class ConfigManager {
         check_openCL.setEnabled(false);
     }
 
+    /**
+     * Disables OpenCL doubles until the application is restarted
+     */
     public void disableOpenCL_double() {
         Log.Warning("OpenCL doubles disabled!");
         this.useOpenCLDouble = false;
@@ -387,14 +465,26 @@ public class ConfigManager {
         check_openCLDouble.setEnabled(false);
     }
 
+    /**
+     * Returns whether OpenCL should be used or not
+     * @return true if openCL should be used
+     */
     public boolean useOpenCL() {
         return useOpenCL;
     }
 
+    /**
+     * Returns whether OpenCL Doubles should be used or not
+     * @return true if OpenCL Doubles should be used
+     */
     public boolean useOpenCL_double() {
         return useOpenCLDouble;
     }
 
+    /**
+     * Returns true if the cache is disabled
+     * @return boolean
+     */
     public boolean isCacheDisabled() {
         return isCacheDisabled;
     }
@@ -402,13 +492,12 @@ public class ConfigManager {
     //endregion
 
     //region Event Handlers
+
+    /**
+     * Invoked when btn_render is activated
+     */
     private class renderHandler implements ActionListener {
 
-        /**
-         * Invoked when an action occurs.
-         *
-         * @param e
-         */
         @Override
         public void actionPerformed(ActionEvent e) {
             mainWindow.renderMandelbrot();
@@ -416,15 +505,14 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Invoked when btn_reset is activated
+     */
     private class resetHandler implements ActionListener {
 
-        /**
-         * Invoked when an action occurs.
-         *
-         * @param e
-         */
         @Override
         public void actionPerformed(ActionEvent e) {
+            // Set the values back to defaults
             spinner_iterations.setValue(100);
             spinner_scale.setValue(1.0);
             spinner_shiftX.setValue(0.0);
@@ -438,6 +526,9 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Invoked when a spinner is changed
+     */
     private class optionChangeHandler implements ChangeListener {
 
         @Override
@@ -461,13 +552,10 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Invoked when a slider is changed
+     */
     private class colourShiftChangeHandler extends AdvancedChangeAdapter {
-
-        /**
-         * Invoked when the target of the listener has finished changing its state.
-         *
-         * @param e a ChangeEvent object
-         */
         @Override
         public void changeFinish(ChangeEvent e) {
             hueShift = getHue();
@@ -477,42 +565,39 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Invoked when a Julia checkbox is changed
+     */
     private class juliaCursorChangeHandler implements ChangeListener {
-        /**
-         * Invoked when the target of the listener has changed its state.
-         *
-         * @param e a ChangeEvent object
-         */
         @Override
         public void stateChanged(ChangeEvent e) {
             displayJuliaMoveCursor = check_juliaCursor.isSelected();
         }
     }
 
+    /**
+     * Invoked when a OpenCL checkbox is changed
+     */
     private class openCLChangeHandler implements ChangeListener {
-        /**
-         * Invoked when the target of the listener has changed its state.
-         *
-         * @param e a ChangeEvent object
-         */
         @Override
         public void stateChanged(ChangeEvent e) {
             useOpenCL = check_openCL.isSelected();
         }
     }
 
+    /**
+     * Invoked when a OpenCL Double checkbox is changed
+     */
     private class openCLDoubleChangeHandler implements ChangeListener {
-        /**
-         * Invoked when the target of the listener has changed its state.
-         *
-         * @param e a ChangeEvent object
-         */
         @Override
         public void stateChanged(ChangeEvent e) {
             useOpenCLDouble = check_openCLDouble.isSelected();
         }
     }
 
+    /**
+     * Invoked when a cache checkbox is changed
+     */
     private class disableCacheHandler implements ChangeListener {
         /**
          * Invoked when the target of the listener has changed its state.
