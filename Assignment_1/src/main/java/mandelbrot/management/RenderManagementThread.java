@@ -1,7 +1,6 @@
 package mandelbrot.management;
 
 import com.nativelibs4java.opencl.*;
-import com.nativelibs4java.opencl.util.Primitive;
 import mandelbrot.CacheManager;
 import mandelbrot.ConfigManager;
 import mandelbrot.Main;
@@ -30,13 +29,15 @@ public abstract class RenderManagementThread extends Thread {
 
     protected final Object runThread = new Object();
 
-    protected final int numberStrips;
     protected ImagePanel panel;
     private FractalImage image;
     protected boolean hasRendered = false;
 
     protected final ConfigManager config;
+    protected final OpenClThread openClThread;
+    protected final CacheManager cacheManager;
 
+    //region Image Properties
     protected double imgHeight;
     protected double imgWidth;
 
@@ -50,14 +51,13 @@ public abstract class RenderManagementThread extends Thread {
 
     protected double xScale;
     protected double yScale;
+    //endregion
 
+    //region CPU Multithreading
     protected ExecutorCompletionService<ImageSegment> executorService;
     protected int numberThreads;
-
-    protected CacheManager cacheManager;
-    protected LinkedHashMap<ImageProperties, FractalImage> renderCache;
-
-    OpenClRenderThread openClRenderThread;
+    protected final int numberStrips;
+    //endregion
 
     /**
      * Creates a Render Management Thread
@@ -65,20 +65,23 @@ public abstract class RenderManagementThread extends Thread {
      * @param panel      ImagePanel to output render to
      * @param threadName Name of thread
      */
-    public RenderManagementThread(Main mainWindow, OpenClRenderThread openCL, ImagePanel panel, String threadName) {
+    public RenderManagementThread(Main mainWindow, OpenClThread openCL, ImagePanel panel, String threadName) {
         Log.Information("Loading Render Management Thread: '" + threadName + "'");
-        this.config = mainWindow.getConfigManager();
-        this.openClRenderThread = openCL;
-        ocl_loadPrograms();
-        this.panel = panel;
+
         this.setName("Render_Management_Thread_" + threadName);
+        this.config = mainWindow.getConfigManager();
+        this.panel = panel;
+        this.openClThread = openCL;
+
+        // Load OpenCL programs
+        ocl_loadPrograms();
 
         cacheManager = new CacheManager();
 
+        // Initialise Event Handling
         listeners = new ArrayList<>();
 
-        mainWindow.addAdvancedComponentListener(new resizeHandler());
-
+        // Initialise CPU Multithreaded Rendering
         numberThreads = Runtime.getRuntime().availableProcessors();
         numberStrips = numberThreads * 2;
 
@@ -94,7 +97,7 @@ public abstract class RenderManagementThread extends Thread {
      * Loads programs into the OpenCL context
      */
     protected void ocl_loadPrograms() {
-        if (!openClRenderThread.loadProgram("recolour", this.getClass().getResourceAsStream("/mandelbrot/opencl/recolour.cl"))) {
+        if (!openClThread.loadProgram("recolour", this.getClass().getResourceAsStream("/mandelbrot/opencl/recolour.cl"))) {
             config.disableOpenCL();
         }
     }
@@ -223,22 +226,9 @@ public abstract class RenderManagementThread extends Thread {
     private void fireRenderComplete() {
         listeners.forEach(RenderListener::renderComplete);
     }
-
-    private class resizeHandler extends AdvancedComponentAdapter {
-        /**
-         * Invoked when the component's size stops changing.
-         *
-         * @param e
-         */
-        @Override
-        public void componentResizeEnd(ComponentEvent e) {
-            clearCache();
-        }
-    }
     //endregion
 
     //region Public Thread Unblocking
-
     /*
      * Prevents calling threads from entering a blocked state whilst the render processes
      */
@@ -247,6 +237,7 @@ public abstract class RenderManagementThread extends Thread {
     public final void run() {
         Log.Information(this.getName() + " started!");
         while (!this.isInterrupted()) {
+
             // Dispatch render method as appropriate to notify
             synchronized (this.runThread) {
                 try {
@@ -278,6 +269,7 @@ public abstract class RenderManagementThread extends Thread {
     protected ImageProperties getRenderProperties(){
         return new ImageProperties((int) imgWidth, (int) imgHeight, getIterations(), getScale(), getShiftX(), getShiftY());
     }
+
     /**
      * Private method to do the render
      */
@@ -295,7 +287,9 @@ public abstract class RenderManagementThread extends Thread {
         ImageProperties properties = this.getRenderProperties();
         ImageColourProperties colourProperties = new ImageColourProperties(getHue(), getSaturation(), getBrightness());
 
+        // If cache is enabled, do cache stuff
         if (!config.isCacheDisabled()) {
+
             // If image is cached with both properties and colours, retrieve it and display it.
             if (cacheManager.isCached(properties, colourProperties)) {
                 Log.Information("Displaying cached image. " + properties.toString() + "/" + colourProperties.toString());
@@ -321,6 +315,8 @@ public abstract class RenderManagementThread extends Thread {
             try {
                 runOpenCL_render(fullRender);
             } catch (CLException e){
+
+                // Fallback to CPU if OpenCL failed (for whatever reason)
                 config.disableOpenCL();
                 e.printStackTrace();
             }
@@ -328,12 +324,16 @@ public abstract class RenderManagementThread extends Thread {
             runCPU_render(fullRender);
         }
 
+        // Update image properties
         image.setProperties(properties);
         image.setColourProperties(colourProperties);
+
+        // Cache the image
         cacheManager.cacheImage(image);
 
         panel.setImage(image, true);
 
+        // Let everyone listening to us know that we're done
         fireRenderComplete();
         hasRendered = true;
     }
@@ -347,7 +347,7 @@ public abstract class RenderManagementThread extends Thread {
     protected abstract Callable<ImageSegment> createTask(Rectangle2D bounds);
 
     /**
-     * Creates the CL Kernel for execution
+     * Creates the Open CL Kernel for execution
      *
      * @param dimension    Dimensions of image to render
      * @param results Buffer to put results into
@@ -361,17 +361,19 @@ public abstract class RenderManagementThread extends Thread {
      */
     private void runOpenCL_render(boolean fullRender) throws CLException {
         boolean shouldDisableOpenCL = true;
+
         if(!fullRender){
+            // If we are recolouring, do the recolour
             ocl_recolourImage();
             return;
         }
         try {
-            CLQueue queue = openClRenderThread.getQueue();
+            CLQueue queue = openClThread.getQueue();
             Dimension dimensions = new Dimension((int) imgWidth, (int) imgHeight);
 
             // Create results buffer and pointer
             Pointer<Integer> results = Pointer.allocateInts(dimensions.height * dimensions.width);
-            CLBuffer<Integer> resultsBuffer = openClRenderThread.getContext().createIntBuffer(CLMem.Usage.Output, results, false);
+            CLBuffer<Integer> resultsBuffer = openClThread.getContext().createIntBuffer(CLMem.Usage.Output, results, false);
 
             // Get Render kernel, queue it, and wait for it to finish
             CLKernel kernel = createOpenCLKernel(dimensions, resultsBuffer);
@@ -381,12 +383,14 @@ public abstract class RenderManagementThread extends Thread {
                 runCPU_render(fullRender);
                 return;
             }
-            long startTime = System.nanoTime();
+
+            // Queue workers
             kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
+
+            // Wait for workers to finish
             queue.finish();
-            long endTime = System.nanoTime();
-            double timePerPixel = ((endTime - startTime) / 1000.0) / (dimensions.getHeight() * dimensions.getWidth());
-            Log.Information("Took " + String.format("%.6f", timePerPixel) + "ms per pixel.");
+
+            // Get results
             results = resultsBuffer.read(queue);
 
             // Paint the colours onto the image
@@ -475,7 +479,7 @@ public abstract class RenderManagementThread extends Thread {
 
     private void ocl_recolourImage() {
         try {
-            CLQueue queue = openClRenderThread.getQueue();
+            CLQueue queue = openClThread.getQueue();
             Dimension dimensions = new Dimension((int) imgWidth, (int) imgHeight);
 
             int[] pixelRGBs = new int[dimensions.height * dimensions.width];
@@ -483,12 +487,12 @@ public abstract class RenderManagementThread extends Thread {
 
             // Create results buffer and pointer
             Pointer<Integer> pixels = Pointer.pointerToInts(pixelRGBs);
-            CLBuffer<Integer> pixelsBuffer = openClRenderThread.getContext().createIntBuffer(CLMem.Usage.InputOutput, pixels, false);
+            CLBuffer<Integer> pixelsBuffer = openClThread.getContext().createIntBuffer(CLMem.Usage.InputOutput, pixels, false);
 
             ImageColourProperties oldImgColour = image.getColourProperties();
 
             // Create hue to RGB kernel
-            CLKernel kernel = openClRenderThread.getProgram("recolour").createKernel(
+            CLKernel kernel = openClThread.getProgram("recolour").createKernel(
                     "recolour",
                     pixelsBuffer,
                     dimensions.width,
@@ -530,78 +534,7 @@ public abstract class RenderManagementThread extends Thread {
     }
     //endregion
 
-    //region Cache Management
-
-    /**
-     * Clears the cache
-     */
-    protected void clearCache(){
-        renderCache = new LinkedHashMap<>();
-    }
-
-    /**
-     * Checks to see if the cache is valid for these settings
-     * If not, it returns false
-     *
-     * @return Boolean, true, if cache is still valid
-     */
-    private boolean checkCacheValidity() {
-        if (image == null) return true;
-        return (image.getHeight() == panel.getHeight()) && (image.getWidth() == panel.getWidth());
-    }
-
-    /**
-     * Checks cache to see if the requested doRender has already been rendered
-     *
-     * @return Boolean, true if doRender is available
-     */
-    private boolean imageIsCached() {
-        return false;
-        /*ImageProperties imageProperties = getImageProperties();
-        return renderCache.containsKey(imageProperties);*/
-    }
-
-    private boolean cacheImage(ImageProperties properties, FractalImage image){
-        if(renderCache.containsValue(image) || renderCache.containsKey(properties)) return false;
-        renderCache.put(properties, image);
-        return true;
-    }
-
-    /**
-     * Displays the image that was found in the cache
-     *
-     * @param properties Properties of image to display
-     */
-    private void useCachedImage(ImageProperties properties) {
-        Log.Information("Using cached image.");
-        this.image = renderCache.get(properties);
-    }
-
-    /**
-     * Checks if the cache needs cleaning and if so, cleans the cache
-     */
-    private void checkCleanCache() {
-        long total = Runtime.getRuntime().maxMemory();
-        long free = Runtime.getRuntime().freeMemory();
-        double percentageFree = free * 100.0d / total;
-
-        long totalMB = total / 1048576;
-        long freeMB = free / 1048576;
-
-        if (renderCache.size() == 0) {
-            return;
-        }
-        if (percentageFree >= 80) {
-            Log.Warning("Removed oldest image from cache.");
-            renderCache.remove(renderCache.entrySet().iterator().next().getKey());
-        }
-        Log.Information("JVM using " + freeMB + "/" + totalMB + "MB (" + String.format("%02.1f", percentageFree) + "% free)");
-    }
-
-    //endregion
-
     //region Image Properties
-
 
     /**
      * Updates the properties of the image
@@ -631,7 +564,5 @@ public abstract class RenderManagementThread extends Thread {
         xScale = xRange / imgWidth;
         yScale = yRange / imgHeight;
     }
-
     //endregion
-
 }
