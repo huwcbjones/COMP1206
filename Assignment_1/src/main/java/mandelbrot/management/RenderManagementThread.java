@@ -381,10 +381,12 @@ public abstract class RenderManagementThread extends Thread {
                 runCPU_render(fullRender);
                 return;
             }
-
+            long startTime = System.nanoTime();
             kernel.enqueueNDRange(queue, new int[]{dimensions.width, dimensions.height}, new int[]{1, 1});
             queue.finish();
-
+            long endTime = System.nanoTime();
+            double timePerPixel = ((endTime - startTime) / 1000.0) / (dimensions.getHeight() * dimensions.getWidth());
+            Log.Information("Took " + String.format("%.6f", timePerPixel) + "ms per pixel.");
             results = resultsBuffer.read(queue);
 
             // Paint the colours onto the image

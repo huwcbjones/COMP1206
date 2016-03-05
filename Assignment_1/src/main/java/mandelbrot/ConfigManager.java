@@ -28,12 +28,13 @@ public class ConfigManager {
     private Main mainWindow;
 
     private JPanel panel_config;
-    boolean useOpenCL = true;
-    boolean isCacheDisabled = false;
     private JPanel panel_controls;
     private JPanel panel_singlets;
     private JPanel panel_colouring;
     private JPanel panel_advanced;
+
+    //region Controls
+    private JLabel label_iterations;
     private JSpinner spinner_iterations;
 
     private JLabel label_translateX;
@@ -45,8 +46,10 @@ public class ConfigManager {
     private JLabel label_scale;
     private JSpinner spinner_scale;
     private JTabbedPane tabbedPane;
-    //region Controls
-    private JLabel label_iterations;
+    //endregion
+    //region Colouring
+    private JLabel label_hue;
+    private JSliderAdvanced slider_hue;
 
     private JLabel label_saturation;
     private JSliderAdvanced slider_saturation;
@@ -54,27 +57,34 @@ public class ConfigManager {
     private JLabel label_brightness;
     private JSliderAdvanced slider_brightness;
     //endregion
-    //region Colouring
-    private JLabel label_hue;
-    private JCheckBox check_openCL;
-    private JSliderAdvanced slider_hue;
-    //endregion
     //region Advanced
     private JLabel label_openCL;
+    private JCheckBox check_openCL;
+
+    private JLabel label_openCL_double;
+    private JCheckBox check_openCL_double;
+
     private JLabel label_disableCache;
+    private JCheckBox check_disableCache;
     //endregion
 
     // Variables
+    int escapeRadius = 2;
+    int iterations;
+    double scaleFactor;
     double xShift;
     double yShift;
-    double scaleFactor;
-    int iterations;
+
     float hueShift;
     float saturation;
     float brightness;
+
     Complex selectedPoint;
-    int escapeRadius = 2;
-    private JCheckBox check_disableCache;
+
+    boolean useOpenCL = true;
+    boolean useOpenCL_double = true;
+    boolean isCacheDisabled = false;
+
     //endregion
     //region Singlets
     private JButton btn_render;
@@ -200,6 +210,15 @@ public class ConfigManager {
         check_openCL.addChangeListener(new openCLChangeHandler());
         panel_advanced.add(check_openCL);
 
+        // Use OpenCL Double
+        label_openCL_double = new JLabel("OpenCL use Double:", JLabel.TRAILING);
+        panel_advanced.add(label_openCL_double);
+
+        check_openCL_double = new JCheckBox();
+        check_openCL_double.setSelected(true);
+        check_openCL_double.addChangeListener(new openCLdoubleChangeHandler());
+        panel_advanced.add(check_openCL_double);
+
         // Disable Cache
         label_disableCache = new JLabel("Disable Cache:", JLabel.TRAILING);
         panel_advanced.add(label_disableCache);
@@ -209,7 +228,7 @@ public class ConfigManager {
         check_disableCache.addChangeListener(new disableCacheHandler());
         panel_advanced.add(check_disableCache);
 
-        SpringUtilities.makeCompactGrid(panel_advanced, 2, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(panel_advanced, 3, 2, 6, 6, 6, 6);
         tabbedPane.addTab("Advanced", panel_advanced);
     }
 
@@ -349,6 +368,10 @@ public class ConfigManager {
         return useOpenCL;
     }
 
+    public boolean useOpenCL_double() {
+        return useOpenCL_double;
+    }
+
     public boolean isCacheDisabled() {
         return isCacheDisabled;
     }
@@ -440,6 +463,18 @@ public class ConfigManager {
         @Override
         public void stateChanged(ChangeEvent e) {
             useOpenCL = check_openCL.isSelected();
+        }
+    }
+
+    private class openCLdoubleChangeHandler implements ChangeListener {
+        /**
+         * Invoked when the target of the listener has changed its state.
+         *
+         * @param e a ChangeEvent object
+         */
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            useOpenCL_double = check_openCL_double.isSelected();
         }
     }
 
