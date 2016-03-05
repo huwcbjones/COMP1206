@@ -5,9 +5,7 @@ import com.nativelibs4java.opencl.CLKernel;
 import com.nativelibs4java.opencl.CLProgram;
 import mandelbrot.Main;
 import mandelbrot.render.MandelbrotTask;
-import utils.ImageColourProperties;
 import utils.ImagePanel;
-import utils.ImageProperties;
 import utils.ImageSegment;
 
 import java.awt.*;
@@ -31,7 +29,11 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     @Override
     protected void ocl_loadPrograms() {
         super.ocl_loadPrograms();
-        if (!openClRenderThread.loadProgram("mandelbrot", this.getClass().getResourceAsStream("/mandelbrot/opencl/mandelbrot.cl"))) {
+
+        String arch = "32";
+        if (openClRenderThread.useDouble()) arch = "64";
+
+        if (!openClRenderThread.loadProgram("mandelbrot", this.getClass().getResourceAsStream("/mandelbrot/opencl/x" + arch + "/mandelbrot.cl"))) {
             config.disableOpenCL();
         }
     }
@@ -57,12 +59,48 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     @Override
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
         CLProgram mandelbrot = openClRenderThread.getProgram("mandelbrot");
+        if (openClRenderThread.useDouble()) {
+            return getX64Kernel(mandelbrot, dimension, results);
+        } else {
+            return getX32Kernel(mandelbrot, dimension, results);
+        }
+    }
+
+    private CLKernel getX64Kernel(CLProgram mandelbrot, Dimension dimension, CLBuffer<Integer> results) {
+        int iterations = this.iterations;
+        int escapeRadius = config.getEscapeRadiusSquared();
+        double[] dimensions = new double[]{dimension.width, dimension.height};
+        double[] scales = new double[]{xScale, yScale};
+        double[] shifts = new double[]{getShiftX(), getShiftY()};
+        double scaleFactor = getScale();
+        double huePrev = getImageHue();
+        double hueAdj = getHue();
+        double saturation = getSaturation();
+        double brightness = getBrightness();
+
+        return mandelbrot.createKernel(
+                "mandelbrot",
+                iterations,
+                escapeRadius,
+                dimensions,
+                scales,
+                shifts,
+                scaleFactor,
+                huePrev,
+                hueAdj,
+                saturation,
+                brightness,
+                results
+        );
+    }
+
+    private CLKernel getX32Kernel(CLProgram mandelbrot, Dimension dimension, CLBuffer<Integer> results) {
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
         float[] scales = new float[]{(float) xScale, (float) yScale};
         float[] shifts = new float[]{(float) getShiftX(), (float) getShiftY()};
-        float scaleFactor = (float)getScale();
+        float scaleFactor = (float) getScale();
         float huePrev = getImageHue();
         float hueAdj = getHue();
         float saturation = getSaturation();
@@ -83,6 +121,5 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
                 results
         );
     }
-
 
 }
