@@ -89,6 +89,7 @@ public class ImageProperties {
 
     @Override
     public int hashCode() {
+        // Create a unique hashcode using prime numbers
         int h_width = width * 487;
         int h_height = height * 491;
         int h_iteration = iterations * 499;

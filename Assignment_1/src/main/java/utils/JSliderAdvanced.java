@@ -7,7 +7,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.EventListenerList;
 
 /**
- * Advanced JSpinner
+ * Advanced JSpinner extends JSpinner to add AdvancedChangeListener
  *
  * @author Huw Jones
  * @since 29/02/2016

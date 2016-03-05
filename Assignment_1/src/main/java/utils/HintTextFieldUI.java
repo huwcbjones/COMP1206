@@ -7,7 +7,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
 /**
- * Advanced JTextField with input hint (like HTML text inputs)
+ * TextFieldUI, with input hint (like HTML text inputs)
  * Taken from: http://stackoverflow.com/a/4962829/5909019
  *
  * @author Huw Jones
