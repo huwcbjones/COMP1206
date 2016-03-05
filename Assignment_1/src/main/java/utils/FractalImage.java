@@ -15,8 +15,8 @@ public class FractalImage extends BufferedImage {
     private ImageProperties properties;
 
     /**
-     * Constructs a <code>BufferedImage</code> of one of the predefined
-     * image types.  The <code>ColorSpace</code> for the image is the
+     * Constructs a <code>FractalImage</code> of one of the predefined
+     * image types.  The <code>FractalImage</code> for the image is the
      * default sRGB space.
      *
      * @param width     width of the created image
@@ -42,6 +42,11 @@ public class FractalImage extends BufferedImage {
         this.colourProperties = new ImageColourProperties();
     }
 
+    /**
+     * Returns a new FractalImage from an existing BufferedImage
+     * @param image BufferedImage to convert
+     * @return new FractalImage
+     */
     public static FractalImage fromBufferedImage(BufferedImage image) {
         FractalImage img = new FractalImage(image.getWidth(), image.getHeight(), image.getType());
         Graphics2D g = img.createGraphics();
@@ -50,18 +55,34 @@ public class FractalImage extends BufferedImage {
         return img;
     }
 
+    /**
+     * Gets the colour properties of this image
+     * @return ImageColourProperties
+     */
     public ImageColourProperties getColourProperties() {
         return colourProperties;
     }
 
+    /**
+     * Sets the colour properties of this image
+     * @param colourProperties colour properties to set
+     */
     public void setColourProperties(ImageColourProperties colourProperties) {
         this.colourProperties = colourProperties;
     }
 
+    /**
+     * Gets the properties of this image
+     * @return ImageProperties
+     */
     public ImageProperties getProperties() {
         return properties;
     }
 
+    /**
+     * Sets the properties of this image
+     * @param properties properties to set
+     */
     public void setProperties(ImageProperties properties) {
         this.properties = properties;
     }
