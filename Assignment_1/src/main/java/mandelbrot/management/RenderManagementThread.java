@@ -41,6 +41,7 @@ public abstract class RenderManagementThread extends Thread {
     protected double imgHeight;
     protected double imgWidth;
 
+    protected double escapeRadiusSquared;
     protected double xShift;
     protected double yShift;
     protected double scaleFactor;
@@ -111,6 +112,15 @@ public abstract class RenderManagementThread extends Thread {
      */
     public FractalImage getImage() {
         return image;
+    }
+
+    /**
+     * Gets escape radius squared
+     *
+     * @return double escape radius squared
+     */
+    public final double getEscapeRadiusSquared() {
+        return escapeRadiusSquared;
     }
 
     /**
@@ -540,6 +550,7 @@ public abstract class RenderManagementThread extends Thread {
      * Updates the properties of the image
      */
     private void updateImageProperties() {
+        escapeRadiusSquared = config.getEscapeRadiusSquared();
         iterations = config.getIterations();
         scaleFactor = config.getScaleFactor();
         xShift = config.getShiftX();

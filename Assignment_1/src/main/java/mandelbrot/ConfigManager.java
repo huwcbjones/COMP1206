@@ -35,7 +35,7 @@ public class ConfigManager {
     private JTabbedPane tabbedPane;
 
     //region Variables
-    private int escapeRadius = 2;
+    private double escapeRadiusSquared = 4;
     private int iterations;
     private double scaleFactor;
     private double xShift;
@@ -406,10 +406,10 @@ public class ConfigManager {
     public float getBrightness() { return (float)slider_brightness.getValue() / 100f; }
 
     /**
-     * Gets the escape radius
+     * Gets the escape radius squared
      * @return escape radius squared
      */
-    public int getEscapeRadiusSquared() { return escapeRadius * escapeRadius; }
+    public double getEscapeRadiusSquared() { return escapeRadiusSquared; }
 
     /**
      * Gets the currently selected complex on the Mandelbrot set

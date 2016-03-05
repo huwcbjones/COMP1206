@@ -21,9 +21,10 @@ public abstract class RenderTask implements Callable<ImageSegment> {
 
     public static final float M_LN2_F = (float)Math.log(2);
 
-    protected RenderManagementThread mgmtThread;
-    protected Rectangle2D bounds;
-    protected int maxIterations;
+    protected final RenderManagementThread mgmtThread;
+    protected final Rectangle2D bounds;
+    protected final int maxIterations;
+    protected final double escapeRadiusSquared;
     protected BufferedImage image;
 
     protected Point2D absolutePoint;
@@ -33,6 +34,7 @@ public abstract class RenderTask implements Callable<ImageSegment> {
         this.mgmtThread = t;
         this.bounds = bounds;
         this.maxIterations = mgmtThread.getIterations();
+        this.escapeRadiusSquared = mgmtThread.getEscapeRadiusSquared();
     }
 
     /**

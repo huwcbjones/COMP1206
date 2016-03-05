@@ -4,7 +4,7 @@
 */
 __kernel void mandelbrot(
 const unsigned int maxIterations,
-const unsigned int escapeRadiusSquared,
+const float escapeRadiusSquared,
 const float2 dimensions,
 const float2 scale,
 const float2 shift,

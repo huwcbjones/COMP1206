@@ -1,6 +1,6 @@
 __kernel void julia(
 const unsigned int maxIterations,
-const unsigned int escapeRadiusSquared,
+const double escapeRadiusSquared,
 const double2 complex,
 const double2 dimensions,
 const double2 scale,
