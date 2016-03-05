@@ -1,9 +1,6 @@
 package mandelbrot.management;
 
-import com.nativelibs4java.opencl.CLContext;
-import com.nativelibs4java.opencl.CLPlatform;
-import com.nativelibs4java.opencl.CLProgram;
-import com.nativelibs4java.opencl.CLQueue;
+import com.nativelibs4java.opencl.*;
 import com.nativelibs4java.util.IOUtils;
 import utils.Log;
 
@@ -21,7 +18,7 @@ import static com.nativelibs4java.opencl.JavaCL.createBestContext;
  * @author Huw Jones
  * @since 01/03/2016
  */
-public class OpenClRenderThread extends Thread {
+public class OpenClThread extends Thread {
     private boolean isAvailable = true;
     private boolean useDouble = false;
     private CLContext context;
@@ -29,7 +26,7 @@ public class OpenClRenderThread extends Thread {
 
     private HashMap<String, CLProgram> programs;
 
-    public OpenClRenderThread(){
+    public OpenClThread(){
         super("OpenCL_Render_Thread");
         Log.Information("Loading OpenCL Render Thread...");
         init();
@@ -38,14 +35,36 @@ public class OpenClRenderThread extends Thread {
 
     private void init(){
         try {
-            context = createBestContext();
-            queue = context.createDefaultQueue();
-            CLPlatform plat = context.getPlatform();
-            ArrayList<String> extensions = new ArrayList<>(Arrays.asList(plat.getExtensions()));
-            useDouble = extensions.contains("cl_khr_fp64");
-
             Log.Information("********************************************************************************");
             Log.Information("* OPEN CL SUPPORT                                                              *");
+            Log.Information("********************************************************************************");
+            Log.Information("* AVAILABLE PLATFORMS                                                          *");
+            Log.Information("********************************************************************************");
+
+            // List available platforms
+            // If multiple platforms, could load balance the work across them (for another day, or I need another GPU)
+            CLPlatform[] platforms = JavaCL.listPlatforms();
+            CLDevice[] devices;
+            for(CLPlatform platform: platforms){
+                devices = platform.listAllDevices(false);
+                for(CLDevice device : devices){
+                    Log.Information("*");
+                    Log.Information("* Vendor:\t\t\t" + device.getVendor());
+                    Log.Information("* Name:\t\t\t\t" + device.getName());
+                }
+            }
+            Log.Information("*");
+
+            // Create best context, then get the queue
+            context = createBestContext();
+            queue = context.createDefaultQueue();
+
+            CLPlatform plat = context.getPlatform();
+            useDouble = plat.getBestDevice().isDoubleSupported();
+
+            // Print debug info
+            Log.Information("********************************************************************************");
+            Log.Information("* SELECTED PLATFORM                                                            *");
             Log.Information("********************************************************************************");
             Log.Information("* Vendor:\t\t\t" + plat.getBestDevice().getVendor());
             Log.Information("* Name:\t\t\t\t" + plat.getName());
@@ -61,7 +80,7 @@ public class OpenClRenderThread extends Thread {
             Log.Information("* Profile:\t\t\t" + plat.getBestDevice().getProfile());
             Log.Information("* Double Support:\t" + (useDouble ? "Enabled" : "Disabled"));
             Log.Information("* Extensions:");
-            for (String s : extensions) {
+            for (String s : plat.getExtensions()) {
                 Log.Information("*\t- " + s);
             }
             Log.Information("********************************************************************************");
@@ -75,6 +94,12 @@ public class OpenClRenderThread extends Thread {
         }
     }
 
+    /**
+     * Loads an OpenCL program to memory.
+     * @param programName Program Name
+     * @param source Source Code for program
+     * @return true if program was loaded successfully
+     */
     public boolean loadProgram(String programName, String source){
         try {
             CLProgram program = context.createProgram(source);
@@ -86,6 +111,12 @@ public class OpenClRenderThread extends Thread {
         return true;
     }
 
+    /**
+     * Loads an OpenCL program to memory.
+     * @param programName Program Name
+     * @param stream Input Stream for program
+     * @return true if program was loaded successfully
+     */
     public boolean loadProgram(String programName, InputStream stream){
         try {
             String source = IOUtils.readText(stream);
@@ -95,16 +126,31 @@ public class OpenClRenderThread extends Thread {
         }
     }
 
+    /**
+     * Returns the OpenCL with name
+     * @param programName Name of program to return
+     * @return The program.
+     */
     public CLProgram getProgram(String programName){
         return programs.get(programName);
     }
 
+    /**
+     * Gets the current CLQueue
+     * @return CL Queue
+     */
     public CLQueue getQueue() {
         return queue;
     }
+
+    /**
+     * Gets the current context
+     * @return CL Context
+     */
     public CLContext getContext() {
         return context;
     }
+
     /**
      * Gets a boolean representing whether OpenCL rendering is available
      * @return True if OpenCL is available.
