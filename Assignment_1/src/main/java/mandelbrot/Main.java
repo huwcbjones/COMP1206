@@ -78,6 +78,9 @@ public class Main extends JFrameAdvanced {
 
         config = new ConfigManager(this);
         config.addConfigChangeListener(new configChangeHandler());
+
+        // If OpenCL features aren't available, disable them
+        if(!openClThread.isAvailable()) config.disableOpenCL();
         if(!openClThread.useDouble()) config.disableOpenCL_double();
 
         bookmarks = new BookmarkManager(this);
