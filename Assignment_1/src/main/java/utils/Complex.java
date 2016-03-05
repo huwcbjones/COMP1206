@@ -31,47 +31,78 @@ public class Complex implements Cloneable {
         return new Complex(squareReal() - squareImaginary(), abi + abi);
     }
 
+    /**
+     * Calculates the square of the real and returns it
+     * @return double, square of the real
+     */
     public double squareReal() {
+        // Check if square has been calculated
         if (real_square != -1) return real_square;
         real_square = real * real;
         return real_square;
     }
 
+    /**
+     * Calculates the square of the imaginary and returns it
+     * @return double, square of the imaginary
+     */
     public double squareImaginary() {
+        // Check if square has been calculated
         if (imaginary_square != -1) return imaginary_square;
         imaginary_square = imaginary * imaginary;
         return imaginary_square;
     }
 
     /**
-     * Cacuclates the square of the modulus
+     * Calculates the square of the modulus
      * @return Returns the square of the modulus of the complex number
      */
     public double modulusSquared(){
         // |a + bi| = root( a^2 + b^2)
         // therefore
         // |a + bi|^2 = a^2 + b^2
-        return (real * real) + (imaginary * imaginary);
+        return (squareReal()) + (squareImaginary());
     }
 
+    /**
+     * Calculates the modulus of the complex and returns it
+     * @return double, modulus of the complex
+     */
     public double modulus(){
         double modulusSquared =  modulusSquared();
         return modulusSquared * modulusSquared;
     }
 
-    public void add(Complex d){
-        real += d.getReal();
-        imaginary += d.getImaginary();
+    /**
+     * Adds a complex to this complex
+     * @param complex Complex to add
+     */
+    public void add(Complex complex){
+        real += complex.getReal();
+        imaginary += complex.getImaginary();
     }
 
-    public void subtract(Complex d){
-        real -= d.getReal();
-        imaginary -= d.getImaginary();
+    /**
+     * Subtracts a complex from this complex
+     * @param complex Complex to subtract
+     */
+    public void subtract(Complex complex){
+        real -= complex.getReal();
+        imaginary -= complex.getImaginary();
     }
 
+    /**
+     * Gets the real component of the complex
+     * @return double, real
+     */
     public double getReal(){
         return real;
     }
+
+    /**
+     * Gets the imaginary component of the complex
+     * @return double, imaginary
+     */
     public double getImaginary(){
         return imaginary;
     }
@@ -79,7 +110,7 @@ public class Complex implements Cloneable {
     @Override
     public String toString(){
         String imaginaryString = String.format("%.3f", imaginary);
-        if (getImaginary() > 0) {
+        if (getImaginary() >= 0) {
             imaginaryString = "+ " + imaginaryString;
         } else {
             imaginaryString = "- " + String.format("%.3f", -1 * imaginary);
@@ -102,5 +133,4 @@ public class Complex implements Cloneable {
     public Complex clone() {
         return new Complex(real, imaginary);
     }
-
 }
