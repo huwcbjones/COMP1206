@@ -19,7 +19,7 @@ import java.util.concurrent.Callable;
  * @since 28/02/2016
  */
 public class MandelbrotRenderManagementThread extends RenderManagementThread {
-    public MandelbrotRenderManagementThread(Main mainWindow, OpenClRenderThread thread, ImagePanel panel) {
+    public MandelbrotRenderManagementThread(Main mainWindow, OpenClThread thread, ImagePanel panel) {
         super(mainWindow, thread, panel, "Mandelbrot");
     }
 
@@ -30,10 +30,11 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     protected void ocl_loadPrograms() {
         super.ocl_loadPrograms();
 
-        if (!openClRenderThread.loadProgram("mandelbrot_x64", this.getClass().getResourceAsStream("/mandelbrot/opencl/x64/mandelbrot.cl"))) {
+        // Load both double and float versions
+        if (!openClThread.loadProgram("mandelbrot_x64", this.getClass().getResourceAsStream("/mandelbrot/opencl/x64/mandelbrot.cl"))) {
             config.disableOpenCL();
         }
-        if (!openClRenderThread.loadProgram("mandelbrot_x32", this.getClass().getResourceAsStream("/mandelbrot/opencl/x32/mandelbrot.cl"))) {
+        if (!openClThread.loadProgram("mandelbrot_x32", this.getClass().getResourceAsStream("/mandelbrot/opencl/x32/mandelbrot.cl"))) {
             config.disableOpenCL();
         }
     }
@@ -58,7 +59,7 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
      */
     @Override
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
-        if (openClRenderThread.useDouble() && config.useOpenCL_double()) {
+        if (openClThread.useDouble() && config.useOpenCL_double()) {
             return getX64Kernel(dimension, results);
         } else {
             return getX32Kernel(dimension, results);
@@ -66,7 +67,7 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     }
 
     private CLKernel getX64Kernel( Dimension dimension, CLBuffer<Integer> results) {
-        CLProgram mandelbrot = openClRenderThread.getProgram("mandelbrot_x64");
+        CLProgram mandelbrot = openClThread.getProgram("mandelbrot_x64");
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
         double[] dimensions = new double[]{dimension.width, dimension.height};
@@ -95,7 +96,7 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     }
 
     private CLKernel getX32Kernel(Dimension dimension, CLBuffer<Integer> results) {
-        CLProgram mandelbrot = openClRenderThread.getProgram("mandelbrot_x32");
+        CLProgram mandelbrot = openClThread.getProgram("mandelbrot_x32");
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
@@ -122,5 +123,4 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
                 results
         );
     }
-
 }

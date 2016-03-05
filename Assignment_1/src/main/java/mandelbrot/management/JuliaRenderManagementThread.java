@@ -24,7 +24,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
 
     protected Complex complex;
 
-    public JuliaRenderManagementThread(Main mainWindow, OpenClRenderThread thread, ImagePanel panel) {
+    public JuliaRenderManagementThread(Main mainWindow, OpenClThread thread, ImagePanel panel) {
         super(mainWindow, thread, panel, "Julia");
     }
 
@@ -40,11 +40,6 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
         return properties;
     }
 
-    @Override
-    protected Callable<ImageSegment> createTask(Rectangle2D bounds) {
-        return new JuliaTask(this, bounds, complex);
-    }
-
     /**
      * Loads programs into the OpenCL context
      */
@@ -52,12 +47,18 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     protected void ocl_loadPrograms() {
         super.ocl_loadPrograms();
 
-        String arch = "32";
-        if (openClRenderThread.useDouble()) arch = "64";
-
-        if (!openClRenderThread.loadProgram("julia", this.getClass().getResourceAsStream("/mandelbrot/opencl/x" + arch + "/julia.cl"))) {
+        // Load both float and double versions
+        if (!openClThread.loadProgram("julia_x64", this.getClass().getResourceAsStream("/mandelbrot/opencl/x64/julia.cl"))) {
             config.disableOpenCL();
         }
+        if (!openClThread.loadProgram("julia_x32", this.getClass().getResourceAsStream("/mandelbrot/opencl/x32/julia.cl"))) {
+            config.disableOpenCL();
+        }
+    }
+
+    @Override
+    protected Callable<ImageSegment> createTask(Rectangle2D bounds) {
+        return new JuliaTask(this, bounds, complex);
     }
 
     /**
@@ -68,15 +69,16 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
      * @return CLKernel to execute
      */
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
-        CLProgram julia = openClRenderThread.getProgram("julia");
-        if (openClRenderThread.useDouble()) {
-            return getX64Kernel(julia, dimension, results);
+
+        if (openClThread.useDouble()) {
+            return getX64Kernel(dimension, results);
         } else {
-            return getX32Kernel(julia, dimension, results);
+            return getX32Kernel(dimension, results);
         }
     }
 
-    private CLKernel getX64Kernel(CLProgram julia, Dimension dimension, CLBuffer<Integer> results) {
+    private CLKernel getX64Kernel(Dimension dimension, CLBuffer<Integer> results) {
+        CLProgram julia = openClThread.getProgram("julia_x64");
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
         double[] complex = new double[]{this.complex.getReal(), this.complex.getImaginary()};
@@ -106,7 +108,8 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
         );
     }
 
-    private CLKernel getX32Kernel(CLProgram julia, Dimension dimension, CLBuffer<Integer> results) {
+    private CLKernel getX32Kernel(Dimension dimension, CLBuffer<Integer> results) {
+        CLProgram julia = openClThread.getProgram("julia_x32");
         int iterations = this.iterations;
         int escapeRadius = config.getEscapeRadiusSquared();
         float[] complex = new float[]{(float) this.complex.getReal(), (float) this.complex.getImaginary()};
