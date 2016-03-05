@@ -80,6 +80,7 @@ public class Main extends JFrameAdvanced {
 
         config = new ConfigManager(this);
         config.addConfigChangeListener(new configChangeHandler());
+        if(!openClRenderThread.useDouble()) config.disableOpenCL_double();
 
         bookmarks = new BookmarkManager(this);
 

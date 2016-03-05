@@ -82,7 +82,7 @@ public class ConfigManager {
     Complex selectedPoint;
 
     boolean useOpenCL = true;
-    boolean useOpenCL_double = true;
+    boolean useOpenCL_double = false;
     boolean isCacheDisabled = false;
 
     //endregion
@@ -215,7 +215,7 @@ public class ConfigManager {
         panel_advanced.add(label_openCL_double);
 
         check_openCL_double = new JCheckBox();
-        check_openCL_double.setSelected(true);
+        check_openCL_double.setSelected(false);
         check_openCL_double.addChangeListener(new openCLdoubleChangeHandler());
         panel_advanced.add(check_openCL_double);
 
@@ -225,6 +225,7 @@ public class ConfigManager {
 
         check_disableCache = new JCheckBox();
         check_disableCache.setSelected(false);
+
         check_disableCache.addChangeListener(new disableCacheHandler());
         panel_advanced.add(check_disableCache);
 
@@ -362,6 +363,13 @@ public class ConfigManager {
         this.useOpenCL = false;
         check_openCL.setSelected(false);
         check_openCL.setEnabled(false);
+    }
+
+    public void disableOpenCL_double() {
+        Log.Warning("OpenCL doubles disabled!");
+        this.useOpenCL_double = false;
+        check_openCL_double.setSelected(false);
+        check_openCL_double.setEnabled(false);
     }
 
     public boolean useOpenCL() {
