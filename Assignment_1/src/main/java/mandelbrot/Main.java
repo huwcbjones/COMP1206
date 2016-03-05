@@ -6,7 +6,7 @@ import mandelbrot.events.ConfigChangeAdapter;
 import mandelbrot.events.RenderListener;
 import mandelbrot.management.JuliaRenderManagementThread;
 import mandelbrot.management.MandelbrotRenderManagementThread;
-import mandelbrot.management.OpenClRenderThread;
+import mandelbrot.management.OpenClThread;
 import utils.*;
 
 import javax.swing.*;
@@ -26,24 +26,25 @@ public class Main extends JFrameAdvanced {
 
     private static final double DISPLAY_CONSTRAINT = 0.9;
 
+    // Managers
     private ConfigManager config;
     private BookmarkManager bookmarks;
 
     //region Main Panels
     private JPanel panel_display;
-    private ImagePanel imgPanel_image;
     private JPanel panel_info;
     private JPanel panel_controls;
     private JPanel panel_bookmarks;
     private JPanel panel_julia;
-
     //endregion
 
-    private final OpenClRenderThread openClRenderThread;
-    private final MandelbrotRenderManagementThread mandel_drawer;
+    // Management Threads
+    private final OpenClThread openClThread;
+    private final MandelbrotRenderManagementThread mandelbrotRenderer;
     private final JuliaRenderManagementThread juliaRenderer;
 
-    // Julia Set
+    // Image Panels
+    private ImagePanel imgPanel_image;
     private ImagePanel imgPanel_julia;
 
     //region Info Properties
@@ -58,41 +59,38 @@ public class Main extends JFrameAdvanced {
 
     private JLabel label_selectedPoint;
     private JTextField text_selectedPoint;
-
     //endregion
-
-
-    // Bookmarks
-
 
     public Main() {
         super("Fractal Explorer");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         this.setMinimumSize(new Dimension(1024, 768));
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
 
         }
 
-        openClRenderThread = new OpenClRenderThread();
+        // Create threads and objects
+        openClThread = new OpenClThread();
 
         config = new ConfigManager(this);
         config.addConfigChangeListener(new configChangeHandler());
-        if(!openClRenderThread.useDouble()) config.disableOpenCL_double();
+        if(!openClThread.useDouble()) config.disableOpenCL_double();
 
         bookmarks = new BookmarkManager(this);
 
+        // Create GUI
         initComponents();
-
         this.pack();
 
-        mandel_drawer = new MandelbrotRenderManagementThread(this, openClRenderThread, imgPanel_image);
-        mandel_drawer.addRenderListener(new renderCompleteHandler());
-        mandel_drawer.start();
+        mandelbrotRenderer = new MandelbrotRenderManagementThread(this, openClThread, imgPanel_image);
+        mandelbrotRenderer.addRenderListener(new renderCompleteHandler());
+        mandelbrotRenderer.start();
 
-        juliaRenderer = new JuliaRenderManagementThread(this, openClRenderThread, imgPanel_julia);
+        juliaRenderer = new JuliaRenderManagementThread(this, openClThread, imgPanel_julia);
         juliaRenderer.start();
 
         this.setVisible(true);
@@ -127,9 +125,16 @@ public class Main extends JFrameAdvanced {
         imgPanel_image.setBackground(Color.WHITE);
         panel_display.add(imgPanel_image, BorderLayout.CENTER);
 
+        // Adds listener for clicking
         imgPanel_image.addMouseListener(new mouseClickHandler());
+
+        // Adds listener for mouse cursor position
+        // Need to add to both events to get mouse exit + mouse move events
+        imgPanel_image.addMouseListener(new mouseMotionHandler());
         imgPanel_image.addMouseMotionListener(new mouseMotionHandler());
 
+        // Adds listener for zoom box/interaction with image
+        // Need to add to both events to get mouse exit + mouse move events
         interactionHandler interactionHandler = new interactionHandler();
         imgPanel_image.addMouseListener(interactionHandler);
         imgPanel_image.addMouseMotionListener(interactionHandler);
@@ -217,14 +222,20 @@ public class Main extends JFrameAdvanced {
 
     //region Update Info Sections
     private void updateRangeDisplay() {
-        // Wait for the thread to notify us that it has completed
-        Complex minimum = mandel_drawer.getComplexFromPoint(0, 0);
-        Complex maximum = mandel_drawer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
-        text_xRange.setText(String.format("%.3f to %.3f", minimum.getReal(), maximum.getReal()));
-        text_yRange.setText(String.format("%.3f to %.3f", minimum.getImaginary(), maximum.getImaginary()));
+        Complex minimum = mandelbrotRenderer.getComplexFromPoint(0, 0);
+        Complex maximum = mandelbrotRenderer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
+        // Dynamically scale precision to make the range clearer
+        int decimalPlaces = 1;
+        do {
+            decimalPlaces++;
+        } while(String.format("%." + decimalPlaces + "f", minimum.getReal()).equals(String.format("%." + decimalPlaces + "f", maximum.getReal())));
+
+        text_xRange.setText(String.format("%."+ decimalPlaces +"f to %."+ decimalPlaces +"f", minimum.getReal(), maximum.getReal()));
+        text_yRange.setText(String.format("%."+ decimalPlaces +"f to %."+ decimalPlaces +"f", minimum.getImaginary(), maximum.getImaginary()));
     }
 
     private void updateSelection() {
+        //If selected point is null (not set), then display a -, otherwise display the complex
         String text = "-";
         if(config.getSelectedPoint() != null){
             text = config.getSelectedPoint().toString();
@@ -233,11 +244,16 @@ public class Main extends JFrameAdvanced {
     }
 
     private void updateSelection(Rectangle2D selection) {
+        // If the selection is null (not set), display -, otherwise display the range
         String text = "-";
+
         if (selection != null) {
-            text = mandel_drawer.getComplexFromPoint(selection.getMinX(), selection.getMinY()).toString();
+            // Top left of rectangle
+            text = mandelbrotRenderer.getComplexFromPoint(selection.getMinX(), selection.getMinY()).toString();
             text += " to ";
-            text += mandel_drawer.getComplexFromPoint(selection.getMaxX(), selection.getMaxY()).toString();
+
+            // Bottom right of rectangle
+            text += mandelbrotRenderer.getComplexFromPoint(selection.getMaxX(), selection.getMaxY()).toString();
         }
         text_selectedPoint.setText(text);
     }
@@ -254,7 +270,7 @@ public class Main extends JFrameAdvanced {
 
     //region Render Handlers
     public void renderMandelbrot(){
-        mandel_drawer.render();
+        mandelbrotRenderer.render();
     }
 
     public void renderJulia(){
@@ -265,6 +281,9 @@ public class Main extends JFrameAdvanced {
 
     //region Event Handlers
 
+    /**
+     * Invoked when JFrame is resized
+     */
     private class resizeHandler extends AdvancedComponentAdapter {
         /**
          * Invoked when the component's size stops changing.
@@ -279,6 +298,9 @@ public class Main extends JFrameAdvanced {
         }
     }
 
+    /**
+     * Invoked when the config has changed
+     */
     private class configChangeHandler extends ConfigChangeAdapter {
         @Override
         public void iterationChange(int iterations) {
@@ -313,6 +335,9 @@ public class Main extends JFrameAdvanced {
         }
     }
 
+    /**
+     * Invoked when the render has completed
+     */
     private class renderCompleteHandler implements RenderListener {
         @Override
         public void renderComplete() {
@@ -320,6 +345,9 @@ public class Main extends JFrameAdvanced {
         }
     }
 
+    /**
+     * Handles zoom interaction
+     */
     private class interactionHandler extends MouseAdapter implements MouseMotionListener {
         private boolean dragging = false;
         private Point2D startPos;
@@ -327,7 +355,6 @@ public class Main extends JFrameAdvanced {
 
         @Override
         public void mousePressed(MouseEvent e) {
-
             if (SwingUtilities.isLeftMouseButton(e)) {
                 startPos = e.getPoint();
                 dragging = true;
@@ -339,34 +366,41 @@ public class Main extends JFrameAdvanced {
             updateSelection();
             imgPanel_image.drawZoomBox(null);
 
+            // Make sure only the left mouse button was released
             if (e.getButton() != MouseEvent.BUTTON1 || rectangle2D == null) {
                 rectangle2D = null;
                 dragging = false;
                 return;
             }
 
+            // Prevent accidental zoom on click
             if (rectangle2D.getWidth() <= 10 && rectangle2D.getHeight() <= 10) return;
 
+            // Get top left/bottom right panel coordinates
             double x1 = rectangle2D.getMinX(), y1 = rectangle2D.getMinY();
             double x2 = rectangle2D.getMaxX(), y2 = rectangle2D.getMaxY();
 
-            Complex orig1 = mandel_drawer.getComplexFromPoint(0, 0);
-            Complex orig2 = mandel_drawer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
+            // Get top left/bottom right complex coordinates
+            Complex new1 = mandelbrotRenderer.getComplexFromPoint(x1, y1);
+            Complex new2 = mandelbrotRenderer.getComplexFromPoint(x2, y2);
 
-            Complex new1 = mandel_drawer.getComplexFromPoint(x1, y1);
-            Complex new2 = mandel_drawer.getComplexFromPoint(x2, y2);
-
+            // Get new image scale
             double scale = (4) / (new2.getReal() - new1.getReal());
 
+            // Get new midpoints
             double new_midPointX = (new2.getReal() + new1.getReal()) / 2d;
             double new_midPointY = (new2.getImaginary() + new1.getImaginary()) / 2d;
 
+            // Set config options, but don't trigger events (prevents multiple renders)
             config.setShiftX(new_midPointX, false);
             config.setShiftY(new_midPointY, false);
             config.setScaleFactor(scale, false);
 
+            // Clear zoom flags
             rectangle2D = null;
             dragging = false;
+
+            // Now render
             renderMandelbrot();
         }
 
@@ -374,6 +408,7 @@ public class Main extends JFrameAdvanced {
         public void mouseDragged(MouseEvent e) {
             if (!dragging) return;
 
+            // Updated zoom box and draw it
             rectangle2D = getRectangle(e.getPoint());
             imgPanel_image.drawZoomBox(rectangle2D);
             updateSelection(rectangle2D);
@@ -396,6 +431,7 @@ public class Main extends JFrameAdvanced {
             double height = Math.abs(e.getY() - startPos.getY());
             double x, y;
 
+            // Ensure zoom box maintains same aspect ratio as image panel
             if (width / aspectRatio < height) {
                 height = width / aspectRatio;
             } else {
@@ -436,34 +472,50 @@ public class Main extends JFrameAdvanced {
     }
 
     //TODO: Add mouse wheel listener! Mouse wheel zoom in/out
+
+    /**
+     * Handles julia set click
+     */
     private class mouseClickHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (SwingUtilities.isLeftMouseButton(e) && !SwingUtilities.isRightMouseButton(e)) {
-                if (mandel_drawer.hasRendered()) {
-                    config.setSelectedPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
+                if (mandelbrotRenderer.hasRendered()) {
+                    config.setSelectedPoint(mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
                 }
                 updateSelection();
             }
         }
     }
 
-    private class mouseMotionHandler extends MouseMotionAdapter {
+    /**
+     * Handles cursor position updating
+     */
+    private class mouseMotionHandler extends MouseAdapter implements MouseMotionListener {
+        @Override
+        public void mouseExited(MouseEvent e) {
+            // If cursor exits panel, set coordinates to "-"
+            updatedCursorPoint();
+        }
+
         @Override
         public void mouseMoved(MouseEvent e) {
             super.mouseMoved(e);
-            if (mandel_drawer.hasRendered()) {
-                updatedCursorPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
+            if (mandelbrotRenderer.hasRendered()) {
+                updatedCursorPoint(mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
             } else {
                 updatedCursorPoint();
             }
+
+            // Render julia set if we are rendering when the cursor moves
             if(config.juliaDisplayOnMove()) {
-                if (mandel_drawer.hasRendered()) {
-                    config.setSelectedPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
+                if (mandelbrotRenderer.hasRendered()) {
+                    config.setSelectedPoint(mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
                 }
                 updateSelection();
             }
         }
+
     }
 
     //endregion
