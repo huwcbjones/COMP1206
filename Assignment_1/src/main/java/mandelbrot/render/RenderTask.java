@@ -45,20 +45,26 @@ public abstract class RenderTask implements Callable<ImageSegment> {
      */
     @Override
     public ImageSegment call() throws Exception {
+        // Create image segment
         image = new BufferedImage(getImageWidth(), getImageHeight(), BufferedImage.TYPE_INT_RGB);
         ColouredPixel pixel;
+        // Loop through row by row
         for (int y = 0; y < getImageHeight(); y++) {
             for (int x = 0; x < getImageWidth(); x++) {
+                // Get points (relative to image segment, for painting and absolute for Image Panel)
                 absolutePoint = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
                 relativePoint = new Point2D.Double(x, y);
 
                 Complex c = mgmtThread.getComplexFromPoint(absolutePoint);
 
+                // Perform calculation
                 pixel = doPixelCalculation(relativePoint, c);
+
                 paintPixel(pixel);
             }
         }
 
+        // Perform final image adjustment
         adjustImage();
 
         return new ImageSegment(image, bounds);
@@ -70,13 +76,31 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     protected int getImageWidth(){
         return (int)this.bounds.getWidth();
     }
+
+    /**
+     * If the image segment needs adjusting (e.g.: half height optimisation), override this method
+     * and perform it here.
+     */
     protected void adjustImage(){
     }
 
+    /**
+     * Gets HSB colour from iterations and a Complex, z.
+     * @param iterations Number of iterations it took
+     * @param z Final complex, z
+     * @return Color of complex
+     */
     protected Color getHSBColour(int iterations, Complex z){
         return Color.getHSBColor(getHue(iterations, z), mgmtThread.getSaturation(), mgmtThread.getBrightness());
     }
 
+    /**
+     * Performs colour smoothing
+     * See <a href="https://en.wikipedia.org/wiki/Mandelbrot_set#Continuous_.28smooth.29_coloring">Continuous Smooth Colouring</a>
+     * @param iterations Number of iterations it took
+     * @param z Final complex, z
+     * @return Hue for complex
+     */
     protected float getHue(int iterations, Complex z){
         // sqrt of inner term removed using log simplification rules. log(x^(1/2)) = (1/2)*log(x) = log(x) / 2
         double log_z = Math.log((z.getReal() * z.getReal()) + (z.getImaginary() * z.getImaginary())) / 2.0d;
@@ -84,11 +108,23 @@ public abstract class RenderTask implements Callable<ImageSegment> {
         return mgmtThread.getHue() + (iterations + 1 - (float)nu ) / 110f;
     }
 
+    /**
+     * Worker Unit for individual pixels
+     * @param point Point on worker unit
+     * @param complex Complex for point
+     * @return ColouredPixel for that pixel
+     */
     protected abstract ColouredPixel doPixelCalculation(Point2D point, Complex complex);
 
+    /**
+     * Paints a coloured pixel on the image segment
+     * @param p Pixel to paint
+     */
     private void paintPixel(ColouredPixel p) {
+        // Get x/y values
         int x = Double.valueOf(p.getPoint().getX()).intValue();
         int y = Double.valueOf(p.getPoint().getY()).intValue();
+
         this.image.setRGB(x, y, p.getColour().getRGB());
     }
 }
