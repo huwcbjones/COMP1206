@@ -125,12 +125,13 @@ public class Main extends JFrameAdvanced {
         imgPanel_image = new ImagePanel();
         imgPanel_image.setBackground(Color.WHITE);
         panel_display.add(imgPanel_image, BorderLayout.CENTER);
-        imgPanel_image.addMouseListener(new mouseClickPositionHandler());
-        imgPanel_image.addMouseMotionListener(new mousePositionHandler());
 
-        zoomBoxHandler zoomBoxHandler = new zoomBoxHandler();
-        imgPanel_image.addMouseListener(zoomBoxHandler);
-        imgPanel_image.addMouseMotionListener(zoomBoxHandler);
+        imgPanel_image.addMouseListener(new mouseClickHandler());
+        imgPanel_image.addMouseMotionListener(new mouseMotionHandler());
+
+        interactionHandler interactionHandler = new interactionHandler();
+        imgPanel_image.addMouseListener(interactionHandler);
+        imgPanel_image.addMouseMotionListener(interactionHandler);
 
         initSidePanels(constraints);
         initInfoPanel();
@@ -201,7 +202,7 @@ public class Main extends JFrameAdvanced {
         text_cursorPoint.setEditable(false);
         panel_info.add(text_cursorPoint);
 
-        label_selectedPoint = new JLabel("Selected Point:", JLabel.TRAILING);
+        label_selectedPoint = new JLabel("Current Selection:", JLabel.TRAILING);
         panel_info.add(label_selectedPoint);
 
         text_selectedPoint = new JTextField("-");
@@ -222,10 +223,20 @@ public class Main extends JFrameAdvanced {
         text_yRange.setText(String.format("%.3f to %.3f", minimum.getImaginary(), maximum.getImaginary()));
     }
 
-    private void updatedSelectedPoint() {
+    private void updateSelection() {
         String text = "-";
         if(config.getSelectedPoint() != null){
             text = config.getSelectedPoint().toString();
+        }
+        text_selectedPoint.setText(text);
+    }
+
+    private void updateSelection(Rectangle2D selection) {
+        String text = "-";
+        if (selection != null) {
+            text = mandel_drawer.getComplexFromPoint(selection.getMinX(), selection.getMinY()).toString();
+            text += " to ";
+            text += mandel_drawer.getComplexFromPoint(selection.getMaxX(), selection.getMaxY()).toString();
         }
         text_selectedPoint.setText(text);
     }
@@ -308,23 +319,54 @@ public class Main extends JFrameAdvanced {
         }
     }
 
-    private class zoomBoxHandler extends MouseAdapter implements MouseMotionListener {
+    private class interactionHandler extends MouseAdapter implements MouseMotionListener {
         private boolean dragging = false;
         private Point2D startPos;
         private Rectangle2D rectangle2D;
 
         @Override
         public void mousePressed(MouseEvent e) {
-            if (dragging) return;
 
-            startPos = e.getPoint();
-            dragging = true;
+            if (SwingUtilities.isLeftMouseButton(e)) {
+                startPos = e.getPoint();
+                dragging = true;
+            }
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            dragging = false;
+            updateSelection();
             imgPanel_image.drawZoomBox(null);
+
+            if (e.getButton() != MouseEvent.BUTTON1 || rectangle2D == null) {
+                rectangle2D = null;
+                dragging = false;
+                return;
+            }
+
+            if (rectangle2D.getWidth() <= 10 && rectangle2D.getHeight() <= 10) return;
+
+            double x1 = rectangle2D.getMinX(), y1 = rectangle2D.getMinY();
+            double x2 = rectangle2D.getMaxX(), y2 = rectangle2D.getMaxY();
+
+            Complex orig1 = mandel_drawer.getComplexFromPoint(0, 0);
+            Complex orig2 = mandel_drawer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
+
+            Complex new1 = mandel_drawer.getComplexFromPoint(x1, y1);
+            Complex new2 = mandel_drawer.getComplexFromPoint(x2, y2);
+
+            double scale = (4) / (new2.getReal() - new1.getReal());
+
+            double new_midPointX = (new2.getReal() + new1.getReal()) / 2d;
+            double new_midPointY = (new2.getImaginary() + new1.getImaginary()) / 2d;
+
+            config.setShiftX(new_midPointX, false);
+            config.setShiftY(new_midPointY, false);
+            config.setScaleFactor(scale, false);
+
+            rectangle2D = null;
+            dragging = false;
+            renderMandelbrot();
         }
 
         @Override
@@ -333,14 +375,16 @@ public class Main extends JFrameAdvanced {
 
             rectangle2D = getRectangle(e.getPoint());
             imgPanel_image.drawZoomBox(rectangle2D);
+            updateSelection(rectangle2D);
         }
 
         /**
          * Uses the startPos and parameter e to create the Rectangle2D Zoom Box to draw
+         *
          * @param e MouseEvent e, with coordinates
          * @return Rectangle2D representing the zoom box to draw
          */
-        private Rectangle2D getRectangle(Point2D e){
+        private Rectangle2D getRectangle(Point2D e) {
             // QUADRANTS (where startPos = (0, 0))
             //  3 | 2
             // ---|---
@@ -365,23 +409,23 @@ public class Main extends JFrameAdvanced {
                 x = startPos.getX();
                 y = startPos.getY();
 
-            // Quadrant 2:
+                // Quadrant 2:
             } else if (startPos.getX() < e.getX() && startPos.getY() > e.getY()) {
                 x = startPos.getX();
                 y = startPos.getY() - height;
 
-            // Quadrant 3:
+                // Quadrant 3:
             } else if (startPos.getX() > e.getX() && startPos.getY() > e.getY()) {
                 x = startPos.getX() - width;
                 y = startPos.getY() - height;
 
-            // Quadrant 4:
+                // Quadrant 4:
             } else if (startPos.getX() > e.getX() && startPos.getY() < e.getY()) {
                 x = startPos.getX() - width;
                 y = startPos.getY();
             } else {
 
-            // Width and/or height are 0, don't draw a box
+                // Width and/or height are 0, don't draw a box
                 return null;
             }
 
@@ -390,24 +434,19 @@ public class Main extends JFrameAdvanced {
 
     }
 
-    /**
-     * Updates display of selected position when mouse clicked
-     */
-    private class mouseClickPositionHandler extends MouseAdapter {
+    private class mouseClickHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (mandel_drawer.hasRendered()) {
-                config.setSelectedPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
+            if (SwingUtilities.isLeftMouseButton(e) && !SwingUtilities.isRightMouseButton(e)) {
+                if (mandel_drawer.hasRendered()) {
+                    config.setSelectedPoint(mandel_drawer.getComplexFromPoint(e.getPoint()));
+                }
+                updateSelection();
             }
-            updatedSelectedPoint();
         }
     }
 
-    /**
-     * Updates display of mouse cursor when mouse moved
-     */
-    private class mousePositionHandler extends MouseMotionAdapter {
-
+    private class mouseMotionHandler extends MouseMotionAdapter {
         @Override
         public void mouseMoved(MouseEvent e) {
             super.mouseMoved(e);
