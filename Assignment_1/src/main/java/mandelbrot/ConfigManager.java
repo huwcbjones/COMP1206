@@ -35,15 +35,15 @@ public class ConfigManager {
     private JTabbedPane tabbedPane;
 
     //region Variables
-    private double escapeRadiusSquared = 4;
-    private int iterations;
-    private double scaleFactor;
-    private double xShift;
-    private double yShift;
+    private double escapeRadiusSquared = 9;
+    private int iterations = 100;
+    private double scaleFactor = 1.0;
+    private double xShift = 0;
+    private double yShift = 0;
 
-    private float hue;
-    private float saturation;
-    private float brightness;
+    private float hue = 0f;
+    private float saturation = 1f;
+    private float brightness = 1f;
 
     private boolean displayJuliaMoveCursor = false;
     private boolean useOpenCL = true;
@@ -217,7 +217,7 @@ public class ConfigManager {
         label_escapeRadius = new JLabel("Escape Radius:", JLabel.TRAILING);
         panel_advanced.add(label_escapeRadius);
 
-        spinner_escapeRadius = new JSpinner(new SpinnerNumberModel(2, 0, 100, 0.1));
+        spinner_escapeRadius = new JSpinner(new SpinnerNumberModel(3, 0, 100, 0.1));
         spinner_escapeRadius.addChangeListener(new optionChangeHandler());
         panel_advanced.add(spinner_escapeRadius);
 
