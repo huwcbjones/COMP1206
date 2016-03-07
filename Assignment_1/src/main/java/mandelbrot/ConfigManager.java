@@ -35,6 +35,7 @@ public class ConfigManager {
     private JTabbedPane tabbedPane;
 
     //region Variables
+    private String fractal = "Mandelbrot";
     private double escapeRadiusSquared = 9;
     private int iterations = 100;
     private double scaleFactor = 1.0;
@@ -137,6 +138,13 @@ public class ConfigManager {
     }
 
     private void initControlComponents() {
+        // Fractal
+        label_fractal = new JLabel("Fractal:", JLabel.TRAILING);
+        panel_controls.add(label_fractal);
+
+        combo_fractal = new JComboBox<>();
+        combo_fractal.addActionListener(new fractalHandler());
+        panel_controls.add(combo_fractal);
 
         // Iterations
         label_iterations = new JLabel("Iterations:", JLabel.TRAILING);
@@ -170,7 +178,7 @@ public class ConfigManager {
         spinner_shiftY.addChangeListener(new optionChangeHandler());
         panel_controls.add(spinner_shiftY);
 
-        SpringUtilities.makeCompactGrid(panel_controls, 4, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(panel_controls, 5, 2, 6, 6, 6, 6);
         tabbedPane.addTab("Controls", panel_controls);
     }
 
@@ -282,6 +290,12 @@ public class ConfigManager {
     //endregion
 
     //region Event Triggers
+    private void fractalChanged(){
+        for(ConfigChangeListener l: listeners){
+            l.fractalChange(fractal);
+        }
+    }
+
     private void escapeRadiusChanged(){
         for(ConfigChangeListener l: listeners){
             l.escapeRadiusSquaredChange(escapeRadiusSquared);
@@ -326,6 +340,10 @@ public class ConfigManager {
     //endregion
 
     //region Get/Set Methods
+
+    public void addFractal(String fractal){
+        combo_fractal.addItem(fractal);
+    }
 
     /**
      * Gets the config panel
@@ -514,6 +532,18 @@ public class ConfigManager {
     //endregion
 
     //region Event Handlers
+
+    /**
+     * Invoked when selected fractal changes
+     */
+    private class fractalHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            fractal = (String)combo_fractal.getSelectedItem();
+            fractalChanged();
+        }
+    }
 
     /**
      * Invoked when btn_render is activated
