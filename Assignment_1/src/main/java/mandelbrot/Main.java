@@ -40,8 +40,8 @@ public class Main extends JFrameAdvanced {
 
     // Management Threads
     private final OpenClThread openClThread;
-    private final MandelbrotRenderManagementThread mandelbrotRenderer;
-    private final JuliaRenderManagementThread juliaRenderer;
+    public final MandelbrotRenderManagementThread mandelbrotRenderer;
+    public final JuliaRenderManagementThread juliaRenderer;
 
     // Image Panels
     private ImagePanel imgPanel_image;
