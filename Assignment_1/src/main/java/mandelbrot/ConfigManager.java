@@ -41,7 +41,7 @@ public class ConfigManager {
     private double xShift;
     private double yShift;
 
-    private float hueShift;
+    private float hue;
     private float saturation;
     private float brightness;
 
@@ -53,6 +53,9 @@ public class ConfigManager {
     Complex selectedPoint;
     //endregion
     //region Controls
+    private JLabel label_fractal;
+    private JComboBox<String> combo_fractal;
+
     private JLabel label_iterations;
     private JSpinner spinner_iterations;
 
@@ -76,6 +79,9 @@ public class ConfigManager {
     private JSliderAdvanced slider_brightness;
     //endregion
     //region Advanced
+    private JLabel label_escapeRadius;
+    private JSpinner spinner_escapeRadius;
+
     private JLabel label_juliaCursor;
     private JCheckBox check_juliaCursor;
 
@@ -207,6 +213,14 @@ public class ConfigManager {
     }
 
     private void initAdvancedComponents() {
+        // Escape Radius
+        label_escapeRadius = new JLabel("Escape Radius:", JLabel.TRAILING);
+        panel_advanced.add(label_escapeRadius);
+
+        spinner_escapeRadius = new JSpinner(new SpinnerNumberModel(2, 0, 100, 0.1));
+        spinner_escapeRadius.addChangeListener(new optionChangeHandler());
+        panel_advanced.add(spinner_escapeRadius);
+
         // Display Julia Set under cursor
         label_juliaCursor = new JLabel("Display Julia on move:", JLabel.TRAILING);
         panel_advanced.add(label_juliaCursor);
@@ -244,7 +258,7 @@ public class ConfigManager {
         check_disableCache.addChangeListener(new disableCacheHandler());
         panel_advanced.add(check_disableCache);
 
-        SpringUtilities.makeCompactGrid(panel_advanced, 4, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(panel_advanced, 5, 2, 6, 6, 6, 6);
         tabbedPane.addTab("Advanced", panel_advanced);
     }
 
@@ -268,6 +282,12 @@ public class ConfigManager {
     //endregion
 
     //region Event Triggers
+    private void escapeRadiusChanged(){
+        for(ConfigChangeListener l: listeners){
+            l.escapeRadiusSquaredChange(escapeRadiusSquared);
+        }
+    }
+
     private void xShiftChange(){
         for(ConfigChangeListener l: listeners){
             l.xShiftChange(xShift);
@@ -294,7 +314,7 @@ public class ConfigManager {
 
     private void colourChange(){
         for(ConfigChangeListener l : listeners){
-            l.colourChange(hueShift, saturation, brightness);
+            l.colourChange(hue, saturation, brightness);
         }
     }
 
@@ -320,7 +340,7 @@ public class ConfigManager {
      * @return x shift
      */
     public double getShiftX() {
-        return (double) spinner_shiftX.getValue();
+        return xShift;
     }
 
     /**
@@ -341,7 +361,7 @@ public class ConfigManager {
      * @return y shift
      */
     public double getShiftY() {
-        return (double) spinner_shiftY.getValue();
+        return yShift;
     }
 
     /**
@@ -362,7 +382,7 @@ public class ConfigManager {
      * @return iterations
      */
     public int getIterations() {
-        return (int) spinner_iterations.getValue();
+        return iterations;
     }
 
     /**
@@ -370,7 +390,7 @@ public class ConfigManager {
      * @return scale factor
      */
     public double getScaleFactor() {
-        return (double) spinner_scale.getValue();
+        return scaleFactor;
     }
 
     /**
@@ -391,25 +411,27 @@ public class ConfigManager {
      * @return image hue
      */
     public float getHue() {
-        return (float) slider_hue.getValue() / 360f;
+        return hue;
     }
     /**
      * Gets the image saturation
      * @return image saturation
      */
-    public float getSaturation() { return (float)slider_saturation.getValue() / 100f; }
+    public float getSaturation() { return saturation; }
 
     /**
      * Gets the image brightness
      * @return image brightness
      */
-    public float getBrightness() { return (float)slider_brightness.getValue() / 100f; }
+    public float getBrightness() { return brightness; }
 
     /**
      * Gets the escape radius squared
      * @return escape radius squared
      */
-    public double getEscapeRadiusSquared() { return escapeRadiusSquared; }
+    public double getEscapeRadiusSquared() {
+        return escapeRadiusSquared;
+    }
 
     /**
      * Gets the currently selected complex on the Mandelbrot set
@@ -537,17 +559,21 @@ public class ConfigManager {
             JSpinner spinner = (JSpinner)e.getSource();
 
             if(spinner == spinner_iterations){
-                iterations = getIterations();
+                iterations = (int) spinner_iterations.getValue();
                 iterationChange();
             } else if(spinner == spinner_scale) {
-                scaleFactor = getScaleFactor();
+                scaleFactor = (double) spinner_scale.getValue();
                 scaleChange();
             } else if(spinner == spinner_shiftX){
-                xShift = getShiftX();
+                xShift = (double) spinner_shiftX.getValue();
                 xShiftChange();
             } else if(spinner == spinner_shiftY) {
-                yShift = getShiftY();
+                yShift = (double) spinner_shiftY.getValue();
                 yShiftChange();
+            } else if (spinner == spinner_escapeRadius) {
+                double escapeRadius = (double)spinner_escapeRadius.getValue();
+                escapeRadiusSquared = escapeRadius * escapeRadius;
+                escapeRadiusChanged();
             }
         }
     }
@@ -558,9 +584,9 @@ public class ConfigManager {
     private class colourShiftChangeHandler extends AdvancedChangeAdapter {
         @Override
         public void changeFinish(ChangeEvent e) {
-            hueShift = getHue();
-            saturation = getSaturation();
-            brightness = getBrightness();
+            hue = (float) slider_hue.getValue() / 360f;
+            saturation = (float)slider_saturation.getValue() / 100f;
+            brightness = (float)slider_brightness.getValue() / 100f;
             colourChange();
         }
     }
