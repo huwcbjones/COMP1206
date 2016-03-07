@@ -411,7 +411,7 @@ public class Main extends JFrameAdvanced {
             Complex new2 = mandelbrotRenderer.getComplexFromPoint(x2, y2);
 
             // Get new image scale
-            double scale = (4) / (new2.getReal() - new1.getReal());
+            double scale = config.getRangeX() / (new2.getReal() - new1.getReal());
 
             // Get new midpoints
             double new_midPointX = (new2.getReal() + new1.getReal()) / 2d;

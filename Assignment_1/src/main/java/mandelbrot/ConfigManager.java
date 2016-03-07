@@ -35,6 +35,9 @@ public class ConfigManager {
     private JTabbedPane tabbedPane;
 
     //region Variables
+    private double rangeX = 4.0;
+    private double rangeY = 4.0;
+
     private String fractal = "Mandelbrot";
     private double escapeRadiusSquared = 9;
     private int iterations = 100;
@@ -341,6 +344,17 @@ public class ConfigManager {
 
     //region Get/Set Methods
 
+    /**
+     * Gets range of axis in x direction
+     * @return double, x range
+     */
+    public double getRangeX() {return rangeX;}
+
+    /**
+     * Gets range of axis in y direction
+     * @return double, y range
+     */
+    public double getRangeY() {return rangeY;}
     /**
      * Adds an item to the fractal selection
      * @param fractal fractal string to add
