@@ -4,6 +4,7 @@ package mandelbrot;
 import mandelbrot.events.AdvancedComponentAdapter;
 import mandelbrot.events.ConfigChangeAdapter;
 import mandelbrot.events.RenderListener;
+import mandelbrot.management.BurningShipManagementThread;
 import mandelbrot.management.JuliaRenderManagementThread;
 import mandelbrot.management.MandelbrotRenderManagementThread;
 import mandelbrot.management.OpenClThread;
@@ -42,6 +43,7 @@ public class Main extends JFrameAdvanced {
     private final OpenClThread openClThread;
     public final MandelbrotRenderManagementThread mandelbrotRenderer;
     public final JuliaRenderManagementThread juliaRenderer;
+    public final BurningShipManagementThread burningShipRenderer;
 
     // Image Panels
     private ImagePanel imgPanel_image;
@@ -79,6 +81,10 @@ public class Main extends JFrameAdvanced {
         config = new ConfigManager(this);
         config.addConfigChangeListener(new configChangeHandler());
 
+        config.addFractal("Mandelbrot");
+        config.addFractal("Burning Ship");
+        config.setFractal("Mandelbrot");
+
         // If OpenCL features aren't available, disable them
         if(!openClThread.isAvailable()) config.disableOpenCL();
         if(!openClThread.useDouble()) config.disableOpenCL_double();
@@ -92,6 +98,10 @@ public class Main extends JFrameAdvanced {
         mandelbrotRenderer = new MandelbrotRenderManagementThread(this, openClThread, imgPanel_image);
         mandelbrotRenderer.addRenderListener(new renderCompleteHandler());
         mandelbrotRenderer.start();
+
+        burningShipRenderer = new BurningShipManagementThread(this, openClThread, imgPanel_image);
+        burningShipRenderer.addRenderListener(new renderCompleteHandler());
+        burningShipRenderer.start();
 
         juliaRenderer = new JuliaRenderManagementThread(this, openClThread, imgPanel_julia);
         juliaRenderer.start();
@@ -272,8 +282,15 @@ public class Main extends JFrameAdvanced {
     //endregion
 
     //region Render Handlers
-    public void renderMandelbrot(){
-        mandelbrotRenderer.render();
+    public void renderMainPanel(){
+        switch(config.getFractal()){
+            case "Mandelbrot":
+                mandelbrotRenderer.render();
+                break;
+            case "Burning Ship":
+                burningShipRenderer.render();
+                break;
+        }
     }
 
     public void renderJulia(){
@@ -296,7 +313,7 @@ public class Main extends JFrameAdvanced {
         @Override
         public void componentResizeEnd(ComponentEvent e) {
             Log.Information("Resize handled");
-            renderMandelbrot();
+            renderMainPanel();
             renderJulia();
         }
     }
@@ -307,34 +324,34 @@ public class Main extends JFrameAdvanced {
     private class configChangeHandler extends ConfigChangeAdapter {
         @Override
         public void escapeRadiusSquaredChange(double escapeRadiusSquared) {
-            renderMandelbrot();
+            renderMainPanel();
             renderJulia();
         }
 
         @Override
         public void iterationChange(int iterations) {
-            renderMandelbrot();
+            renderMainPanel();
             renderJulia();
         }
 
         @Override
         public void xShiftChange(double xShift) {
-            renderMandelbrot();
+            renderMainPanel();
         }
 
         @Override
         public void yShiftChange(double yShift) {
-            renderMandelbrot();
+            renderMainPanel();
         }
 
         @Override
         public void scaleChange(double scale) {
-            renderMandelbrot();
+            renderMainPanel();
         }
 
         @Override
         public void colourChange(float shift, float saturation, float brightness) {
-            renderMandelbrot();
+            renderMainPanel();
             renderJulia();
         }
 
@@ -410,7 +427,7 @@ public class Main extends JFrameAdvanced {
             dragging = false;
 
             // Now render
-            renderMandelbrot();
+            renderMainPanel();
         }
 
         @Override

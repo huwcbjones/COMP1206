@@ -341,9 +341,39 @@ public class ConfigManager {
 
     //region Get/Set Methods
 
+    /**
+     * Adds an item to the fractal selection
+     * @param fractal fractal string to add
+     */
     public void addFractal(String fractal){
         combo_fractal.addItem(fractal);
     }
+
+    /**
+     * Sets the currently selected fractal to the argument
+     * @param fractal Fractal to set
+     * @return true if fractal was set
+     */
+    public boolean setFractal(String fractal){
+        boolean hasItem = false;
+        int index = 0;
+        for(int i = 0; i < combo_fractal.getItemCount(); i++){
+            if(combo_fractal.getItemAt(i).equals(fractal)){
+                index = i;
+                hasItem = true;
+                break;
+            }
+        }
+        if(!hasItem) return false;
+        combo_fractal.setSelectedIndex(index);
+        return true;
+    }
+
+    /**
+     * Gets the currently selected fractal
+     * @return string, fractal
+     */
+    public String getFractal(){ return fractal; }
 
     /**
      * Gets the config panel
@@ -552,7 +582,7 @@ public class ConfigManager {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            mainWindow.renderMandelbrot();
+            mainWindow.renderMainPanel();
             mainWindow.renderJulia();
         }
     }
@@ -573,7 +603,7 @@ public class ConfigManager {
             slider_saturation.setValue(100);
             slider_brightness.setValue(100);
 
-            mainWindow.renderMandelbrot();
+            mainWindow.renderMainPanel();
             mainWindow.renderJulia();
         }
     }
