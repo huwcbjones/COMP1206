@@ -566,7 +566,7 @@ public abstract class RenderManagementThread extends Thread {
 
         double aspectRatio = imgWidth / imgHeight;
         double xRange = 4.0;
-        double yRange = 2.6;
+        double yRange = 4.0;
 
         if (aspectRatio * yRange < 4) {
             yRange = xRange / aspectRatio;
