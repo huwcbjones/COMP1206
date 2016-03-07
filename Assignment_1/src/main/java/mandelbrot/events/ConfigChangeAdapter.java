@@ -12,6 +12,10 @@ import utils.ImageProperties;
 public class ConfigChangeAdapter implements ConfigChangeListener {
 
     @Override
+    public void fractalChange(String fractal){
+    }
+
+    @Override
     public void escapeRadiusSquaredChange(double escapeRadiusSquared){
     }
 

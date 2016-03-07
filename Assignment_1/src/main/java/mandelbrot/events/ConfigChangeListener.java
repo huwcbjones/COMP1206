@@ -11,6 +11,8 @@ import utils.ImageProperties;
  */
 public interface ConfigChangeListener {
 
+    void fractalChange(String fractal);
+
     void escapeRadiusSquaredChange(double escapeRadiusSquared);
 
     void iterationChange(int iterations);
