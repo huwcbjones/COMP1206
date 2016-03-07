@@ -57,7 +57,7 @@ public abstract class RenderManagementThread extends Thread {
     //region CPU Multithreading
     protected ExecutorCompletionService<ImageSegment> executorService;
     protected int numberThreads;
-    protected final int numberStrips;
+    protected int numberStrips;
     //endregion
 
     /**
@@ -338,8 +338,10 @@ public abstract class RenderManagementThread extends Thread {
         image.setProperties(properties);
         image.setColourProperties(colourProperties);
 
-        // Cache the image
-        cacheManager.cacheImage(image);
+        // Cache the image if cache is enabled
+        if(!config.isCacheDisabled()) {
+            cacheManager.cacheImage(image);
+        }
 
         panel.setImage(image, true);
 
