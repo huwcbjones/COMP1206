@@ -34,6 +34,8 @@ public class BurningShipTask extends RenderTask {
         Complex prevPoint;
 
         while (z.squareReal() + z.squareImaginary() <= escapeRadiusSquared && currIteration < maxIterations) {
+            z = new Complex(Math.abs(z.getReal()), Math.abs(z.getImaginary()));
+
             prevPoint = z.clone();
             z = z.square();
             z.add(complex);
@@ -43,8 +45,6 @@ public class BurningShipTask extends RenderTask {
                 currIteration = maxIterations;
                 break;
             }
-
-            z = new Complex(Math.abs(z.getReal()), Math.abs(z.getImaginary()));
 
             currIteration++;
         }
