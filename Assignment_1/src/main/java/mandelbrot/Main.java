@@ -306,6 +306,12 @@ public class Main extends JFrameAdvanced {
      */
     private class configChangeHandler extends ConfigChangeAdapter {
         @Override
+        public void escapeRadiusSquaredChange(double escapeRadiusSquared) {
+            renderMandelbrot();
+            renderJulia();
+        }
+
+        @Override
         public void iterationChange(int iterations) {
             renderMandelbrot();
             renderJulia();
