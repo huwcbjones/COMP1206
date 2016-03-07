@@ -407,8 +407,8 @@ public class Main extends JFrameAdvanced {
             double x2 = rectangle2D.getMaxX(), y2 = rectangle2D.getMaxY();
 
             // Get top left/bottom right complex coordinates
-            Complex new1 = mandelbrotRenderer.getComplexFromPoint(x1, y1);
-            Complex new2 = mandelbrotRenderer.getComplexFromPoint(x2, y2);
+            Complex new1 = getComplex(x1, y1);
+            Complex new2 = getComplex(x2, y2);
 
             // Get new image scale
             double scale = config.getRangeX() / (new2.getReal() - new1.getReal());
@@ -493,6 +493,19 @@ public class Main extends JFrameAdvanced {
             }
 
             return new Rectangle2D.Double(x, y, width, height);
+        }
+
+        private Complex getComplex(double x, double y){
+            Complex newComplex = null;
+            switch(config.getFractal()){
+                case "Mandelbrot":
+                    newComplex = mandelbrotRenderer.getComplexFromPoint(x, y);
+                    break;
+                case "Burning Ship":
+                    newComplex = burningShipRenderer.getComplexFromPoint(x, y);
+                    break;
+            }
+            return newComplex;
         }
 
     }
