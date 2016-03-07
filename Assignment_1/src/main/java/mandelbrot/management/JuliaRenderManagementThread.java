@@ -80,7 +80,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     private CLKernel getX64Kernel(Dimension dimension, CLBuffer<Integer> results) {
         CLProgram julia = openClThread.getProgram("julia_x64");
         int iterations = this.iterations;
-        double escapeRadius = config.getEscapeRadiusSquared();
+        double escapeRadius = escapeRadiusSquared;
         double[] complex = new double[]{this.complex.getReal(), this.complex.getImaginary()};
         double[] dimensions = new double[]{dimension.width, dimension.height};
         double[] scales = new double[]{xScale, yScale};
@@ -111,7 +111,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     private CLKernel getX32Kernel(Dimension dimension, CLBuffer<Integer> results) {
         CLProgram julia = openClThread.getProgram("julia_x32");
         int iterations = this.iterations;
-        float escapeRadius = (float)config.getEscapeRadiusSquared();
+        float escapeRadius = (float)escapeRadiusSquared;
         float[] complex = new float[]{(float) this.complex.getReal(), (float) this.complex.getImaginary()};
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
         float[] scales = new float[]{(float) xScale, (float) yScale};

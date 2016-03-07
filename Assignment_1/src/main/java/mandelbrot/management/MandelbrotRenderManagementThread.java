@@ -69,7 +69,7 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     private CLKernel getX64Kernel( Dimension dimension, CLBuffer<Integer> results) {
         CLProgram mandelbrot = openClThread.getProgram("mandelbrot_x64");
         int iterations = this.iterations;
-        double escapeRadius = config.getEscapeRadiusSquared();
+        double escapeRadius = escapeRadiusSquared;
         double[] dimensions = new double[]{dimension.width, dimension.height};
         double[] scales = new double[]{xScale, yScale};
         double[] shifts = new double[]{getShiftX(), getShiftY()};
@@ -98,7 +98,7 @@ public class MandelbrotRenderManagementThread extends RenderManagementThread {
     private CLKernel getX32Kernel(Dimension dimension, CLBuffer<Integer> results) {
         CLProgram mandelbrot = openClThread.getProgram("mandelbrot_x32");
         int iterations = this.iterations;
-        float escapeRadius = (float)config.getEscapeRadiusSquared();
+        float escapeRadius = (float)escapeRadiusSquared;
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
         float[] scales = new float[]{(float) xScale, (float) yScale};
         float[] shifts = new float[]{(float) getShiftX(), (float) getShiftY()};
