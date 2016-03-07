@@ -11,6 +11,8 @@ import utils.ImageProperties;
  */
 public interface ConfigChangeListener {
 
+    void escapeRadiusSquaredChange(double escapeRadiusSquared);
+
     void iterationChange(int iterations);
 
     void xShiftChange(double xShift);

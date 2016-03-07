@@ -12,6 +12,10 @@ import utils.ImageProperties;
 public class ConfigChangeAdapter implements ConfigChangeListener {
 
     @Override
+    public void escapeRadiusSquaredChange(double escapeRadiusSquared){
+    }
+
+    @Override
     public void iterationChange(int iterations) {
     }
 
@@ -34,4 +38,5 @@ public class ConfigChangeAdapter implements ConfigChangeListener {
     @Override
     public void selectedPointChange(Complex complex) {
     }
+
 }
