@@ -20,10 +20,10 @@ public class ImageSegment {
     }
 
     public Rectangle2D getBounds() {
-        return bounds;
+        return this.bounds;
     }
 
     public BufferedImage getImage() {
-        return image;
+        return this.image;
     }
 }

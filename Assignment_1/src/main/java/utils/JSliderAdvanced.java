@@ -46,18 +46,18 @@ public class JSliderAdvanced extends JSlider {
         super(min, max, value);
 
         this.addChangeListener(e -> {
-            if(!sliderTimer.isRunning()) {
-                fireStateChangedStart(e);
+            if(!this.sliderTimer.isRunning()) {
+                this.fireStateChangedStart(e);
             }
-            sliderTimer.restart();
-            lastChangeEvent = e;
+            this.sliderTimer.restart();
+            this.lastChangeEvent = e;
         });
 
-        sliderTimer = new Timer(TIMEOUT, e -> {
-            fireStateChangedFinish(lastChangeEvent);
-            lastChangeEvent = null;
+        this.sliderTimer = new Timer(TIMEOUT, e -> {
+            this.fireStateChangedFinish(this.lastChangeEvent);
+            this.lastChangeEvent = null;
         });
-        sliderTimer.setRepeats(false);
+        this.sliderTimer.setRepeats(false);
     }
 
     /**
@@ -74,7 +74,7 @@ public class JSliderAdvanced extends JSlider {
      * @see EventListenerList
      */
     protected void fireStateChangedStart(ChangeEvent changeEvent) {
-        Object[] listeners = listenerList.getListenerList();
+        Object[] listeners = this.listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==AdvancedChangeListener.class) {
                 ((AdvancedChangeListener)listeners[i+1]).changeStarted(changeEvent);
@@ -96,7 +96,7 @@ public class JSliderAdvanced extends JSlider {
      * @see EventListenerList
      */
     protected void fireStateChangedFinish(ChangeEvent changeEvent) {
-        Object[] listeners = listenerList.getListenerList();
+        Object[] listeners = this.listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==AdvancedChangeListener.class) {
                 ((AdvancedChangeListener)listeners[i+1]).changeFinish(changeEvent);
@@ -131,7 +131,7 @@ public class JSliderAdvanced extends JSlider {
      * @see #addChangeListener
      */
     public void addAdvancedChangeListener(AdvancedChangeListener listener) {
-        listenerList.add(AdvancedChangeListener.class, listener);
+        this.listenerList.add(AdvancedChangeListener.class, listener);
     }
 
     /**
@@ -142,6 +142,6 @@ public class JSliderAdvanced extends JSlider {
      * @see #removeChangeListener
      */
     public void removeAdvancedChangeListener(AdvancedChangeListener listener) {
-        listenerList.remove(AdvancedChangeListener.class, listener);
+        this.listenerList.remove(AdvancedChangeListener.class, listener);
     }
 }

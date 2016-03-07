@@ -108,19 +108,19 @@ public class JFrameAdvanced extends JFrame {
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                if(!sliderTimer.isRunning()) {
-                    fireComponentResizeStart(e);
+                if(!JFrameAdvanced.this.sliderTimer.isRunning()) {
+                    JFrameAdvanced.this.fireComponentResizeStart(e);
                 }
-                sliderTimer.restart();
-                lastChangeEvent = e;
+                JFrameAdvanced.this.sliderTimer.restart();
+                JFrameAdvanced.this.lastChangeEvent = e;
             }
         });
 
-        sliderTimer = new Timer(TIMEOUT, e -> {
-            fireComponentResizeEnd(lastChangeEvent);
-            lastChangeEvent = null;
+        this.sliderTimer = new Timer(TIMEOUT, e -> {
+            this.fireComponentResizeEnd(this.lastChangeEvent);
+            this.lastChangeEvent = null;
         });
-        sliderTimer.setRepeats(false);
+        this.sliderTimer.setRepeats(false);
     }
 
     /**
@@ -137,7 +137,7 @@ public class JFrameAdvanced extends JFrame {
      * @see EventListenerList
      */
     protected void fireComponentResizeStart(ComponentEvent componentEvent) {
-        Object[] listeners = listenerList.getListenerList();
+        Object[] listeners = this.listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==AdvancedComponentListener.class) {
                 ((AdvancedComponentListener)listeners[i+1]).componentResizeStart(componentEvent);
@@ -158,7 +158,7 @@ public class JFrameAdvanced extends JFrame {
      * @see #addComponentListener
      */
     protected void fireComponentResizeEnd(ComponentEvent componentEvent) {
-        Object[] listeners = listenerList.getListenerList();
+        Object[] listeners = this.listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==AdvancedComponentListener.class) {
                 ((AdvancedComponentListener)listeners[i+1]).componentResizeEnd(componentEvent);
@@ -173,7 +173,7 @@ public class JFrameAdvanced extends JFrame {
      * @see #addComponentListener
      */
     public void addAdvancedComponentListener(AdvancedComponentListener listener) {
-        listenerList.add(AdvancedComponentListener.class, listener);
+        this.listenerList.add(AdvancedComponentListener.class, listener);
     }
 
     /**
@@ -183,6 +183,6 @@ public class JFrameAdvanced extends JFrame {
      * @see #removeComponentListener
      */
     public void removeAdvancedComponentListener(AdvancedComponentListener listener) {
-        listenerList.remove(AdvancedComponentListener.class, listener);
+        this.listenerList.remove(AdvancedComponentListener.class, listener);
     }
 }

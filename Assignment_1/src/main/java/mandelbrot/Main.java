@@ -76,42 +76,42 @@ public class Main extends JFrameAdvanced {
         }
 
         // Create threads and objects
-        openClThread = new OpenClThread();
+        this.openClThread = new OpenClThread();
 
-        config = new ConfigManager(this);
-        config.addConfigChangeListener(new configChangeHandler());
+        this.config = new ConfigManager(this);
+        this.config.addConfigChangeListener(new configChangeHandler());
 
-        config.addFractal("Mandelbrot");
-        config.addFractal("Burning Ship");
-        config.setFractal("Mandelbrot");
+        this.config.addFractal("Mandelbrot");
+        this.config.addFractal("Burning Ship");
+        this.config.setFractal("Mandelbrot");
 
         // If OpenCL features aren't available, disable them
-        if(!openClThread.isAvailable()) config.disableOpenCL();
-        if(!openClThread.useDouble()) config.disableOpenCL_double();
+        if(!this.openClThread.isAvailable()) this.config.disableOpenCL();
+        if(!this.openClThread.useDouble()) this.config.disableOpenCL_double();
 
-        bookmarks = new BookmarkManager(this);
+        this.bookmarks = new BookmarkManager(this);
 
         // Create GUI
-        initComponents();
+        this.initComponents();
         this.pack();
 
-        mandelbrotRenderer = new MandelbrotRenderManagementThread(this, openClThread, imgPanel_image);
-        mandelbrotRenderer.addRenderListener(new renderCompleteHandler());
-        mandelbrotRenderer.start();
+        this.mandelbrotRenderer = new MandelbrotRenderManagementThread(this, this.openClThread, this.imgPanel_image);
+        this.mandelbrotRenderer.addRenderListener(new renderCompleteHandler());
+        this.mandelbrotRenderer.start();
 
-        burningShipRenderer = new BurningShipManagementThread(this, openClThread, imgPanel_image);
-        burningShipRenderer.addRenderListener(new renderCompleteHandler());
-        burningShipRenderer.start();
+        this.burningShipRenderer = new BurningShipManagementThread(this, this.openClThread, this.imgPanel_image);
+        this.burningShipRenderer.addRenderListener(new renderCompleteHandler());
+        this.burningShipRenderer.start();
 
-        juliaRenderer = new JuliaRenderManagementThread(this, openClThread, imgPanel_julia);
-        juliaRenderer.start();
+        this.juliaRenderer = new JuliaRenderManagementThread(this, this.openClThread, this.imgPanel_julia);
+        this.juliaRenderer.start();
 
         this.setVisible(true);
         this.addAdvancedComponentListener(new resizeHandler());
     }
 
     public ConfigManager getConfigManager(){
-        return config;
+        return this.config;
     }
 
     //region Initialise Components
@@ -122,38 +122,38 @@ public class Main extends JFrameAdvanced {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
 
-        panel_display = new JPanel();
-        panel_display.setLayout(new BorderLayout());
-        panel_display.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Mandelbrot Set"));
-        panel_display.setMinimumSize(new Dimension(700, 700));
+        this.panel_display = new JPanel();
+        this.panel_display.setLayout(new BorderLayout());
+        this.panel_display.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Mandelbrot Set"));
+        this.panel_display.setMinimumSize(new Dimension(700, 700));
         constraints.gridx = 0;
         constraints.gridy = 0;
         constraints.weightx = DISPLAY_CONSTRAINT;
         constraints.weighty = DISPLAY_CONSTRAINT;
         constraints.gridheight = 4;
         constraints.gridwidth = 1;
-        c.add(panel_display, constraints);
+        c.add(this.panel_display, constraints);
 
-        imgPanel_image = new ImagePanel();
-        imgPanel_image.setBackground(Color.WHITE);
-        panel_display.add(imgPanel_image, BorderLayout.CENTER);
+        this.imgPanel_image = new ImagePanel();
+        this.imgPanel_image.setBackground(Color.WHITE);
+        this.panel_display.add(this.imgPanel_image, BorderLayout.CENTER);
 
         // Adds listener for clicking
-        imgPanel_image.addMouseListener(new mouseClickHandler());
+        this.imgPanel_image.addMouseListener(new mouseClickHandler());
 
         // Adds listener for mouse cursor position
         // Need to add to both events to get mouse exit + mouse move events
-        imgPanel_image.addMouseListener(new mouseMotionHandler());
-        imgPanel_image.addMouseMotionListener(new mouseMotionHandler());
+        this.imgPanel_image.addMouseListener(new mouseMotionHandler());
+        this.imgPanel_image.addMouseMotionListener(new mouseMotionHandler());
 
         // Adds listener for zoom box/interaction with image
         // Need to add to both events to get mouse exit + mouse move events
         interactionHandler interactionHandler = new interactionHandler();
-        imgPanel_image.addMouseListener(interactionHandler);
-        imgPanel_image.addMouseMotionListener(interactionHandler);
+        this.imgPanel_image.addMouseListener(interactionHandler);
+        this.imgPanel_image.addMouseMotionListener(interactionHandler);
 
-        initSidePanels(constraints);
-        initInfoPanel();
+        this.initSidePanels(constraints);
+        this.initInfoPanel();
     }
 
     private void initSidePanels(GridBagConstraints c) {
@@ -165,95 +165,95 @@ public class Main extends JFrameAdvanced {
         c.weighty = 0.01;
         c.fill = GridBagConstraints.HORIZONTAL;
 
-        panel_info = new JPanel();
-        panel_info.setOpaque(false);
+        this.panel_info = new JPanel();
+        this.panel_info.setOpaque(false);
         c.gridy = 0;
-        pane.add(panel_info, c);
+        pane.add(this.panel_info, c);
 
-        panel_controls = config.getConfigPanel();
-        panel_controls.setOpaque(false);
+        this.panel_controls = this.config.getConfigPanel();
+        this.panel_controls.setOpaque(false);
         c.gridy = 1;
-        pane.add(panel_controls, c);
+        pane.add(this.panel_controls, c);
 
         c.fill = GridBagConstraints.BOTH;
 
-        panel_bookmarks = bookmarks.getBookmarkPanel();
-        panel_bookmarks.setOpaque(false);
+        this.panel_bookmarks = this.bookmarks.getBookmarkPanel();
+        this.panel_bookmarks.setOpaque(false);
         c.gridy = 2;
-        pane.add(panel_bookmarks, c);
+        pane.add(this.panel_bookmarks, c);
 
         BorderLayout juliaLayout = new BorderLayout();
-        panel_julia = new JPanel(juliaLayout);
-        panel_julia.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Julia Set"));
+        this.panel_julia = new JPanel(juliaLayout);
+        this.panel_julia.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Julia Set"));
         c.weighty = 1;
         c.gridy = 3;
-        pane.add(panel_julia, c);
+        pane.add(this.panel_julia, c);
 
 
-        imgPanel_julia = new ImagePanel();
-        imgPanel_julia.setBackground(Color.WHITE);
-        panel_julia.add(imgPanel_julia, BorderLayout.CENTER);
+        this.imgPanel_julia = new ImagePanel();
+        this.imgPanel_julia.setBackground(Color.WHITE);
+        this.panel_julia.add(this.imgPanel_julia, BorderLayout.CENTER);
     }
 
     private void initInfoPanel() {
         SpringLayout layout = new SpringLayout();
-        panel_info.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Information"));
-        panel_info.setLayout(layout);
+        this.panel_info.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Information"));
+        this.panel_info.setLayout(layout);
 
-        label_xRange = new JLabel("X Range:", JLabel.TRAILING);
-        panel_info.add(label_xRange);
+        this.label_xRange = new JLabel("X Range:", JLabel.TRAILING);
+        this.panel_info.add(this.label_xRange);
 
-        text_xRange = new JTextField("- to -");
-        text_xRange.setEditable(false);
-        panel_info.add(text_xRange);
+        this.text_xRange = new JTextField("- to -");
+        this.text_xRange.setEditable(false);
+        this.panel_info.add(this.text_xRange);
 
-        label_yRange = new JLabel("Y Range:", JLabel.TRAILING);
-        panel_info.add(label_yRange);
+        this.label_yRange = new JLabel("Y Range:", JLabel.TRAILING);
+        this.panel_info.add(this.label_yRange);
 
-        text_yRange = new JTextField("- to -");
-        text_yRange.setEditable(false);
-        panel_info.add(text_yRange);
+        this.text_yRange = new JTextField("- to -");
+        this.text_yRange.setEditable(false);
+        this.panel_info.add(this.text_yRange);
 
-        label_cursorPoint = new JLabel("Cursor Point:", JLabel.TRAILING);
-        panel_info.add(label_cursorPoint);
+        this.label_cursorPoint = new JLabel("Cursor Point:", JLabel.TRAILING);
+        this.panel_info.add(this.label_cursorPoint);
 
-        text_cursorPoint = new JTextField("-");
-        text_cursorPoint.setEditable(false);
-        panel_info.add(text_cursorPoint);
+        this.text_cursorPoint = new JTextField("-");
+        this.text_cursorPoint.setEditable(false);
+        this.panel_info.add(this.text_cursorPoint);
 
-        label_selectedPoint = new JLabel("Current Selection:", JLabel.TRAILING);
-        panel_info.add(label_selectedPoint);
+        this.label_selectedPoint = new JLabel("Current Selection:", JLabel.TRAILING);
+        this.panel_info.add(this.label_selectedPoint);
 
-        text_selectedPoint = new JTextField("-");
-        text_selectedPoint.setEditable(false);
-        panel_info.add(text_selectedPoint);
+        this.text_selectedPoint = new JTextField("-");
+        this.text_selectedPoint.setEditable(false);
+        this.panel_info.add(this.text_selectedPoint);
 
-        SpringUtilities.makeCompactGrid(panel_info, 4, 2, 6, 6, 6, 6);
+        SpringUtilities.makeCompactGrid(this.panel_info, 4, 2, 6, 6, 6, 6);
     }
 
     //endregion
 
     //region Update Info Sections
     private void updateRangeDisplay() {
-        Complex minimum = mandelbrotRenderer.getComplexFromPoint(0, 0);
-        Complex maximum = mandelbrotRenderer.getComplexFromPoint(imgPanel_image.getWidth(), imgPanel_image.getHeight());
+        Complex minimum = this.mandelbrotRenderer.getComplexFromPoint(0, 0);
+        Complex maximum = this.mandelbrotRenderer.getComplexFromPoint(this.imgPanel_image.getWidth(), this.imgPanel_image.getHeight());
         // Dynamically scale precision to make the range clearer
         int decimalPlaces = 1;
         do {
             decimalPlaces++;
         } while(String.format("%." + decimalPlaces + "f", minimum.getReal()).equals(String.format("%." + decimalPlaces + "f", maximum.getReal())));
 
-        text_xRange.setText(String.format("%."+ decimalPlaces +"f to %."+ decimalPlaces +"f", minimum.getReal(), maximum.getReal()));
-        text_yRange.setText(String.format("%."+ decimalPlaces +"f to %."+ decimalPlaces +"f", minimum.getImaginary(), maximum.getImaginary()));
+        this.text_xRange.setText(String.format("%."+ decimalPlaces +"f to %."+ decimalPlaces +"f", minimum.getReal(), maximum.getReal()));
+        this.text_yRange.setText(String.format("%."+ decimalPlaces +"f to %."+ decimalPlaces +"f", minimum.getImaginary(), maximum.getImaginary()));
     }
 
     private void updateSelection() {
         //If selected point is null (not set), then display a -, otherwise display the complex
         String text = "-";
-        if(config.getSelectedPoint() != null){
-            text = config.getSelectedPoint().toString();
+        if(this.config.getSelectedPoint() != null){
+            text = this.config.getSelectedPoint().toString();
         }
-        text_selectedPoint.setText(text);
+        this.text_selectedPoint.setText(text);
     }
 
     private void updateSelection(Rectangle2D selection) {
@@ -262,40 +262,40 @@ public class Main extends JFrameAdvanced {
 
         if (selection != null) {
             // Top left of rectangle
-            text = mandelbrotRenderer.getComplexFromPoint(selection.getMinX(), selection.getMinY()).toString();
+            text = this.mandelbrotRenderer.getComplexFromPoint(selection.getMinX(), selection.getMinY()).toString();
             text += " to ";
 
             // Bottom right of rectangle
-            text += mandelbrotRenderer.getComplexFromPoint(selection.getMaxX(), selection.getMaxY()).toString();
+            text += this.mandelbrotRenderer.getComplexFromPoint(selection.getMaxX(), selection.getMaxY()).toString();
         }
-        text_selectedPoint.setText(text);
+        this.text_selectedPoint.setText(text);
     }
 
     private void updatedCursorPoint() {
-        text_cursorPoint.setText("-");
+        this.text_cursorPoint.setText("-");
     }
 
     private void updatedCursorPoint(Complex c) {
-        text_cursorPoint.setText(c.toString());
+        this.text_cursorPoint.setText(c.toString());
     }
 
     //endregion
 
     //region Render Handlers
     public void renderMainPanel(){
-        switch(config.getFractal()){
+        switch(this.config.getFractal()){
             case "Mandelbrot":
-                mandelbrotRenderer.render();
+                this.mandelbrotRenderer.render();
                 break;
             case "Burning Ship":
-                burningShipRenderer.render();
+                this.burningShipRenderer.render();
                 break;
         }
     }
 
     public void renderJulia(){
-        if(config.getSelectedPoint() == null) return;
-        juliaRenderer.render();
+        if(this.config.getSelectedPoint() == null) return;
+        this.juliaRenderer.render();
     }
     //endregion
 
@@ -313,8 +313,8 @@ public class Main extends JFrameAdvanced {
         @Override
         public void componentResizeEnd(ComponentEvent e) {
             Log.Information("Resize handled");
-            renderMainPanel();
-            renderJulia();
+            Main.this.renderMainPanel();
+            Main.this.renderJulia();
         }
     }
 
@@ -325,48 +325,48 @@ public class Main extends JFrameAdvanced {
         @Override
         public void fractalChange(String fractal) {
             if (
-                    mandelbrotRenderer == null ||
-                    burningShipRenderer == null
+                    Main.this.mandelbrotRenderer == null ||
+                            Main.this.burningShipRenderer == null
             ) return;
-            renderMainPanel();
+            Main.this.renderMainPanel();
         }
 
         @Override
         public void escapeRadiusSquaredChange(double escapeRadiusSquared) {
-            renderMainPanel();
-            renderJulia();
+            Main.this.renderMainPanel();
+            Main.this.renderJulia();
         }
 
         @Override
         public void iterationChange(int iterations) {
-            renderMainPanel();
-            renderJulia();
+            Main.this.renderMainPanel();
+            Main.this.renderJulia();
         }
 
         @Override
         public void xShiftChange(double xShift) {
-            renderMainPanel();
+            Main.this.renderMainPanel();
         }
 
         @Override
         public void yShiftChange(double yShift) {
-            renderMainPanel();
+            Main.this.renderMainPanel();
         }
 
         @Override
         public void scaleChange(double scale) {
-            renderMainPanel();
+            Main.this.renderMainPanel();
         }
 
         @Override
         public void colourChange(float shift, float saturation, float brightness) {
-            renderMainPanel();
-            renderJulia();
+            Main.this.renderMainPanel();
+            Main.this.renderJulia();
         }
 
         @Override
         public void selectedPointChange(Complex complex) {
-            renderJulia();
+            Main.this.renderJulia();
         }
     }
 
@@ -376,7 +376,7 @@ public class Main extends JFrameAdvanced {
     private class renderCompleteHandler implements RenderListener {
         @Override
         public void renderComplete() {
-            updateRangeDisplay();
+            Main.this.updateRangeDisplay();
         }
     }
 
@@ -391,62 +391,62 @@ public class Main extends JFrameAdvanced {
         @Override
         public void mousePressed(MouseEvent e) {
             if (SwingUtilities.isLeftMouseButton(e)) {
-                startPos = e.getPoint();
-                dragging = true;
+                this.startPos = e.getPoint();
+                this.dragging = true;
             }
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            updateSelection();
-            imgPanel_image.drawZoomBox(null);
+            Main.this.updateSelection();
+            Main.this.imgPanel_image.drawZoomBox(null);
 
             // Make sure only the left mouse button was released
-            if (e.getButton() != MouseEvent.BUTTON1 || rectangle2D == null) {
-                rectangle2D = null;
-                dragging = false;
+            if (e.getButton() != MouseEvent.BUTTON1 || this.rectangle2D == null) {
+                this.rectangle2D = null;
+                this.dragging = false;
                 return;
             }
 
             // Prevent accidental zoom on click
-            if (rectangle2D.getWidth() <= 10 && rectangle2D.getHeight() <= 10) return;
+            if (this.rectangle2D.getWidth() <= 10 && this.rectangle2D.getHeight() <= 10) return;
 
             // Get top left/bottom right panel coordinates
-            double x1 = rectangle2D.getMinX(), y1 = rectangle2D.getMinY();
-            double x2 = rectangle2D.getMaxX(), y2 = rectangle2D.getMaxY();
+            double x1 = this.rectangle2D.getMinX(), y1 = this.rectangle2D.getMinY();
+            double x2 = this.rectangle2D.getMaxX(), y2 = this.rectangle2D.getMaxY();
 
             // Get top left/bottom right complex coordinates
-            Complex new1 = getComplex(x1, y1);
-            Complex new2 = getComplex(x2, y2);
+            Complex new1 = this.getComplex(x1, y1);
+            Complex new2 = this.getComplex(x2, y2);
 
             // Get new image scale
-            double scale = config.getRangeX() / (new2.getReal() - new1.getReal());
+            double scale = Main.this.config.getRangeX() / (new2.getReal() - new1.getReal());
 
             // Get new midpoints
             double new_midPointX = (new2.getReal() + new1.getReal()) / 2d;
             double new_midPointY = (new2.getImaginary() + new1.getImaginary()) / 2d;
 
             // Set config options, but don't trigger events (prevents multiple renders)
-            config.setShiftX(new_midPointX, false);
-            config.setShiftY(new_midPointY, false);
-            config.setScaleFactor(scale, false);
+            Main.this.config.setShiftX(new_midPointX, false);
+            Main.this.config.setShiftY(new_midPointY, false);
+            Main.this.config.setScaleFactor(scale, false);
 
             // Clear zoom flags
-            rectangle2D = null;
-            dragging = false;
+            this.rectangle2D = null;
+            this.dragging = false;
 
             // Now render
-            renderMainPanel();
+            Main.this.renderMainPanel();
         }
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (!dragging) return;
+            if (!this.dragging) return;
 
             // Updated zoom box and draw it
-            rectangle2D = getRectangle(e.getPoint());
-            imgPanel_image.drawZoomBox(rectangle2D);
-            updateSelection(rectangle2D);
+            this.rectangle2D = this.getRectangle(e.getPoint());
+            Main.this.imgPanel_image.drawZoomBox(this.rectangle2D);
+            Main.this.updateSelection(this.rectangle2D);
         }
 
         /**
@@ -461,9 +461,9 @@ public class Main extends JFrameAdvanced {
             // ---|---
             //  4 | 1
 
-            double aspectRatio = (double) imgPanel_image.getWidth() / (double) imgPanel_image.getHeight();
-            double width = Math.abs(e.getX() - startPos.getX());
-            double height = Math.abs(e.getY() - startPos.getY());
+            double aspectRatio = (double) Main.this.imgPanel_image.getWidth() / (double) Main.this.imgPanel_image.getHeight();
+            double width = Math.abs(e.getX() - this.startPos.getX());
+            double height = Math.abs(e.getY() - this.startPos.getY());
             double x, y;
 
             // Ensure zoom box maintains same aspect ratio as image panel
@@ -477,24 +477,24 @@ public class Main extends JFrameAdvanced {
             // Then set the top left coordinate, whilst fixing one coordinate to the start position
 
             // Quadrant 1:
-            if (startPos.getX() < e.getX() && startPos.getY() < e.getY()) {
-                x = startPos.getX();
-                y = startPos.getY();
+            if (this.startPos.getX() < e.getX() && this.startPos.getY() < e.getY()) {
+                x = this.startPos.getX();
+                y = this.startPos.getY();
 
                 // Quadrant 2:
-            } else if (startPos.getX() < e.getX() && startPos.getY() > e.getY()) {
-                x = startPos.getX();
-                y = startPos.getY() - height;
+            } else if (this.startPos.getX() < e.getX() && this.startPos.getY() > e.getY()) {
+                x = this.startPos.getX();
+                y = this.startPos.getY() - height;
 
                 // Quadrant 3:
-            } else if (startPos.getX() > e.getX() && startPos.getY() > e.getY()) {
-                x = startPos.getX() - width;
-                y = startPos.getY() - height;
+            } else if (this.startPos.getX() > e.getX() && this.startPos.getY() > e.getY()) {
+                x = this.startPos.getX() - width;
+                y = this.startPos.getY() - height;
 
                 // Quadrant 4:
-            } else if (startPos.getX() > e.getX() && startPos.getY() < e.getY()) {
-                x = startPos.getX() - width;
-                y = startPos.getY();
+            } else if (this.startPos.getX() > e.getX() && this.startPos.getY() < e.getY()) {
+                x = this.startPos.getX() - width;
+                y = this.startPos.getY();
             } else {
 
                 // Width and/or height are 0, don't draw a box
@@ -512,12 +512,12 @@ public class Main extends JFrameAdvanced {
          */
         private Complex getComplex(double x, double y){
             Complex newComplex = null;
-            switch(config.getFractal()){
+            switch(Main.this.config.getFractal()){
                 case "Mandelbrot":
-                    newComplex = mandelbrotRenderer.getComplexFromPoint(x, y);
+                    newComplex = Main.this.mandelbrotRenderer.getComplexFromPoint(x, y);
                     break;
                 case "Burning Ship":
-                    newComplex = burningShipRenderer.getComplexFromPoint(x, y);
+                    newComplex = Main.this.burningShipRenderer.getComplexFromPoint(x, y);
                     break;
             }
             return newComplex;
@@ -534,10 +534,10 @@ public class Main extends JFrameAdvanced {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (SwingUtilities.isLeftMouseButton(e) && !SwingUtilities.isRightMouseButton(e)) {
-                if (mandelbrotRenderer.hasRendered()) {
-                    config.setSelectedPoint(mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
+                if (Main.this.mandelbrotRenderer.hasRendered()) {
+                    Main.this.config.setSelectedPoint(Main.this.mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
                 }
-                updateSelection();
+                Main.this.updateSelection();
             }
         }
     }
@@ -549,24 +549,24 @@ public class Main extends JFrameAdvanced {
         @Override
         public void mouseExited(MouseEvent e) {
             // If cursor exits panel, set coordinates to "-"
-            updatedCursorPoint();
+            Main.this.updatedCursorPoint();
         }
 
         @Override
         public void mouseMoved(MouseEvent e) {
             super.mouseMoved(e);
-            if (mandelbrotRenderer.hasRendered()) {
-                updatedCursorPoint(mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
+            if (Main.this.mandelbrotRenderer.hasRendered()) {
+                Main.this.updatedCursorPoint(Main.this.mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
             } else {
-                updatedCursorPoint();
+                Main.this.updatedCursorPoint();
             }
 
             // Render julia set if we are rendering when the cursor moves
-            if(config.juliaDisplayOnMove()) {
-                if (mandelbrotRenderer.hasRendered()) {
-                    config.setSelectedPoint(mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
+            if(Main.this.config.juliaDisplayOnMove()) {
+                if (Main.this.mandelbrotRenderer.hasRendered()) {
+                    Main.this.config.setSelectedPoint(Main.this.mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
                 }
-                updateSelection();
+                Main.this.updateSelection();
             }
         }
 

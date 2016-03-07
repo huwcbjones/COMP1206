@@ -32,7 +32,7 @@ public class Log {
     }
 
     private static void message(String message, boolean isError) {
-        PrintStream out = (isError) ? System.err : System.out;
+        PrintStream out = isError ? System.err : System.out;
         out.println("[" + getDateTime() + "]" + message);
     }
 

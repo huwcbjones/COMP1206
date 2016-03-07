@@ -19,16 +19,16 @@ public class CacheManager {
 
     public CacheManager(){
         Log.Information("Loading cache manager...");
-        imageCache = new LinkedHashMap<>();
+        this.imageCache = new LinkedHashMap<>();
     }
 
     public void cacheImage(FractalImage image){
-        if(imageCache.containsKey(image.getProperties())){
-            imageCache.get(image.getProperties()).put(image.getColourProperties(), image);
+        if(this.imageCache.containsKey(image.getProperties())){
+            this.imageCache.get(image.getProperties()).put(image.getColourProperties(), image);
         } else {
             LinkedHashMap<ImageColourProperties, FractalImage> newImageCache = new LinkedHashMap<>();
             newImageCache.put(image.getColourProperties(), image);
-            imageCache.put(image.getProperties(), newImageCache);
+            this.imageCache.put(image.getProperties(), newImageCache);
         }
     }
 
@@ -40,7 +40,7 @@ public class CacheManager {
      */
     public boolean isCached(ImageProperties properties){
         //return false;
-        return imageCache.containsKey(properties);
+        return this.imageCache.containsKey(properties);
     }
 
     /**
@@ -51,17 +51,17 @@ public class CacheManager {
      */
     public boolean isCached(ImageProperties properties, ImageColourProperties colourProperties){
         //return false;
-        if(!isCached(properties)){
+        if(!this.isCached(properties)){
             return false;
         }
-        return imageCache.get(properties).containsKey(colourProperties);
+        return this.imageCache.get(properties).containsKey(colourProperties);
     }
 
     public FractalImage getImage(ImageProperties properties){
-        return imageCache.get(properties).entrySet().iterator().next().getValue();
+        return this.imageCache.get(properties).entrySet().iterator().next().getValue();
     }
 
     public FractalImage getImage(ImageProperties properties, ImageColourProperties colourProperties){
-        return imageCache.get(properties).get(colourProperties);
+        return this.imageCache.get(properties).get(colourProperties);
     }
 }

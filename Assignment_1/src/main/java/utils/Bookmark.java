@@ -25,28 +25,28 @@ public class Bookmark implements Comparable<Bookmark> {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public double getReal() {
-        return real;
+        return this.real;
     }
 
     public double getImaginary() {
-        return imaginary;
+        return this.imaginary;
     }
 
     public Complex getComplex() {
-        return new Complex(real, imaginary);
+        return new Complex(this.real, this.imaginary);
     }
 
     @Override
     public int compareTo(Bookmark o) {
-        return name.compareTo(o.getName());
+        return this.name.compareTo(o.getName());
     }
 
     @Override
     public String toString() {
-        return String.format("%s (%.5f, %.5f)", name, real, imaginary);
+        return String.format("%s (%.5f, %.5f)", this.name, this.real, this.imaginary);
     }
 }

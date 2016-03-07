@@ -29,8 +29,8 @@ public class OpenClThread extends Thread {
     public OpenClThread(){
         super("OpenCL_Render_Thread");
         Log.Information("Loading OpenCL Render Thread...");
-        init();
-        programs = new HashMap<>();
+        this.init();
+        this.programs = new HashMap<>();
     }
 
     private void init(){
@@ -56,11 +56,11 @@ public class OpenClThread extends Thread {
             Log.Information("*");
 
             // Create best context, then get the queue
-            context = createBestContext();
-            queue = context.createDefaultQueue();
+            this.context = createBestContext();
+            this.queue = this.context.createDefaultQueue();
 
-            CLPlatform plat = context.getPlatform();
-            useDouble = plat.getBestDevice().isDoubleSupported();
+            CLPlatform plat = this.context.getPlatform();
+            this.useDouble = plat.getBestDevice().isDoubleSupported();
 
             // Print debug info
             Log.Information("********************************************************************************");
@@ -76,9 +76,9 @@ public class OpenClThread extends Thread {
             Log.Information("* Samplers:\t\t\t" + plat.getBestDevice().getMaxSamplers());
             Log.Information("* Work Group:\t\t" + plat.getBestDevice().getMaxWorkGroupSize());
             Log.Information("* Address Bits:\t\t" + plat.getBestDevice().getAddressBits());
-            Log.Information("* GPU Memory:\t\t" + (plat.getBestDevice().getGlobalMemSize() / 1024 / 1024) + "MB");
+            Log.Information("* GPU Memory:\t\t" + plat.getBestDevice().getGlobalMemSize() / 1024 / 1024 + "MB");
             Log.Information("* Profile:\t\t\t" + plat.getBestDevice().getProfile());
-            Log.Information("* Double Support:\t" + (useDouble ? "Enabled" : "Disabled"));
+            Log.Information("* Double Support:\t" + (this.useDouble ? "Enabled" : "Disabled"));
             Log.Information("* Extensions:");
             for (String s : plat.getExtensions()) {
                 Log.Information("*\t- " + s);
@@ -88,7 +88,7 @@ public class OpenClThread extends Thread {
 
 
         } catch (Exception ex) {
-            isAvailable = false;
+            this.isAvailable = false;
             Log.Warning("OpenCL support unavailable.");
             Log.Warning(ex.getCause().toString());
         }
@@ -102,9 +102,9 @@ public class OpenClThread extends Thread {
      */
     public boolean loadProgram(String programName, String source){
         try {
-            CLProgram program = context.createProgram(source);
+            CLProgram program = this.context.createProgram(source);
             Log.Information("Loaded OpenCL program, " + programName + ".");
-            programs.put(programName, program);
+            this.programs.put(programName, program);
         } catch (Exception ex){
             return false;
         }
@@ -120,7 +120,7 @@ public class OpenClThread extends Thread {
     public boolean loadProgram(String programName, InputStream stream){
         try {
             String source = IOUtils.readText(stream);
-            return loadProgram(programName, source);
+            return this.loadProgram(programName, source);
         } catch (IOException ex){
             return false;
         }
@@ -132,7 +132,7 @@ public class OpenClThread extends Thread {
      * @return The program.
      */
     public CLProgram getProgram(String programName){
-        return programs.get(programName);
+        return this.programs.get(programName);
     }
 
     /**
@@ -140,7 +140,7 @@ public class OpenClThread extends Thread {
      * @return CL Queue
      */
     public CLQueue getQueue() {
-        return queue;
+        return this.queue;
     }
 
     /**
@@ -148,7 +148,7 @@ public class OpenClThread extends Thread {
      * @return CL Context
      */
     public CLContext getContext() {
-        return context;
+        return this.context;
     }
 
     /**
@@ -156,7 +156,7 @@ public class OpenClThread extends Thread {
      * @return True if OpenCL is available.
      */
     public boolean isAvailable() {
-        return isAvailable;
+        return this.isAvailable;
     }
 
     /**
@@ -165,7 +165,7 @@ public class OpenClThread extends Thread {
      * @return boolean
      */
     public boolean useDouble() {
-        return useDouble;
+        return this.useDouble;
     }
 
 }

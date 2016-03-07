@@ -60,7 +60,7 @@ public class FractalImage extends BufferedImage {
      * @return ImageColourProperties
      */
     public ImageColourProperties getColourProperties() {
-        return colourProperties;
+        return this.colourProperties;
     }
 
     /**
@@ -76,7 +76,7 @@ public class FractalImage extends BufferedImage {
      * @return ImageProperties
      */
     public ImageProperties getProperties() {
-        return properties;
+        return this.properties;
     }
 
     /**

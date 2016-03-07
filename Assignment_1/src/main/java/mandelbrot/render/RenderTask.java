@@ -33,8 +33,8 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     public RenderTask(RenderManagementThread t, Rectangle2D bounds) {
         this.mgmtThread = t;
         this.bounds = bounds;
-        this.maxIterations = mgmtThread.getIterations();
-        this.escapeRadiusSquared = mgmtThread.getEscapeRadiusSquared();
+        this.maxIterations = this.mgmtThread.getIterations();
+        this.escapeRadiusSquared = this.mgmtThread.getEscapeRadiusSquared();
     }
 
     /**
@@ -46,28 +46,28 @@ public abstract class RenderTask implements Callable<ImageSegment> {
     @Override
     public ImageSegment call() throws Exception {
         // Create image segment
-        image = new BufferedImage(getImageWidth(), getImageHeight(), BufferedImage.TYPE_INT_RGB);
+        this.image = new BufferedImage(this.getImageWidth(), this.getImageHeight(), BufferedImage.TYPE_INT_RGB);
         ColouredPixel pixel;
         // Loop through row by row
-        for (int y = 0; y < getImageHeight(); y++) {
-            for (int x = 0; x < getImageWidth(); x++) {
+        for (int y = 0; y < this.getImageHeight(); y++) {
+            for (int x = 0; x < this.getImageWidth(); x++) {
                 // Get points (relative to image segment, for painting and absolute for Image Panel)
-                absolutePoint = new Point2D.Double(x + bounds.getX(), y + bounds.getY());
-                relativePoint = new Point2D.Double(x, y);
+                this.absolutePoint = new Point2D.Double(x + this.bounds.getX(), y + this.bounds.getY());
+                this.relativePoint = new Point2D.Double(x, y);
 
-                Complex c = mgmtThread.getComplexFromPoint(absolutePoint);
+                Complex c = this.mgmtThread.getComplexFromPoint(this.absolutePoint);
 
                 // Perform calculation
-                pixel = doPixelCalculation(relativePoint, c);
+                pixel = this.doPixelCalculation(this.relativePoint, c);
 
-                paintPixel(pixel);
+                this.paintPixel(pixel);
             }
         }
 
         // Perform final image adjustment
-        adjustImage();
+        this.adjustImage();
 
-        return new ImageSegment(image, bounds);
+        return new ImageSegment(this.image, this.bounds);
     }
 
     protected int getImageHeight(){
@@ -91,7 +91,7 @@ public abstract class RenderTask implements Callable<ImageSegment> {
      * @return Color of complex
      */
     protected Color getHSBColour(int iterations, Complex z){
-        return Color.getHSBColor(getHue(iterations, z), mgmtThread.getSaturation(), mgmtThread.getBrightness());
+        return Color.getHSBColor(this.getHue(iterations, z), this.mgmtThread.getSaturation(), this.mgmtThread.getBrightness());
     }
 
     /**
@@ -103,9 +103,9 @@ public abstract class RenderTask implements Callable<ImageSegment> {
      */
     protected float getHue(int iterations, Complex z){
         // sqrt of inner term removed using log simplification rules. log(x^(1/2)) = (1/2)*log(x) = log(x) / 2
-        double log_z = Math.log((z.getReal() * z.getReal()) + (z.getImaginary() * z.getImaginary())) / 2.0d;
+        double log_z = Math.log(z.getReal() * z.getReal() + z.getImaginary() * z.getImaginary()) / 2.0d;
         double nu = Math.log( log_z / M_LN2_F ) / M_LN2_F;
-        return mgmtThread.getHue() + (iterations + 1 - (float)nu ) / 110f;
+        return this.mgmtThread.getHue() + (iterations + 1 - (float)nu ) / 110f;
     }
 
     /**

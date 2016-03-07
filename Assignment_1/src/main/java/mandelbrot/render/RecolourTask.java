@@ -23,9 +23,9 @@ public class RecolourTask extends RenderTask {
     public RecolourTask(RenderManagementThread t, Rectangle2D bounds) {
         super(t, bounds);
         // Get original values
-        originalHue = t.getImage().getColourProperties().getHue();
-        originalSaturation = t.getImage().getColourProperties().getSaturation();
-        originalBrightness = t.getImage().getColourProperties().getBrightness();
+        this.originalHue = t.getImage().getColourProperties().getHue();
+        this.originalSaturation = t.getImage().getColourProperties().getSaturation();
+        this.originalBrightness = t.getImage().getColourProperties().getBrightness();
     }
 
     /**
@@ -38,21 +38,21 @@ public class RecolourTask extends RenderTask {
     protected ColouredPixel doPixelCalculation (Point2D point, Complex complex) {
         float[] hsb = new float[3];
         // Get current RGB Colour
-        int rgb = mgmtThread.getImage().getRGB((int)absolutePoint.getX(), (int)absolutePoint.getY());
+        int rgb = this.mgmtThread.getImage().getRGB((int) this.absolutePoint.getX(), (int) this.absolutePoint.getY());
 
         // Convert RGB to HSB
-        hsb = Color.RGBtoHSB((rgb >> 16) & 0x000000FF, (rgb >>8 ) & 0x000000FF, (rgb) & 0x000000FF, hsb);
+        hsb = Color.RGBtoHSB(rgb >> 16 & 0x000000FF, rgb >>8 & 0x000000FF, rgb & 0x000000FF, hsb);
 
         // Add new values and subtract old ones
-        hsb[0] += mgmtThread.getHue() - originalHue;
+        hsb[0] += this.mgmtThread.getHue() - this.originalHue;
 
         // Maintain black
         if(rgb == Color.black.getRGB()) {
             hsb[1] = 0;
             hsb[2] = 0;
         } else {
-            hsb[1] += mgmtThread.getSaturation() - originalSaturation;
-            hsb[2] += mgmtThread.getBrightness() - originalBrightness;
+            hsb[1] += this.mgmtThread.getSaturation() - this.originalSaturation;
+            hsb[2] += this.mgmtThread.getBrightness() - this.originalBrightness;
         }
 
         // Return new pixel, but with adjusted colours

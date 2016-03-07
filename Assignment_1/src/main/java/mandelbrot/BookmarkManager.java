@@ -54,15 +54,15 @@ public class BookmarkManager {
         this.config = mainWindow.getConfigManager();
         this.config.addConfigChangeListener(new selectedPointHandler());
 
-        loadBookmarks();
+        this.loadBookmarks();
 
-        panel_bookmarks = new JPanel(new BorderLayout());
-        panel_bookmarks.setBorder(BorderFactory.createCompoundBorder(
+        this.panel_bookmarks = new JPanel(new BorderLayout());
+        this.panel_bookmarks.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Bookmarks"),
                 new EmptyBorder(6, 6, 6, 6)
         ));
 
-        init();
+        this.init();
     }
 
     /**
@@ -70,54 +70,54 @@ public class BookmarkManager {
      */
     private void init() {
         // Create list model and add elements to it
-        lm_bookmarks = new DefaultListModel<>();
+        this.lm_bookmarks = new DefaultListModel<>();
 
         // Add loaded bookmarks to list model
-        bookmarks.values().forEach(lm_bookmarks::addElement);
+        this.bookmarks.values().forEach(this.lm_bookmarks::addElement);
 
         // Create list view
-        list_bookmarks = new JList(lm_bookmarks);
-        list_bookmarks.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list_bookmarks.setLayoutOrientation(JList.VERTICAL);
-        list_bookmarks.addListSelectionListener(new bookmarkSelectionHandler());
+        this.list_bookmarks = new JList(this.lm_bookmarks);
+        this.list_bookmarks.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        this.list_bookmarks.setLayoutOrientation(JList.VERTICAL);
+        this.list_bookmarks.addListSelectionListener(new bookmarkSelectionHandler());
 
         // Create scroller to scroll list view if there are too many bookmarks
-        JScrollPane listScroller = new JScrollPane(list_bookmarks);
-        panel_bookmarks.add(listScroller, BorderLayout.CENTER);
+        JScrollPane listScroller = new JScrollPane(this.list_bookmarks);
+        this.panel_bookmarks.add(listScroller, BorderLayout.CENTER);
 
         // Add add panel at the bottom of the border layouts
-        panel_add = new JPanel(new GridBagLayout());
-        panel_add.setBorder(new EmptyBorder(6, 0, 6, 0));
-        panel_bookmarks.add(panel_add, BorderLayout.PAGE_END);
+        this.panel_add = new JPanel(new GridBagLayout());
+        this.panel_add.setBorder(new EmptyBorder(6, 0, 6, 0));
+        this.panel_bookmarks.add(this.panel_add, BorderLayout.PAGE_END);
 
-        text_name = new JTextField();
-        text_name.setUI(new HintTextFieldUI("Bookmark Name", true, Color.lightGray));
-        text_name.getDocument().addDocumentListener(new textChangeHandler());
+        this.text_name = new JTextField();
+        this.text_name.setUI(new HintTextFieldUI("Bookmark Name", true, Color.lightGray));
+        this.text_name.getDocument().addDocumentListener(new textChangeHandler());
 
-        btn_add = new JButton("Add");
-        btn_add.setMnemonic(KeyEvent.VK_A);
-        btn_add.setEnabled(false);
-        btn_add.addActionListener(new addClickHandler());
+        this.btn_add = new JButton("Add");
+        this.btn_add.setMnemonic(KeyEvent.VK_A);
+        this.btn_add.setEnabled(false);
+        this.btn_add.addActionListener(new addClickHandler());
 
-        btn_delete = new JButton("Delete");
-        btn_delete.setMnemonic(KeyEvent.VK_D);
-        btn_delete.setEnabled(false);
-        btn_delete.addActionListener(new deleteClickHandler());
+        this.btn_delete = new JButton("Delete");
+        this.btn_delete.setMnemonic(KeyEvent.VK_D);
+        this.btn_delete.setEnabled(false);
+        this.btn_delete.addActionListener(new deleteClickHandler());
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(0, 0, 0, 3);
         constraints.weightx = 0.8;
 
-        panel_add.add(text_name, constraints);
+        this.panel_add.add(this.text_name, constraints);
 
         constraints.gridx = 1;
         constraints.weightx = 0.2;
         constraints.insets = new Insets(0, 3, 0, 3);
-        panel_add.add(btn_add, constraints);
+        this.panel_add.add(this.btn_add, constraints);
         constraints.gridx = 2;
         constraints.insets = new Insets(0, 3, 0, 0);
-        panel_add.add(btn_delete, constraints);
+        this.panel_add.add(this.btn_delete, constraints);
     }
 
     //region Saving/Loading
@@ -127,7 +127,7 @@ public class BookmarkManager {
      */
     private void loadBookmarks() {
         Log.Information("Loading bookmarks...");
-        bookmarks = new HashMap<>();
+        this.bookmarks = new HashMap<>();
 
         // Get bookmarks.json from resources
         InputStream inputStream = this.getClass().getResourceAsStream("/mandelbrot/bookmarks.json");
@@ -151,10 +151,10 @@ public class BookmarkManager {
             while (jsonIterator.hasNext()) {
                 bookmark = (JSONObject) jsonIterator.next();
                 String name = (String) bookmark.get("name");
-                double real = Double.parseDouble((String) bookmark.get("real").toString());
-                double imaginary = Double.parseDouble((String) bookmark.get("imaginary").toString());
+                double real = Double.parseDouble(bookmark.get("real").toString());
+                double imaginary = Double.parseDouble(bookmark.get("imaginary").toString());
 
-                bookmarks.put(name, new Bookmark(name, real, imaginary));
+                this.bookmarks.put(name, new Bookmark(name, real, imaginary));
             }
 
         } catch (IOException e) {
@@ -221,15 +221,15 @@ public class BookmarkManager {
     //region Event Handling
     private void setBtnAddState() {
         // If no text is entered, can't save
-        boolean btn_enabled = !text_name.getText().equals("");
+        boolean btn_enabled = !this.text_name.getText().equals("");
 
         // If name already exists, can't save
-        btn_enabled &= !bookmarks.containsKey(text_name.getText());
+        btn_enabled &= !this.bookmarks.containsKey(this.text_name.getText());
 
         // If selected point is null, can't save
-        btn_enabled &= config.getSelectedPoint() != null;
+        btn_enabled &= this.config.getSelectedPoint() != null;
 
-        btn_add.setEnabled(btn_enabled);
+        this.btn_add.setEnabled(btn_enabled);
     }
 
     /**
@@ -244,7 +244,7 @@ public class BookmarkManager {
          */
         @Override
         public void allUpdate(DocumentEvent e) {
-            setBtnAddState();
+            BookmarkManager.this.setBtnAddState();
         }
     }
 
@@ -254,7 +254,7 @@ public class BookmarkManager {
     private class selectedPointHandler extends ConfigChangeAdapter {
         @Override
         public void selectedPointChange(Complex complex) {
-            setBtnAddState();
+            BookmarkManager.this.setBtnAddState();
         }
     }
 
@@ -270,12 +270,12 @@ public class BookmarkManager {
          */
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            List selectedObj = list_bookmarks.getSelectedValuesList();
-            btn_delete.setEnabled(selectedObj.size() == 1);
+            List selectedObj = BookmarkManager.this.list_bookmarks.getSelectedValuesList();
+            BookmarkManager.this.btn_delete.setEnabled(selectedObj.size() == 1);
             if (selectedObj.size() != 1) return;
 
             Bookmark bookmark = (Bookmark) selectedObj.get(0);
-            config.setSelectedPoint(bookmark.getComplex());
+            BookmarkManager.this.config.setSelectedPoint(bookmark.getComplex());
         }
     }
 
@@ -287,18 +287,18 @@ public class BookmarkManager {
         @Override
         public void actionPerformed(ActionEvent e) {
             // Create new bookmark
-            Bookmark bookmark = new Bookmark(text_name.getText(), config.getSelectedPoint());
+            Bookmark bookmark = new Bookmark(BookmarkManager.this.text_name.getText(), BookmarkManager.this.config.getSelectedPoint());
 
             // Add it to HashMap
-            addBookmark(bookmark);
+            BookmarkManager.this.addBookmark(bookmark);
 
             // Add it to ListView
-            lm_bookmarks.addElement(bookmark);
+            BookmarkManager.this.lm_bookmarks.addElement(bookmark);
 
             // Clear text field
-            text_name.setText("");
+            BookmarkManager.this.text_name.setText("");
 
-            saveBookmarks();
+            BookmarkManager.this.saveBookmarks();
         }
     }
 
@@ -310,8 +310,8 @@ public class BookmarkManager {
         @Override
         public void actionPerformed(ActionEvent e) {
             // Check if a bookmark is selected, otherwise return
-            List selectedObj = list_bookmarks.getSelectedValuesList();
-            btn_delete.setEnabled(selectedObj.size() == 1);
+            List selectedObj = BookmarkManager.this.list_bookmarks.getSelectedValuesList();
+            BookmarkManager.this.btn_delete.setEnabled(selectedObj.size() == 1);
             if (selectedObj.size() != 1) return;
 
             // Get selected bookmark
@@ -319,7 +319,7 @@ public class BookmarkManager {
 
             // Prompt user if they want to delete it
             int option = JOptionPane.showConfirmDialog(
-                    mainWindow,
+                    BookmarkManager.this.mainWindow,
                     "Are you sure want to delete the bookmark\n" +
                             "\"" + bookmark.getName() + "\"?",
                     "Delete Bookmark",
@@ -328,8 +328,8 @@ public class BookmarkManager {
 
             // If they do, then remove it
             if(option == JOptionPane.YES_OPTION) {
-                lm_bookmarks.removeElement(bookmark);
-                bookmarks.remove(bookmark.getName());
+                BookmarkManager.this.lm_bookmarks.removeElement(bookmark);
+                BookmarkManager.this.bookmarks.remove(bookmark.getName());
             }
         }
     }

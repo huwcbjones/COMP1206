@@ -37,73 +37,73 @@ public class HintTextFieldUI extends BasicTextFieldUI implements FocusListener {
     }
 
     public Color getColor() {
-        return color;
+        return this.color;
     }
 
     public void setColor(Color color) {
         this.color = color;
-        repaint();
+        this.repaint();
     }
 
     private void repaint() {
-        if (getComponent() != null) {
-            getComponent().repaint();
+        if (this.getComponent() != null) {
+            this.getComponent().repaint();
         }
     }
 
     public boolean isHideOnFocus() {
-        return hideOnFocus;
+        return this.hideOnFocus;
     }
 
     public void setHideOnFocus(boolean hideOnFocus) {
         this.hideOnFocus = hideOnFocus;
-        repaint();
+        this.repaint();
     }
 
     public String getHint() {
-        return hint;
+        return this.hint;
     }
 
     public void setHint(String hint) {
         this.hint = hint;
-        repaint();
+        this.repaint();
     }
 
     @Override
     public void focusGained(FocusEvent e) {
-        if (hideOnFocus) repaint();
+        if (this.hideOnFocus) this.repaint();
 
     }
 
     @Override
     public void focusLost(FocusEvent e) {
-        if (hideOnFocus) repaint();
+        if (this.hideOnFocus) this.repaint();
     }
 
     @Override
     protected void installListeners() {
         super.installListeners();
-        getComponent().addFocusListener(this);
+        this.getComponent().addFocusListener(this);
     }
 
     @Override
     protected void uninstallListeners() {
         super.uninstallListeners();
-        getComponent().removeFocusListener(this);
+        this.getComponent().removeFocusListener(this);
     }
 
     @Override
     protected void paintSafely(Graphics g) {
         super.paintSafely(g);
-        JTextComponent comp = getComponent();
-        if (hint != null && comp.getText().length() == 0 && (!(hideOnFocus && comp.hasFocus()))) {
-            if (color != null) {
-                g.setColor(color);
+        JTextComponent comp = this.getComponent();
+        if (this.hint != null && comp.getText().length() == 0 && !(this.hideOnFocus && comp.hasFocus())) {
+            if (this.color != null) {
+                g.setColor(this.color);
             } else {
                 g.setColor(comp.getForeground().brighter().brighter().brighter());
             }
             int padding = (comp.getHeight() - comp.getFont().getSize()) / 2;
-            g.drawString(hint, 3, comp.getHeight() - padding - 2);
+            g.drawString(this.hint, 3, comp.getHeight() - padding - 2);
         }
     }
 }

@@ -36,7 +36,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     @Override
     protected ImageProperties getRenderProperties() {
         ImageProperties properties = super.getRenderProperties();
-        properties.setComplex(complex);
+        properties.setComplex(this.complex);
         return properties;
     }
 
@@ -48,17 +48,17 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
         super.ocl_loadPrograms();
 
         // Load both float and double versions
-        if (!openClThread.loadProgram("julia_x64", this.getClass().getResourceAsStream("/mandelbrot/opencl/x64/julia.cl"))) {
-            config.disableOpenCL();
+        if (!this.openClThread.loadProgram("julia_x64", this.getClass().getResourceAsStream("/mandelbrot/opencl/x64/julia.cl"))) {
+            this.config.disableOpenCL();
         }
-        if (!openClThread.loadProgram("julia_x32", this.getClass().getResourceAsStream("/mandelbrot/opencl/x32/julia.cl"))) {
-            config.disableOpenCL();
+        if (!this.openClThread.loadProgram("julia_x32", this.getClass().getResourceAsStream("/mandelbrot/opencl/x32/julia.cl"))) {
+            this.config.disableOpenCL();
         }
     }
 
     @Override
     protected Callable<ImageSegment> createTask(Rectangle2D bounds) {
-        return new JuliaTask(this, bounds, complex);
+        return new JuliaTask(this, bounds, this.complex);
     }
 
     /**
@@ -68,28 +68,29 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
      * @param results   Buffer to put results into
      * @return CLKernel to execute
      */
+    @Override
     protected CLKernel createOpenCLKernel(Dimension dimension, CLBuffer<Integer> results) {
 
-        if (openClThread.useDouble()) {
-            return getX64Kernel(dimension, results);
+        if (this.openClThread.useDouble()) {
+            return this.getX64Kernel(dimension, results);
         } else {
-            return getX32Kernel(dimension, results);
+            return this.getX32Kernel(dimension, results);
         }
     }
 
     private CLKernel getX64Kernel(Dimension dimension, CLBuffer<Integer> results) {
-        CLProgram julia = openClThread.getProgram("julia_x64");
+        CLProgram julia = this.openClThread.getProgram("julia_x64");
         int iterations = this.iterations;
-        double escapeRadius = escapeRadiusSquared;
+        double escapeRadius = this.escapeRadiusSquared;
         double[] complex = new double[]{this.complex.getReal(), this.complex.getImaginary()};
         double[] dimensions = new double[]{dimension.width, dimension.height};
-        double[] scales = new double[]{xScale, yScale};
-        double[] shifts = new double[]{getShiftX(), getShiftY()};
-        double scaleFactor = getScale();
-        double huePrev = getImageHue();
-        double hueAdj = getHue();
-        double saturation = getSaturation();
-        double brightness = getBrightness();
+        double[] scales = new double[]{this.xScale, this.yScale};
+        double[] shifts = new double[]{this.getShiftX(), this.getShiftY()};
+        double scaleFactor = this.getScale();
+        double huePrev = this.getImageHue();
+        double hueAdj = this.getHue();
+        double saturation = this.getSaturation();
+        double brightness = this.getBrightness();
 
         return julia.createKernel(
                 "julia",
@@ -109,18 +110,18 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
     }
 
     private CLKernel getX32Kernel(Dimension dimension, CLBuffer<Integer> results) {
-        CLProgram julia = openClThread.getProgram("julia_x32");
+        CLProgram julia = this.openClThread.getProgram("julia_x32");
         int iterations = this.iterations;
-        float escapeRadius = (float)escapeRadiusSquared;
+        float escapeRadius = (float) this.escapeRadiusSquared;
         float[] complex = new float[]{(float) this.complex.getReal(), (float) this.complex.getImaginary()};
         float[] dimensions = new float[]{(float) dimension.width, (float) dimension.height};
-        float[] scales = new float[]{(float) xScale, (float) yScale};
-        float[] shifts = new float[]{(float) getShiftX(), (float) getShiftY()};
-        float scaleFactor = (float) getScale();
-        float huePrev = getImageHue();
-        float hueAdj = getHue();
-        float saturation = getSaturation();
-        float brightness = getBrightness();
+        float[] scales = new float[]{(float) this.xScale, (float) this.yScale};
+        float[] shifts = new float[]{(float) this.getShiftX(), (float) this.getShiftY()};
+        float scaleFactor = (float) this.getScale();
+        float huePrev = this.getImageHue();
+        float hueAdj = this.getHue();
+        float saturation = this.getSaturation();
+        float brightness = this.getBrightness();
 
         return julia.createKernel(
                 "julia",
@@ -141,7 +142,7 @@ public class JuliaRenderManagementThread extends RenderManagementThread {
 
     @Override
     public void render() {
-        this.complex = config.getSelectedPoint();
+        this.complex = this.config.getSelectedPoint();
         super.render();
     }
 

@@ -75,21 +75,21 @@ public abstract class RenderManagementThread extends Thread {
         this.openClThread = openCL;
 
         // Load OpenCL programs
-        ocl_loadPrograms();
+        this.ocl_loadPrograms();
 
-        cacheManager = new CacheManager();
+        this.cacheManager = new CacheManager();
 
         // Initialise Event Handling
-        listeners = new ArrayList<>();
+        this.listeners = new ArrayList<>();
 
         // Initialise CPU Multithreaded Rendering
-        numberThreads = Runtime.getRuntime().availableProcessors();
-        numberStrips = numberThreads * 2;
+        this.numberThreads = Runtime.getRuntime().availableProcessors();
+        this.numberStrips = this.numberThreads * 2;
 
-        Log.Information("Multicore Processing: Using " + numberThreads + ", and " + numberStrips + " workers.");
+        Log.Information("Multicore Processing: Using " + this.numberThreads + ", and " + this.numberStrips + " workers.");
 
         // Get an executor service for the amount of cores we have
-        ExecutorService executorService = Executors.newFixedThreadPool(numberThreads);
+        ExecutorService executorService = Executors.newFixedThreadPool(this.numberThreads);
         this.executorService = new ExecutorCompletionService<>(executorService);
         Log.Information("Starting execution pool...");
     }
@@ -98,8 +98,8 @@ public abstract class RenderManagementThread extends Thread {
      * Loads programs into the OpenCL context
      */
     protected void ocl_loadPrograms() {
-        if (!openClThread.loadProgram("recolour", this.getClass().getResourceAsStream("/mandelbrot/opencl/recolour.cl"))) {
-            config.disableOpenCL();
+        if (!this.openClThread.loadProgram("recolour", this.getClass().getResourceAsStream("/mandelbrot/opencl/recolour.cl"))) {
+            this.config.disableOpenCL();
         }
     }
 
@@ -111,7 +111,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return BufferedImage, render result
      */
     public FractalImage getImage() {
-        return image;
+        return this.image;
     }
 
     /**
@@ -120,7 +120,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return double escape radius squared
      */
     public final double getEscapeRadiusSquared() {
-        return escapeRadiusSquared;
+        return this.escapeRadiusSquared;
     }
 
     /**
@@ -129,7 +129,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return int max iteration count
      */
     public final int getIterations() {
-        return iterations;
+        return this.iterations;
     }
 
     /**
@@ -173,7 +173,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return float image hue
      */
     public final float getImageHue() {
-        return image.getColourProperties().getHue();
+        return this.image.getColourProperties().getHue();
     }
     /**
      * Gets image saturation
@@ -200,7 +200,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return Complex number
      */
     public final Complex getComplexFromPoint(Point2D p) {
-        return getComplexFromPoint(p.getX(), p.getY());
+        return this.getComplexFromPoint(p.getX(), p.getY());
     }
 
     /**
@@ -211,8 +211,8 @@ public abstract class RenderManagementThread extends Thread {
      * @return Complex number
      */
     public final Complex getComplexFromPoint(double x, double y) {
-        x = ((x - imgWidth / 2d) * xScale) / scaleFactor + xShift;
-        y = ((y - imgHeight / 2d) * yScale) / scaleFactor + yShift;
+        x = (x - this.imgWidth / 2d) * this.xScale / this.scaleFactor + this.xShift;
+        y = (y - this.imgHeight / 2d) * this.yScale / this.scaleFactor + this.yShift;
 
         return new Complex(x, y);
     }
@@ -223,18 +223,18 @@ public abstract class RenderManagementThread extends Thread {
      * @return true if an image has been rendered
      */
     public final boolean hasRendered() {
-        return hasRendered;
+        return this.hasRendered;
     }
 
     //endregion
 
     //region Event Listening & Handling
     public void addRenderListener(RenderListener listener) {
-        listeners.add(listener);
+        this.listeners.add(listener);
     }
 
     private void fireRenderComplete() {
-        listeners.forEach(RenderListener::renderComplete);
+        this.listeners.forEach(RenderListener::renderComplete);
     }
     //endregion
 
@@ -251,8 +251,8 @@ public abstract class RenderManagementThread extends Thread {
             // Dispatch render method as appropriate to notify
             synchronized (this.runThread) {
                 try {
-                    runThread.wait();
-                    doRender();
+                    this.runThread.wait();
+                    this.doRender();
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -265,7 +265,7 @@ public abstract class RenderManagementThread extends Thread {
      */
     public void render() {
         synchronized (this.runThread) {
-            runThread.notify();
+            this.runThread.notify();
         }
     }
     //endregion
@@ -277,7 +277,7 @@ public abstract class RenderManagementThread extends Thread {
      * @return ImageProperties
      */
     protected ImageProperties getRenderProperties(){
-        return new ImageProperties((int) imgWidth, (int) imgHeight, getIterations(), getScale(), getShiftX(), getShiftY());
+        return new ImageProperties((int) this.imgWidth, (int) this.imgHeight, this.getIterations(), this.getScale(), this.getShiftX(), this.getShiftY());
     }
 
     /**
@@ -285,69 +285,69 @@ public abstract class RenderManagementThread extends Thread {
      */
     private void doRender() {
         // Create image
-        image = FractalImage.fromBufferedImage(panel.createImage());
+        this.image = FractalImage.fromBufferedImage(this.panel.createImage());
 
         // Update image properties for this render
-        updateImageProperties();
+        this.updateImageProperties();
 
         // Check if image is cached
         boolean fullRender = true;
 
         // Create image properties
         ImageProperties properties = this.getRenderProperties();
-        ImageColourProperties colourProperties = new ImageColourProperties(getHue(), getSaturation(), getBrightness());
+        ImageColourProperties colourProperties = new ImageColourProperties(this.getHue(), this.getSaturation(), this.getBrightness());
 
         // If cache is enabled, do cache stuff
-        if (!config.isCacheDisabled()) {
+        if (!this.config.isCacheDisabled()) {
 
             // If image is cached with both properties and colours, retrieve it and display it.
-            if (cacheManager.isCached(properties, colourProperties)) {
+            if (this.cacheManager.isCached(properties, colourProperties)) {
                 Log.Information("Displaying cached image. " + properties.toString() + "/" + colourProperties.toString());
-                image = cacheManager.getImage(properties, colourProperties);
-                panel.setImage(image, true);
-                fireRenderComplete();
-                hasRendered = true;
+                this.image = this.cacheManager.getImage(properties, colourProperties);
+                this.panel.setImage(this.image, true);
+                this.fireRenderComplete();
+                this.hasRendered = true;
                 return;
             }
 
             // If image with same properties (dimensions, iterations, etc) is cached, use this
             // as recolouring is quicker than rendering
-            if (cacheManager.isCached(properties)) {
+            if (this.cacheManager.isCached(properties)) {
                 Log.Information("Recolouring cached image. " + properties.toString());
-                image = cacheManager.getImage(properties);
-                Log.Information(" - from: " + image.getColourProperties().toString());
+                this.image = this.cacheManager.getImage(properties);
+                Log.Information(" - from: " + this.image.getColourProperties().toString());
                 Log.Information(" - to  : " + colourProperties.toString());
                 fullRender = false;
             }
         }
 
-        if (config.useOpenCL()) {
+        if (this.config.useOpenCL()) {
             try {
-                runOpenCL_render(fullRender);
+                this.runOpenCL_render(fullRender);
             } catch (CLException e){
 
                 // Fallback to CPU if OpenCL failed (for whatever reason)
-                config.disableOpenCL();
+                this.config.disableOpenCL();
                 e.printStackTrace();
             }
         } else {
-            runCPU_render(fullRender);
+            this.runCPU_render(fullRender);
         }
 
         // Update image properties
-        image.setProperties(properties);
-        image.setColourProperties(colourProperties);
+        this.image.setProperties(properties);
+        this.image.setColourProperties(colourProperties);
 
         // Cache the image if cache is enabled
-        if(!config.isCacheDisabled()) {
-            cacheManager.cacheImage(image);
+        if(!this.config.isCacheDisabled()) {
+            this.cacheManager.cacheImage(this.image);
         }
 
-        panel.setImage(image, true);
+        this.panel.setImage(this.image, true);
 
         // Let everyone listening to us know that we're done
-        fireRenderComplete();
-        hasRendered = true;
+        this.fireRenderComplete();
+        this.hasRendered = true;
     }
 
     /**
@@ -376,23 +376,23 @@ public abstract class RenderManagementThread extends Thread {
 
         if(!fullRender){
             // If we are recolouring, do the recolour
-            ocl_recolourImage();
+            this.ocl_recolourImage();
             return;
         }
         try {
-            CLQueue queue = openClThread.getQueue();
-            Dimension dimensions = new Dimension((int) imgWidth, (int) imgHeight);
+            CLQueue queue = this.openClThread.getQueue();
+            Dimension dimensions = new Dimension((int) this.imgWidth, (int) this.imgHeight);
 
             // Create results buffer and pointer
             Pointer<Integer> results = Pointer.allocateInts(dimensions.height * dimensions.width);
-            CLBuffer<Integer> resultsBuffer = openClThread.getContext().createIntBuffer(CLMem.Usage.Output, results, false);
+            CLBuffer<Integer> resultsBuffer = this.openClThread.getContext().createIntBuffer(CLMem.Usage.Output, results, false);
 
             // Get Render kernel, queue it, and wait for it to finish
-            CLKernel kernel = createOpenCLKernel(dimensions, resultsBuffer);
+            CLKernel kernel = this.createOpenCLKernel(dimensions, resultsBuffer);
 
             if (kernel == null) {
-                config.disableOpenCL();
-                runCPU_render(fullRender);
+                this.config.disableOpenCL();
+                this.runCPU_render(fullRender);
                 return;
             }
 
@@ -406,7 +406,7 @@ public abstract class RenderManagementThread extends Thread {
             results = resultsBuffer.read(queue);
 
             // Paint the colours onto the image
-            image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, results.getInts(), 0, (int) imgWidth);
+            this.image.setRGB(0, 0, (int) this.imgWidth, (int) this.imgHeight, results.getInts(), 0, (int) this.imgWidth);
 
             shouldDisableOpenCL = false;
 
@@ -419,7 +419,7 @@ public abstract class RenderManagementThread extends Thread {
         }
 
         if (shouldDisableOpenCL) {
-            config.disableOpenCL();
+            this.config.disableOpenCL();
         }
     }
 
@@ -427,14 +427,14 @@ public abstract class RenderManagementThread extends Thread {
      * Runs the render on the CPU
      */
     private void runCPU_render(boolean fullRender) {
-        int stripWidth = (int) Math.floor(imgWidth / (numberStrips));
+        int stripWidth = (int) Math.floor(this.imgWidth / this.numberStrips);
         Rectangle2D bounds;
         int start;
 
         Callable<ImageSegment> task;
 
         // Queue up strips to be calculated
-        for (int i = 0; i < numberStrips; i++) {
+        for (int i = 0; i < this.numberStrips; i++) {
 
             // If first strip, start at 0
             if (i == 0) {
@@ -443,30 +443,30 @@ public abstract class RenderManagementThread extends Thread {
                 // Otherwise start at -1
                 start = i * stripWidth;
             }
-            if (i == numberStrips - 1) {
-                bounds = new Rectangle2D.Double(start, 0, imgWidth - start, imgHeight);
+            if (i == this.numberStrips - 1) {
+                bounds = new Rectangle2D.Double(start, 0, this.imgWidth - start, this.imgHeight);
             } else {
-                bounds = new Rectangle2D.Double(start, 0, stripWidth, imgHeight);
+                bounds = new Rectangle2D.Double(start, 0, stripWidth, this.imgHeight);
             }
 
             // Dispatch task to execution service
             if (fullRender) {
-                task = createTask(bounds);
+                task = this.createTask(bounds);
             } else {
                 task = new RecolourTask(this, bounds);
             }
-            executorService.submit(task);
+            this.executorService.submit(task);
         }
 
         Future<ImageSegment> result;
         ImageSegment imgSeg;
-        Graphics2D g = (Graphics2D) image.getGraphics();
+        Graphics2D g = (Graphics2D) this.image.getGraphics();
 
         // Get results from strips
-        for (int i = 0; i < numberStrips; i++) {
+        for (int i = 0; i < this.numberStrips; i++) {
             try {
                 // Get result from Executor Completion Service (this method is blocking)
-                result = executorService.take();
+                result = this.executorService.take();
 
                 // If result failed, skip it
                 if (!result.isDone()) {
@@ -491,34 +491,34 @@ public abstract class RenderManagementThread extends Thread {
 
     private void ocl_recolourImage() {
         try {
-            CLQueue queue = openClThread.getQueue();
-            Dimension dimensions = new Dimension((int) imgWidth, (int) imgHeight);
+            CLQueue queue = this.openClThread.getQueue();
+            Dimension dimensions = new Dimension((int) this.imgWidth, (int) this.imgHeight);
 
             int[] pixelRGBs = new int[dimensions.height * dimensions.width];
-            image.getRGB(0, 0, dimensions.width, dimensions.height, pixelRGBs, 0, dimensions.width);
+            this.image.getRGB(0, 0, dimensions.width, dimensions.height, pixelRGBs, 0, dimensions.width);
 
             // Create results buffer and pointer
             Pointer<Integer> pixels = Pointer.pointerToInts(pixelRGBs);
-            CLBuffer<Integer> pixelsBuffer = openClThread.getContext().createIntBuffer(CLMem.Usage.InputOutput, pixels, false);
+            CLBuffer<Integer> pixelsBuffer = this.openClThread.getContext().createIntBuffer(CLMem.Usage.InputOutput, pixels, false);
 
-            ImageColourProperties oldImgColour = image.getColourProperties();
+            ImageColourProperties oldImgColour = this.image.getColourProperties();
 
             // Create hue to RGB kernel
-            CLKernel kernel = openClThread.getProgram("recolour").createKernel(
+            CLKernel kernel = this.openClThread.getProgram("recolour").createKernel(
                     "recolour",
                     pixelsBuffer,
                     dimensions.width,
                     oldImgColour.getHue(),
                     oldImgColour.getSaturation(),
                     oldImgColour.getBrightness(),
-                    config.getHue(),
-                    config.getSaturation(),
-                    config.getBrightness()
+                    this.config.getHue(),
+                    this.config.getSaturation(),
+                    this.config.getBrightness()
             );
 
             if (kernel == null) {
-                config.disableOpenCL();
-                runCPU_render(false);
+                this.config.disableOpenCL();
+                this.runCPU_render(false);
                 return;
             }
 
@@ -534,7 +534,7 @@ public abstract class RenderManagementThread extends Thread {
             pixels = pixelsBuffer.read(queue);
 
             // Paint the colours onto the image
-            image.setRGB(0, 0, (int) imgWidth, (int) imgHeight, pixels.getInts(), 0, (int) imgWidth);
+            this.image.setRGB(0, 0, (int) this.imgWidth, (int) this.imgHeight, pixels.getInts(), 0, (int) this.imgWidth);
 
         } catch (CLException.OutOfResources ex) {
             Log.Error("OpenCL render failed with CL_OUT_OF_RESOURCES.");
@@ -552,21 +552,21 @@ public abstract class RenderManagementThread extends Thread {
      * Updates the properties of the image
      */
     private void updateImageProperties() {
-        escapeRadiusSquared = config.getEscapeRadiusSquared();
-        iterations = config.getIterations();
-        scaleFactor = config.getScaleFactor();
-        xShift = config.getShiftX();
-        yShift = config.getShiftY();
-        hue = config.getHue();
-        saturation = config.getSaturation();
-        brightness = config.getBrightness();
+        this.escapeRadiusSquared = this.config.getEscapeRadiusSquared();
+        this.iterations = this.config.getIterations();
+        this.scaleFactor = this.config.getScaleFactor();
+        this.xShift = this.config.getShiftX();
+        this.yShift = this.config.getShiftY();
+        this.hue = this.config.getHue();
+        this.saturation = this.config.getSaturation();
+        this.brightness = this.config.getBrightness();
 
-        imgHeight = image.getHeight();
-        imgWidth = image.getWidth();
+        this.imgHeight = this.image.getHeight();
+        this.imgWidth = this.image.getWidth();
 
-        double aspectRatio = imgWidth / imgHeight;
-        double xRange = config.getRangeX();
-        double yRange = config.getRangeY();
+        double aspectRatio = this.imgWidth / this.imgHeight;
+        double xRange = this.config.getRangeX();
+        double yRange = this.config.getRangeY();
 
         if (aspectRatio * yRange < 4) {
             yRange = xRange / aspectRatio;
@@ -574,8 +574,8 @@ public abstract class RenderManagementThread extends Thread {
             xRange = yRange * aspectRatio;
         }
 
-        xScale = xRange / imgWidth;
-        yScale = yRange / imgHeight;
+        this.xScale = xRange / this.imgWidth;
+        this.yScale = yRange / this.imgHeight;
     }
     //endregion
 }

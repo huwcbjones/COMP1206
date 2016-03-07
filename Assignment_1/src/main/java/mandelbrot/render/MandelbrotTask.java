@@ -24,7 +24,7 @@ public class MandelbrotTask extends RenderTask {
         super(t, bounds);
 
         // If y shift is 0, we can effectively use half height optimisation
-        halfHeight = (mgmtThread.getShiftY() == 0);
+        this.halfHeight = this.mgmtThread.getShiftY() == 0;
     }
 
     /**
@@ -34,7 +34,7 @@ public class MandelbrotTask extends RenderTask {
      */
     @Override
     protected int getImageHeight() {
-        if (halfHeight) {
+        if (this.halfHeight) {
             return super.getImageHeight() / 2 + 2;
         } else {
             return super.getImageHeight();
@@ -46,25 +46,25 @@ public class MandelbrotTask extends RenderTask {
      */
     @Override
     protected void adjustImage(){
-        if (!halfHeight) return;
+        if (!this.halfHeight) return;
 
-        BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_RGB);
+        BufferedImage newImage = new BufferedImage(this.image.getWidth(), this.image.getHeight() * 2, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = newImage.createGraphics();
 
         // Draw original image
-        g.drawImage(image, 0, 0, null);
+        g.drawImage(this.image, 0, 0, null);
 
         // Flip image upside down (reflect in x = 0)
         AffineTransform at = new AffineTransform();
         at.concatenate(AffineTransform.getScaleInstance(1 ,-1));
-        at.concatenate(AffineTransform.getTranslateInstance(0, -image.getHeight()));
+        at.concatenate(AffineTransform.getTranslateInstance(0, -this.image.getHeight()));
         g.transform(at);
 
         // Adjust image positioning so we don't get any black lines
-        g.drawImage(image, 0, 2 -image.getHeight(), null);
+        g.drawImage(this.image, 0, 2 - this.image.getHeight(), null);
         g.dispose();
 
-        image = newImage;
+        this.image = newImage;
     }
 
     /**
@@ -79,14 +79,14 @@ public class MandelbrotTask extends RenderTask {
         Complex z = complex.clone();
         Complex prevPoint;
 
-        while (z.squareReal() + z.squareImaginary() <= escapeRadiusSquared && currIteration < maxIterations) {
+        while (z.squareReal() + z.squareImaginary() <= this.escapeRadiusSquared && currIteration < this.maxIterations) {
             prevPoint = z.clone();
             z = z.square();
             z.add(complex);
 
             // Apply period detection
             if(z.equals(prevPoint)){
-                currIteration = maxIterations;
+                currIteration = this.maxIterations;
                 break;
             }
 
@@ -95,8 +95,8 @@ public class MandelbrotTask extends RenderTask {
 
         Color colour;
 
-        if (currIteration < maxIterations) {
-            colour = getHSBColour(currIteration, z);
+        if (currIteration < this.maxIterations) {
+            colour = this.getHSBColour(currIteration, z);
         } else {
             colour = Color.BLACK;
         }

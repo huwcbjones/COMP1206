@@ -36,7 +36,7 @@ public class JuliaTask extends RenderTask {
         Complex z = complex;
         Complex prevPoint;
 
-        while (z.squareReal() + z.squareImaginary() <= escapeRadiusSquared && currIteration < maxIterations) {
+        while (z.squareReal() + z.squareImaginary() <= this.escapeRadiusSquared && currIteration < this.maxIterations) {
             prevPoint = z.clone();
             z = z.square();
 
@@ -45,7 +45,7 @@ public class JuliaTask extends RenderTask {
 
             // Apply period detection
             if(z.equals(prevPoint)){
-                currIteration = maxIterations;
+                currIteration = this.maxIterations;
                 break;
             }
 
@@ -54,8 +54,8 @@ public class JuliaTask extends RenderTask {
 
         Color colour;
 
-        if (currIteration < maxIterations) {
-            colour = getHSBColour(currIteration, z);
+        if (currIteration < this.maxIterations) {
+            colour = this.getHSBColour(currIteration, z);
         } else {
             colour = Color.BLACK;
         }

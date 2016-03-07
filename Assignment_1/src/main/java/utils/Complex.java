@@ -27,8 +27,8 @@ public class Complex implements Cloneable {
     public Complex square(){
         // (a + bi) ^2 can be expanded to a^2 + 2abi + i^2 * b^2
         // which equals a^2 - b^2 + abi
-        double abi = real * imaginary;
-        return new Complex(squareReal() - squareImaginary(), abi + abi);
+        double abi = this.real * this.imaginary;
+        return new Complex(this.squareReal() - this.squareImaginary(), abi + abi);
     }
 
     /**
@@ -37,9 +37,9 @@ public class Complex implements Cloneable {
      */
     public double squareReal() {
         // Check if square has been calculated
-        if (real_square != -1) return real_square;
-        real_square = real * real;
-        return real_square;
+        if (this.real_square != -1) return this.real_square;
+        this.real_square = this.real * this.real;
+        return this.real_square;
     }
 
     /**
@@ -48,9 +48,9 @@ public class Complex implements Cloneable {
      */
     public double squareImaginary() {
         // Check if square has been calculated
-        if (imaginary_square != -1) return imaginary_square;
-        imaginary_square = imaginary * imaginary;
-        return imaginary_square;
+        if (this.imaginary_square != -1) return this.imaginary_square;
+        this.imaginary_square = this.imaginary * this.imaginary;
+        return this.imaginary_square;
     }
 
     /**
@@ -61,7 +61,7 @@ public class Complex implements Cloneable {
         // |a + bi| = root( a^2 + b^2)
         // therefore
         // |a + bi|^2 = a^2 + b^2
-        return (squareReal()) + (squareImaginary());
+        return this.squareReal() + this.squareImaginary();
     }
 
     /**
@@ -69,7 +69,7 @@ public class Complex implements Cloneable {
      * @return double, modulus of the complex
      */
     public double modulus(){
-        double modulusSquared =  modulusSquared();
+        double modulusSquared = this.modulusSquared();
         return modulusSquared * modulusSquared;
     }
 
@@ -78,8 +78,8 @@ public class Complex implements Cloneable {
      * @param complex Complex to add
      */
     public void add(Complex complex){
-        real += complex.getReal();
-        imaginary += complex.getImaginary();
+        this.real += complex.getReal();
+        this.imaginary += complex.getImaginary();
     }
 
     /**
@@ -87,8 +87,8 @@ public class Complex implements Cloneable {
      * @param complex Complex to subtract
      */
     public void subtract(Complex complex){
-        real -= complex.getReal();
-        imaginary -= complex.getImaginary();
+        this.real -= complex.getReal();
+        this.imaginary -= complex.getImaginary();
     }
 
     /**
@@ -96,7 +96,7 @@ public class Complex implements Cloneable {
      * @return double, real
      */
     public double getReal(){
-        return real;
+        return this.real;
     }
 
     /**
@@ -104,33 +104,34 @@ public class Complex implements Cloneable {
      * @return double, imaginary
      */
     public double getImaginary(){
-        return imaginary;
+        return this.imaginary;
     }
 
     @Override
     public String toString(){
-        String imaginaryString = String.format("%.3f", imaginary);
-        if (getImaginary() >= 0) {
+        String imaginaryString = String.format("%.3f", this.imaginary);
+        if (this.getImaginary() >= 0) {
             imaginaryString = "+ " + imaginaryString;
         } else {
-            imaginaryString = "- " + String.format("%.3f", -1 * imaginary);
+            imaginaryString = "- " + String.format("%.3f", -1 * this.imaginary);
         }
-        return String.format("%.3f %s", real, imaginaryString) + "i";
+        return String.format("%.3f %s", this.real, imaginaryString) + "i";
     }
 
     @Override
     public int hashCode() {
-        return (int) (real * imaginary + imaginary);
+        return (int) (this.real * this.imaginary + this.imaginary);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Complex)) return false;
         Complex c = (Complex) obj;
-        return imaginary == c.getImaginary() && real == c.getReal();
+        return this.imaginary == c.getImaginary() && this.real == c.getReal();
     }
 
+    @Override
     public Complex clone() {
-        return new Complex(real, imaginary);
+        return new Complex(this.real, this.imaginary);
     }
 }

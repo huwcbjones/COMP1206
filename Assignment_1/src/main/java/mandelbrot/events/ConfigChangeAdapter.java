@@ -1,7 +1,6 @@
 package mandelbrot.events;
 
 import utils.Complex;
-import utils.ImageProperties;
 
 /**
  * Adapter for ConfigChange

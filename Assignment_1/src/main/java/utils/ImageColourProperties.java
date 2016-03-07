@@ -25,9 +25,9 @@ public class ImageColourProperties {
     @Override
     public int hashCode() {
         // Create a unique hashcode using prime numbers
-        int h_hue = (int) (hue * 499);
-        int h_saturation = (int) (saturation * 503);
-        int h_brightness = (int) (brightness * 509);
+        int h_hue = (int) (this.hue * 499);
+        int h_saturation = (int) (this.saturation * 503);
+        int h_brightness = (int) (this.brightness * 509);
 
         return h_hue ^ h_saturation ^ h_brightness;
     }
@@ -37,13 +37,13 @@ public class ImageColourProperties {
         if (!(obj instanceof ImageColourProperties)) return false;
         ImageColourProperties p = (ImageColourProperties) obj;
 
-        return hue == p.getHue() &&
-                saturation == p.getSaturation() &&
-                brightness == p.getBrightness();
+        return this.hue == p.getHue() &&
+                this.saturation == p.getSaturation() &&
+                this.brightness == p.getBrightness();
     }
 
     public float getHue() {
-        return hue;
+        return this.hue;
     }
 
     public void setHue(float hue) {
@@ -51,7 +51,7 @@ public class ImageColourProperties {
     }
 
     public float getSaturation() {
-        return saturation;
+        return this.saturation;
     }
 
     public void setSaturation(float saturation) {
@@ -59,7 +59,7 @@ public class ImageColourProperties {
     }
 
     public float getBrightness() {
-        return brightness;
+        return this.brightness;
     }
 
     public void setBrightness(float brightness) {
@@ -68,6 +68,6 @@ public class ImageColourProperties {
 
     @Override
     public String toString() {
-        return "H: " + hue + ", S: " + saturation + ", B: " + brightness;
+        return "H: " + this.hue + ", S: " + this.saturation + ", B: " + this.brightness;
     }
 }

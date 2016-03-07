@@ -44,7 +44,7 @@ public class ImageProperties {
     }
 
     public int getIterations() {
-        return iterations;
+        return this.iterations;
     }
 
     public void setIterations(int iterations) {
@@ -52,11 +52,11 @@ public class ImageProperties {
     }
 
     public double getScale() {
-        return scale;
+        return this.scale;
     }
 
     public double getScale(int decimalPlaces) {
-        return round(scale, decimalPlaces);
+        return round(this.scale, decimalPlaces);
     }
 
     public void setScale(double scale) {
@@ -64,7 +64,7 @@ public class ImageProperties {
     }
 
     public double getxShift() {
-        return xShift;
+        return this.xShift;
     }
 
     public void setxShift(double xShift) {
@@ -72,7 +72,7 @@ public class ImageProperties {
     }
 
     public double getyShift() {
-        return yShift;
+        return this.yShift;
     }
 
     public void setyShift(double yShift) {
@@ -80,7 +80,7 @@ public class ImageProperties {
     }
 
     public Complex getComplex() {
-        return complex;
+        return this.complex;
     }
 
     public void setComplex(Complex complex) {
@@ -90,15 +90,15 @@ public class ImageProperties {
     @Override
     public int hashCode() {
         // Create a unique hashcode using prime numbers
-        int h_width = width * 487;
-        int h_height = height * 491;
-        int h_iteration = iterations * 499;
-        int h_scale = (int)(scale * 503);
-        int h_xShift = (int)(xShift * 509);
-        int h_yShift = (int)(xShift * 521);
+        int h_width = this.width * 487;
+        int h_height = this.height * 491;
+        int h_iteration = this.iterations * 499;
+        int h_scale = (int)(this.scale * 503);
+        int h_xShift = (int)(this.xShift * 509);
+        int h_yShift = (int)(this.xShift * 521);
 
         int code = h_width ^ h_height ^ h_iteration ^ h_scale ^ h_xShift ^ h_yShift;
-        if(complex != null) code ^= complex.hashCode();
+        if(this.complex != null) code ^= this.complex.hashCode();
 
         return code;
     }
@@ -118,21 +118,21 @@ public class ImageProperties {
         ImageProperties p = (ImageProperties) obj;
 
         // If these values are unset in either property, return false
-        if (p.getComplex() == null && complex != null) return false;
+        if (p.getComplex() == null && this.complex != null) return false;
 
-        boolean complex = (this.complex == null) || this.complex.equals(p.getComplex());
+        boolean complex = this.complex == null || this.complex.equals(p.getComplex());
         return
-                width == p.getWidth() &&
-                height == p.getHeight() &&
-                iterations == p.getIterations() &&
-                scale == p.getScale() &&
-                xShift == p.getxShift() &&
-                yShift == p.getyShift() &&
+                this.width == p.getWidth() &&
+                        this.height == p.getHeight() &&
+                        this.iterations == p.getIterations() &&
+                        this.scale == p.getScale() &&
+                        this.xShift == p.getxShift() &&
+                        this.yShift == p.getyShift() &&
                 complex;
     }
 
     public int getWidth() {
-        return width;
+        return this.width;
     }
 
     public void setWidth(int width) {
@@ -140,7 +140,7 @@ public class ImageProperties {
     }
 
     public int getHeight() {
-        return height;
+        return this.height;
     }
 
     public void setHeight(int height) {
@@ -150,9 +150,9 @@ public class ImageProperties {
 
     @Override
     public String toString() {
-        String str = "W: " + width + ", H: " + height + ", I:" + iterations + ", S: " + scale + ", X:" + xShift + ", Y:" + yShift;
-        if(complex != null) {
-            str += ", C:(" + complex.toString() + ")";
+        String str = "W: " + this.width + ", H: " + this.height + ", I:" + this.iterations + ", S: " + this.scale + ", X:" + this.xShift + ", Y:" + this.yShift;
+        if(this.complex != null) {
+            str += ", C:(" + this.complex.toString() + ")";
         }
         return str;
     }

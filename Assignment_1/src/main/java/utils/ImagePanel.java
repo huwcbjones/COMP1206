@@ -24,25 +24,25 @@ public class ImagePanel extends JPanel {
     }
 
     public void setImage(BufferedImage image){
-        setImage(image, false);
+        this.setImage(image, false);
     }
     public void setImage (BufferedImage image, boolean repaint) {
         this.image = image;
-        if (repaint) repaint();
+        if (repaint) this.repaint();
     }
     @Override
     protected void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D)g;
-        g.drawImage(image, 0, 0, null);
+        g.drawImage(this.image, 0, 0, null);
 
-        if(zoomBox == null) return;
+        if(this.zoomBox == null) return;
 
         g2d.setColor(new Color(0, 0, 255, 96));
-        g2d.fill(zoomBox);
+        g2d.fill(this.zoomBox);
 
         g2d.setColor(new Color(0, 0, 255, 48));
-        g2d.draw(zoomBox);
+        g2d.draw(this.zoomBox);
     }
 
     public BufferedImage createImage() {
@@ -50,7 +50,7 @@ public class ImagePanel extends JPanel {
     }
 
     public void drawZoomBox(Rectangle2D box) {
-        zoomBox = box;
-        repaint();
+        this.zoomBox = box;
+        this.repaint();
     }
 }

@@ -21,7 +21,7 @@ public class ColouredPixel {
     }
 
     public Color getColour() {
-        return colour;
+        return this.colour;
     }
 
     public void setColour(Color colour) {
@@ -29,7 +29,7 @@ public class ColouredPixel {
     }
 
     public Point2D getPoint() {
-        return point;
+        return this.point;
     }
 
     public void setPoint(Point2D point) {

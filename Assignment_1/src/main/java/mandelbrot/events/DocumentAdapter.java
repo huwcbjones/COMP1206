@@ -27,7 +27,7 @@ public class DocumentAdapter implements DocumentListener {
      */
     @Override
     public void insertUpdate(DocumentEvent e) {
-        allUpdate(e);
+        this.allUpdate(e);
     }
 
     /**
@@ -39,7 +39,7 @@ public class DocumentAdapter implements DocumentListener {
      */
     @Override
     public void removeUpdate(DocumentEvent e) {
-        allUpdate(e);
+        this.allUpdate(e);
     }
 
     /**
@@ -49,6 +49,6 @@ public class DocumentAdapter implements DocumentListener {
      */
     @Override
     public void changedUpdate(DocumentEvent e) {
-        allUpdate(e);
+        this.allUpdate(e);
     }
 }
