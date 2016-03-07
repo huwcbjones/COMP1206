@@ -323,6 +323,15 @@ public class Main extends JFrameAdvanced {
      */
     private class configChangeHandler extends ConfigChangeAdapter {
         @Override
+        public void fractalChange(String fractal) {
+            if (
+                    mandelbrotRenderer == null ||
+                    burningShipRenderer == null
+            ) return;
+            renderMainPanel();
+        }
+
+        @Override
         public void escapeRadiusSquaredChange(double escapeRadiusSquared) {
             renderMainPanel();
             renderJulia();
@@ -495,6 +504,12 @@ public class Main extends JFrameAdvanced {
             return new Rectangle2D.Double(x, y, width, height);
         }
 
+        /**
+         * Gets the complex position from the relative render thread
+         * @param x x coord
+         * @param y y coord
+         * @return new complex
+         */
         private Complex getComplex(double x, double y){
             Complex newComplex = null;
             switch(config.getFractal()){
