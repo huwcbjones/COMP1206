@@ -4,18 +4,15 @@ import com.nativelibs4java.opencl.*;
 import mandelbrot.CacheManager;
 import mandelbrot.ConfigManager;
 import mandelbrot.Main;
-import mandelbrot.events.AdvancedComponentAdapter;
 import mandelbrot.events.RenderListener;
 import mandelbrot.render.RecolourTask;
 import org.bridj.Pointer;
 import utils.*;
 
 import java.awt.*;
-import java.awt.event.ComponentEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 /**
  * Manages and delegates drawing/calculation threads
