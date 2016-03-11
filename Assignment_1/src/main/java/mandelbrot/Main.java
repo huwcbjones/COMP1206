@@ -4,10 +4,7 @@ package mandelbrot;
 import mandelbrot.events.AdvancedComponentAdapter;
 import mandelbrot.events.ConfigChangeAdapter;
 import mandelbrot.events.RenderListener;
-import mandelbrot.management.BurningShipManagementThread;
-import mandelbrot.management.JuliaRenderManagementThread;
-import mandelbrot.management.MandelbrotRenderManagementThread;
-import mandelbrot.management.OpenClThread;
+import mandelbrot.management.*;
 import utils.*;
 
 import javax.swing.*;
@@ -233,10 +230,26 @@ public class Main extends JFrameAdvanced {
 
     //endregion
 
+    private RenderManagementThread getCurrentFractal() throws IllegalStateException {
+        RenderManagementThread t;
+        switch(this.config.getFractal()){
+            case "Mandelbrot":
+                t = this.mandelbrotRenderer;
+                break;
+            case "Burning Ship":
+                t = this.burningShipRenderer;
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+        return t;
+    }
+
+
     //region Update Info Sections
     private void updateRangeDisplay() {
-        Complex minimum = this.mandelbrotRenderer.getComplexFromPoint(0, 0);
-        Complex maximum = this.mandelbrotRenderer.getComplexFromPoint(this.imgPanel_image.getWidth(), this.imgPanel_image.getHeight());
+        Complex minimum = this.getCurrentFractal().getComplexFromPoint(0, 0);
+        Complex maximum = this.getCurrentFractal().getComplexFromPoint(this.imgPanel_image.getWidth(), this.imgPanel_image.getHeight());
         // Dynamically scale precision to make the range clearer
         int decimalPlaces = 1;
         do {
@@ -283,14 +296,7 @@ public class Main extends JFrameAdvanced {
 
     //region Render Handlers
     public void renderMainPanel(){
-        switch(this.config.getFractal()){
-            case "Mandelbrot":
-                this.mandelbrotRenderer.render();
-                break;
-            case "Burning Ship":
-                this.burningShipRenderer.render();
-                break;
-        }
+        this.getCurrentFractal().render();
     }
 
     public void renderJulia(){
