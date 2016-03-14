@@ -411,8 +411,8 @@ public class ConfigManager {
      * @param triggerEvent Trigger the xShiftChange event
      */
     public void setShiftX(double xShift, boolean triggerEvent){
-        this.spinner_shiftX.setValue(xShift);
         this.xShift = xShift;
+        this.spinner_shiftX.setValue(xShift);
         if(triggerEvent){
             this.xShiftChange();
         }
@@ -432,8 +432,8 @@ public class ConfigManager {
      * @param triggerEvent Trigger the yShiftChange event
      */
     public void setShiftY(double yShift, boolean triggerEvent){
-        this.spinner_shiftY.setValue(yShift);
         this.yShift = yShift;
+        this.spinner_shiftY.setValue(yShift);
         if(triggerEvent){
             this.yShiftChange();
         }
@@ -461,8 +461,8 @@ public class ConfigManager {
      * @param triggerEvent Trigger the scaleChange event
      */
     public void setScaleFactor(double scaleFactor, boolean triggerEvent){
-        this.spinner_scale.setValue(scaleFactor);
         this.scaleFactor = scaleFactor;
+        this.spinner_scale.setValue(scaleFactor);
         if(triggerEvent){
             this.scaleChange();
         }
@@ -633,19 +633,30 @@ public class ConfigManager {
             JSpinner spinner = (JSpinner)e.getSource();
 
             if(spinner == ConfigManager.this.spinner_iterations){
+                if(ConfigManager.this.iterations == (int)ConfigManager.this.spinner_iterations.getValue()) return;
                 ConfigManager.this.iterations = (int) ConfigManager.this.spinner_iterations.getValue();
                 ConfigManager.this.iterationChange();
+
             } else if(spinner == ConfigManager.this.spinner_scale) {
+                if(ConfigManager.this.scaleFactor == (double)ConfigManager.this.spinner_scale.getValue()) return;
                 ConfigManager.this.scaleFactor = (double) ConfigManager.this.spinner_scale.getValue();
                 ConfigManager.this.scaleChange();
+
             } else if(spinner == ConfigManager.this.spinner_shiftX){
+                if(ConfigManager.this.xShift == (double)ConfigManager.this.spinner_shiftX.getValue()) return;
                 ConfigManager.this.xShift = (double) ConfigManager.this.spinner_shiftX.getValue();
                 ConfigManager.this.xShiftChange();
+
             } else if(spinner == ConfigManager.this.spinner_shiftY) {
+                if(ConfigManager.this.yShift == (double)ConfigManager.this.spinner_shiftY.getValue()) return;
                 ConfigManager.this.yShift = (double) ConfigManager.this.spinner_shiftY.getValue();
                 ConfigManager.this.yShiftChange();
+
             } else if (spinner == ConfigManager.this.spinner_escapeRadius) {
+
+
                 double escapeRadius = (double) ConfigManager.this.spinner_escapeRadius.getValue();
+                if(ConfigManager.this.escapeRadiusSquared == escapeRadius * escapeRadius) return;
                 ConfigManager.this.escapeRadiusSquared = escapeRadius * escapeRadius;
                 ConfigManager.this.escapeRadiusChanged();
             }
