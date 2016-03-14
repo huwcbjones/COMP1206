@@ -145,9 +145,9 @@ public class Main extends JFrameAdvanced {
 
         // Adds listener for zoom box/interaction with image
         // Need to add to both events to get mouse exit + mouse move events
-        interactionHandler interactionHandler = new interactionHandler();
-        this.imgPanel_image.addMouseListener(interactionHandler);
-        this.imgPanel_image.addMouseMotionListener(interactionHandler);
+        ZoomManager zoomManager = new ZoomManager(this, imgPanel_image);
+        this.imgPanel_image.addMouseListener(zoomManager);
+        this.imgPanel_image.addMouseMotionListener(zoomManager);
 
         this.initSidePanels(constraints);
         this.initInfoPanel();
@@ -230,7 +230,7 @@ public class Main extends JFrameAdvanced {
 
     //endregion
 
-    private RenderManagementThread getCurrentFractal() throws IllegalStateException {
+    public RenderManagementThread getCurrentFractal() throws IllegalStateException {
         RenderManagementThread t;
         switch(this.config.getFractal()){
             case "Mandelbrot":
@@ -260,7 +260,7 @@ public class Main extends JFrameAdvanced {
         this.text_yRange.setText(String.format("%."+ decimalPlaces +"f to %."+ decimalPlaces +"f", minimum.getImaginary(), maximum.getImaginary()));
     }
 
-    private void updateSelection() {
+    protected void updateSelection() {
         //If selected point is null (not set), then display a -, otherwise display the complex
         String text = "-";
         if(this.config.getSelectedPoint() != null){
@@ -269,7 +269,7 @@ public class Main extends JFrameAdvanced {
         this.text_selectedPoint.setText(text);
     }
 
-    private void updateSelection(Rectangle2D selection) {
+    protected void updateSelection(Rectangle2D selection) {
         // If the selection is null (not set), display -, otherwise display the range
         String text = "-";
 
@@ -295,7 +295,7 @@ public class Main extends JFrameAdvanced {
     //endregion
 
     //region Render Handlers
-    public void renderMainPanel(){
+    protected void renderMainPanel(){
         this.getCurrentFractal().render();
     }
 
@@ -385,153 +385,6 @@ public class Main extends JFrameAdvanced {
             Main.this.updateRangeDisplay();
         }
     }
-
-    /**
-     * Handles zoom interaction
-     */
-    private class interactionHandler extends MouseAdapter implements MouseMotionListener {
-        private boolean dragging = false;
-        private Point2D startPos;
-        private Rectangle2D rectangle2D;
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            if (SwingUtilities.isLeftMouseButton(e)) {
-                this.startPos = e.getPoint();
-                this.dragging = true;
-            }
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            Main.this.updateSelection();
-            Main.this.imgPanel_image.drawZoomBox(null);
-
-            // Make sure only the left mouse button was released
-            if (e.getButton() != MouseEvent.BUTTON1 || this.rectangle2D == null) {
-                this.rectangle2D = null;
-                this.dragging = false;
-                return;
-            }
-
-            // Prevent accidental zoom on click
-            if (this.rectangle2D.getWidth() <= 10 && this.rectangle2D.getHeight() <= 10) return;
-
-            // Get top left/bottom right panel coordinates
-            double x1 = this.rectangle2D.getMinX(), y1 = this.rectangle2D.getMinY();
-            double x2 = this.rectangle2D.getMaxX(), y2 = this.rectangle2D.getMaxY();
-
-            // Get top left/bottom right complex coordinates
-            Complex new1 = this.getComplex(x1, y1);
-            Complex new2 = this.getComplex(x2, y2);
-
-            // Get new image scale
-            double scale = Main.this.config.getRangeX() / (new2.getReal() - new1.getReal());
-
-            // Get new midpoints
-            double new_midPointX = (new2.getReal() + new1.getReal()) / 2d;
-            double new_midPointY = (new2.getImaginary() + new1.getImaginary()) / 2d;
-
-            // Set config options, but don't trigger events (prevents multiple renders)
-            Main.this.config.setShiftX(new_midPointX, false);
-            Main.this.config.setShiftY(new_midPointY, false);
-            Main.this.config.setScaleFactor(scale, false);
-
-            // Clear zoom flags
-            this.rectangle2D = null;
-            this.dragging = false;
-
-            // Now render
-            Main.this.renderMainPanel();
-        }
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            if (!this.dragging) return;
-
-            // Updated zoom box and draw it
-            this.rectangle2D = this.getRectangle(e.getPoint());
-            Main.this.imgPanel_image.drawZoomBox(this.rectangle2D);
-            Main.this.updateSelection(this.rectangle2D);
-        }
-
-        /**
-         * Uses the startPos and parameter e to create the Rectangle2D Zoom Box to draw
-         *
-         * @param e MouseEvent e, with coordinates
-         * @return Rectangle2D representing the zoom box to draw
-         */
-        private Rectangle2D getRectangle(Point2D e) {
-            // QUADRANTS (where startPos = (0, 0))
-            //  3 | 2
-            // ---|---
-            //  4 | 1
-
-            double aspectRatio = (double) Main.this.imgPanel_image.getWidth() / (double) Main.this.imgPanel_image.getHeight();
-            double width = Math.abs(e.getX() - this.startPos.getX());
-            double height = Math.abs(e.getY() - this.startPos.getY());
-            double x, y;
-
-            // Ensure zoom box maintains same aspect ratio as image panel
-            if (width / aspectRatio < height) {
-                height = width / aspectRatio;
-            } else {
-                width = height * aspectRatio;
-            }
-
-            // Check which quadrant we are in
-            // Then set the top left coordinate, whilst fixing one coordinate to the start position
-
-            // Quadrant 1:
-            if (this.startPos.getX() < e.getX() && this.startPos.getY() < e.getY()) {
-                x = this.startPos.getX();
-                y = this.startPos.getY();
-
-                // Quadrant 2:
-            } else if (this.startPos.getX() < e.getX() && this.startPos.getY() > e.getY()) {
-                x = this.startPos.getX();
-                y = this.startPos.getY() - height;
-
-                // Quadrant 3:
-            } else if (this.startPos.getX() > e.getX() && this.startPos.getY() > e.getY()) {
-                x = this.startPos.getX() - width;
-                y = this.startPos.getY() - height;
-
-                // Quadrant 4:
-            } else if (this.startPos.getX() > e.getX() && this.startPos.getY() < e.getY()) {
-                x = this.startPos.getX() - width;
-                y = this.startPos.getY();
-            } else {
-
-                // Width and/or height are 0, don't draw a box
-                return null;
-            }
-
-            return new Rectangle2D.Double(x, y, width, height);
-        }
-
-        /**
-         * Gets the complex position from the relative render thread
-         * @param x x coord
-         * @param y y coord
-         * @return new complex
-         */
-        private Complex getComplex(double x, double y){
-            Complex newComplex = null;
-            switch(Main.this.config.getFractal()){
-                case "Mandelbrot":
-                    newComplex = Main.this.mandelbrotRenderer.getComplexFromPoint(x, y);
-                    break;
-                case "Burning Ship":
-                    newComplex = Main.this.burningShipRenderer.getComplexFromPoint(x, y);
-                    break;
-            }
-            return newComplex;
-        }
-
-    }
-
-    //TODO: Add mouse wheel listener! Mouse wheel zoom in/out
 
     /**
      * Handles julia set click
