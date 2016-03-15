@@ -68,6 +68,7 @@ public class BookmarkManager {
     /**
      * Creates bookmark panel
      */
+    @SuppressWarnings("unchecked")
     private void init() {
         // Create list model and add elements to it
         this.lm_bookmarks = new DefaultListModel<>();
