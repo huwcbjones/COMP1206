@@ -167,6 +167,7 @@ public class BookmarkManager {
     /**
      * Saves the bookmarks from memory to file
      */
+    @SuppressWarnings("unchecked")              // Suppress warning because of the 3rd party library
     public void saveBookmarks() {
         Log.Information("Saving bookmarks...");
         try {
