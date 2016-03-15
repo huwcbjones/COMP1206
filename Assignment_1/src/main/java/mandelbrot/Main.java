@@ -413,7 +413,6 @@ public class Main extends JFrameAdvanced {
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            super.mouseMoved(e);
             if (Main.this.mandelbrotRenderer.hasRendered()) {
                 Main.this.updatedCursorPoint(Main.this.mandelbrotRenderer.getComplexFromPoint(e.getPoint()));
             } else {
@@ -429,6 +428,15 @@ public class Main extends JFrameAdvanced {
             }
         }
 
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            this.mouseMoved(e);
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            this.mouseMoved(e);
+        }
     }
 
     //endregion
