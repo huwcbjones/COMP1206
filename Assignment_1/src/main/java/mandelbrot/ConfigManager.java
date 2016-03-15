@@ -98,6 +98,10 @@ public class ConfigManager {
 
     private JLabel label_disableCache;
     private JCheckBox check_disableCache;
+
+    private JLabel label_zoomAnimation;
+    private JCheckBox check_zoomAnimation;
+
     //endregion
     //region Singlets
     private JButton btn_render;
@@ -105,7 +109,7 @@ public class ConfigManager {
     //endregion
     private ArrayList<ConfigChangeListener> listeners;
 
-    public ConfigManager(Main mainWindow){
+    public ConfigManager (Main mainWindow) {
         this.listeners = new ArrayList<>();
         this.mainWindow = mainWindow;
         this.initPanel();
@@ -113,14 +117,15 @@ public class ConfigManager {
 
     /**
      * Adds a config change listener to this ConfigManager
+     *
      * @param listener Listener to add
      */
-    public void addConfigChangeListener(ConfigChangeListener listener){
+    public void addConfigChangeListener (ConfigChangeListener listener) {
         this.listeners.add(listener);
     }
 
     //region Initialise Components
-    private void initPanel(){
+    private void initPanel () {
         this.panel_config = new JPanel();
         this.panel_config.setLayout(new BorderLayout());
         this.panel_config.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Controls"));
@@ -141,7 +146,7 @@ public class ConfigManager {
         this.initSingletComponents();
     }
 
-    private void initControlComponents() {
+    private void initControlComponents () {
         // Fractal
         this.label_fractal = new JLabel("Fractal:", JLabel.TRAILING);
         this.panel_controls.add(this.label_fractal);
@@ -186,7 +191,7 @@ public class ConfigManager {
         this.tabbedPane.addTab("Controls", this.panel_controls);
     }
 
-    private void initColouringComponents() {
+    private void initColouringComponents () {
         // Hue Shift
         this.label_hue = new JLabel("Hue Shift:", JLabel.TRAILING);
         this.panel_colouring.add(this.label_hue);
@@ -224,7 +229,7 @@ public class ConfigManager {
         this.tabbedPane.addTab("Colouring", this.panel_colouring);
     }
 
-    private void initAdvancedComponents() {
+    private void initAdvancedComponents () {
         // Escape Radius
         this.label_escapeRadius = new JLabel("Escape Radius:", JLabel.TRAILING);
         this.panel_advanced.add(this.label_escapeRadius);
@@ -238,8 +243,8 @@ public class ConfigManager {
         this.panel_advanced.add(this.label_juliaCursor);
 
         this.check_juliaCursor = new JCheckBox();
-        this.check_juliaCursor.setSelected(false);
-        this.check_juliaCursor.addChangeListener(new juliaCursorChangeHandler());
+        this.check_juliaCursor.setSelected(displayJuliaMoveCursor);
+        this.check_juliaCursor.addChangeListener(new checkChangeHanlder());
         this.panel_advanced.add(this.check_juliaCursor);
 
         // Use OpenCL
@@ -247,8 +252,8 @@ public class ConfigManager {
         this.panel_advanced.add(this.label_openCL);
 
         this.check_openCL = new JCheckBox();
-        this.check_openCL.setSelected(true);
-        this.check_openCL.addChangeListener(new openCLChangeHandler());
+        this.check_openCL.setSelected(useOpenCL);
+        this.check_openCL.addChangeListener(new checkChangeHanlder());
         this.panel_advanced.add(this.check_openCL);
 
         // Use OpenCL Double
@@ -256,8 +261,8 @@ public class ConfigManager {
         this.panel_advanced.add(this.label_openCL_double);
 
         this.check_openCLDouble = new JCheckBox();
-        this.check_openCLDouble.setSelected(false);
-        this.check_openCLDouble.addChangeListener(new openCLDoubleChangeHandler());
+        this.check_openCLDouble.setSelected(useOpenCLDouble);
+        this.check_openCLDouble.addChangeListener(new checkChangeHanlder());
         this.panel_advanced.add(this.check_openCLDouble);
 
         // Disable Cache
@@ -265,16 +270,25 @@ public class ConfigManager {
         this.panel_advanced.add(this.label_disableCache);
 
         this.check_disableCache = new JCheckBox();
-        this.check_disableCache.setSelected(true);
+        this.check_disableCache.setSelected(isCacheDisabled);
 
-        this.check_disableCache.addChangeListener(new disableCacheHandler());
+        this.check_disableCache.addChangeListener(new checkChangeHanlder());
         this.panel_advanced.add(this.check_disableCache);
 
-        SpringUtilities.makeCompactGrid(this.panel_advanced, 5, 2, 6, 6, 6, 6);
+        // Enable Zoom Animations
+        this.label_zoomAnimation = new JLabel("Enable Zoom Animation:", JLabel.TRAILING);
+        this.panel_advanced.add(this.label_zoomAnimation);
+
+        this.check_zoomAnimation = new JCheckBox();
+        this.check_zoomAnimation.setSelected(zoomAnimationEnabled);
+        this.check_zoomAnimation.addChangeListener(new checkChangeHanlder());
+        this.panel_advanced.add(this.check_zoomAnimation);
+
+        SpringUtilities.makeCompactGrid(this.panel_advanced, 6, 2, 6, 6, 6, 6);
         this.tabbedPane.addTab("Advanced", this.panel_advanced);
     }
 
-    private void initSingletComponents(){
+    private void initSingletComponents () {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(3, 0, 3, 0);
@@ -294,50 +308,50 @@ public class ConfigManager {
     //endregion
 
     //region Event Triggers
-    private void fractalChanged(){
-        for(ConfigChangeListener l: this.listeners){
+    private void fractalChanged () {
+        for (ConfigChangeListener l : this.listeners) {
             l.fractalChange(this.fractal);
         }
     }
 
-    private void escapeRadiusChanged(){
-        for(ConfigChangeListener l: this.listeners){
+    private void escapeRadiusChanged () {
+        for (ConfigChangeListener l : this.listeners) {
             l.escapeRadiusSquaredChange(this.escapeRadiusSquared);
         }
     }
 
-    private void xShiftChange(){
-        for(ConfigChangeListener l: this.listeners){
+    private void xShiftChange () {
+        for (ConfigChangeListener l : this.listeners) {
             l.xShiftChange(this.xShift);
         }
     }
 
-    private void yShiftChange(){
-        for(ConfigChangeListener l: this.listeners){
+    private void yShiftChange () {
+        for (ConfigChangeListener l : this.listeners) {
             l.yShiftChange(this.yShift);
         }
     }
 
-    private void iterationChange(){
-        for(ConfigChangeListener l: this.listeners){
+    private void iterationChange () {
+        for (ConfigChangeListener l : this.listeners) {
             l.iterationChange(this.iterations);
         }
     }
 
-    private void scaleChange(){
-        for(ConfigChangeListener l: this.listeners){
+    private void scaleChange () {
+        for (ConfigChangeListener l : this.listeners) {
             l.scaleChange(this.scaleFactor);
         }
     }
 
-    private void colourChange(){
-        for(ConfigChangeListener l : this.listeners){
+    private void colourChange () {
+        for (ConfigChangeListener l : this.listeners) {
             l.colourChange(this.hue, this.saturation, this.brightness);
         }
     }
 
-    private void selectedPointChange(){
-        for(ConfigChangeListener l : this.listeners){
+    private void selectedPointChange () {
+        for (ConfigChangeListener l : this.listeners) {
             l.selectedPointChange(this.selectedPoint);
         }
     }
@@ -347,193 +361,216 @@ public class ConfigManager {
 
     /**
      * Gets range of axis in x direction
+     *
      * @return double, x range
      */
-    public double getRangeX() {return this.rangeX;}
+    public double getRangeX () {return this.rangeX;}
 
     /**
      * Gets range of axis in y direction
+     *
      * @return double, y range
      */
-    public double getRangeY() {return this.rangeY;}
+    public double getRangeY () {return this.rangeY;}
+
     /**
      * Adds an item to the fractal selection
+     *
      * @param fractal fractal string to add
      */
-    public void addFractal(String fractal){
+    public void addFractal (String fractal) {
         this.combo_fractal.addItem(fractal);
     }
 
     /**
      * Sets the currently selected fractal to the argument
+     *
      * @param fractal Fractal to set
      * @return true if fractal was set
      */
-    public boolean setFractal(String fractal){
+    public boolean setFractal (String fractal) {
         boolean hasItem = false;
         int index = 0;
-        for(int i = 0; i < this.combo_fractal.getItemCount(); i++){
-            if(this.combo_fractal.getItemAt(i).equals(fractal)){
+        for (int i = 0; i < this.combo_fractal.getItemCount(); i++) {
+            if (this.combo_fractal.getItemAt(i).equals(fractal)) {
                 index = i;
                 hasItem = true;
                 break;
             }
         }
-        if(!hasItem) return false;
+        if (!hasItem) return false;
         this.combo_fractal.setSelectedIndex(index);
         return true;
     }
 
     /**
      * Gets the currently selected fractal
+     *
      * @return string, fractal
      */
-    public String getFractal(){ return this.fractal; }
+    public String getFractal () { return this.fractal; }
 
     /**
      * Gets the config panel
+     *
      * @return JPanel
      */
-    public JPanel getConfigPanel(){
+    public JPanel getConfigPanel () {
         return this.panel_config;
     }
 
     /**
      * Gets the shift in the x axis
+     *
      * @return x shift
      */
-    public double getShiftX() {
+    public double getShiftX () {
         return this.xShift;
     }
 
     /**
      * Sets the x shift
-     * @param xShift New X Shift
+     *
+     * @param xShift       New X Shift
      * @param triggerEvent Trigger the xShiftChange event
      */
-    public void setShiftX(double xShift, boolean triggerEvent){
+    public void setShiftX (double xShift, boolean triggerEvent) {
         this.xShift = xShift;
         this.spinner_shiftX.setValue(xShift);
-        if(triggerEvent){
+        if (triggerEvent) {
             this.xShiftChange();
         }
     }
 
     /**
      * Gets the shift in the y axis
+     *
      * @return y shift
      */
-    public double getShiftY() {
+    public double getShiftY () {
         return this.yShift;
     }
 
     /**
      * Sets the y shift
-     * @param yShift New y shift
+     *
+     * @param yShift       New y shift
      * @param triggerEvent Trigger the yShiftChange event
      */
-    public void setShiftY(double yShift, boolean triggerEvent){
+    public void setShiftY (double yShift, boolean triggerEvent) {
         this.yShift = yShift;
         this.spinner_shiftY.setValue(yShift);
-        if(triggerEvent){
+        if (triggerEvent) {
             this.yShiftChange();
         }
     }
 
     /**
      * Gets number of iterations
+     *
      * @return iterations
      */
-    public int getIterations() {
+    public int getIterations () {
         return this.iterations;
     }
 
     /**
      * Gets the scale factor
+     *
      * @return scale factor
      */
-    public double getScaleFactor() {
+    public double getScaleFactor () {
         return this.scaleFactor;
     }
 
     /**
      * Sets the scale factor
-     * @param scaleFactor new scale factor
+     *
+     * @param scaleFactor  new scale factor
      * @param triggerEvent Trigger the scaleChange event
      */
-    public void setScaleFactor(double scaleFactor, boolean triggerEvent){
+    public void setScaleFactor (double scaleFactor, boolean triggerEvent) {
         this.scaleFactor = scaleFactor;
         this.spinner_scale.setValue(scaleFactor);
-        if(triggerEvent){
+        if (triggerEvent) {
             this.scaleChange();
         }
     }
 
     /**
      * Gets the image hue
+     *
      * @return image hue
      */
-    public float getHue() {
+    public float getHue () {
         return this.hue;
     }
+
     /**
      * Gets the image saturation
+     *
      * @return image saturation
      */
-    public float getSaturation() { return this.saturation; }
+    public float getSaturation () { return this.saturation; }
 
     /**
      * Gets the image brightness
+     *
      * @return image brightness
      */
-    public float getBrightness() { return this.brightness; }
+    public float getBrightness () { return this.brightness; }
 
     /**
      * Gets the escape radius squared
+     *
      * @return escape radius squared
      */
-    public double getEscapeRadiusSquared() {
+    public double getEscapeRadiusSquared () {
         return this.escapeRadiusSquared;
     }
 
     /**
      * Gets the currently selected complex on the Mandelbrot set
+     *
      * @return Complex, current selected point
      */
-    public Complex getSelectedPoint() {
-        if(this.selectedPoint == null) return null;
+    public Complex getSelectedPoint () {
+        if (this.selectedPoint == null) return null;
         return this.selectedPoint.clone();
     }
 
     /**
      * Sets the currently selected complex on the Mandelbrot set
+     *
      * @param complex new selected point
      */
-    public void setSelectedPoint(Complex complex){
+    public void setSelectedPoint (Complex complex) {
         this.selectedPoint = complex;
         this.selectedPointChange();
     }
 
     /**
      * Display the Julia set when the cursor is moved
+     *
      * @return true if when the cursor moves, the julia set should be updated
      */
-    public boolean juliaDisplayOnMove() {
+    public boolean juliaDisplayOnMove () {
         return this.displayJuliaMoveCursor;
     }
 
     /**
      * Sets whether OpenCL should be used
+     *
      * @param useOpenCL
      */
-    public void setUseOpenCL(boolean useOpenCL) {
+    public void setUseOpenCL (boolean useOpenCL) {
         this.useOpenCL = useOpenCL;
     }
 
     /**
      * Disables OpenCL until the application is restarted
      */
-    public void disableOpenCL() {
+    public void disableOpenCL () {
         Log.Warning("OpenCL disabled!");
         this.useOpenCL = false;
         this.check_openCL.setSelected(false);
@@ -543,7 +580,7 @@ public class ConfigManager {
     /**
      * Disables OpenCL doubles until the application is restarted
      */
-    public void disableOpenCL_double() {
+    public void disableOpenCL_double () {
         Log.Warning("OpenCL doubles disabled!");
         this.useOpenCLDouble = false;
         this.check_openCLDouble.setSelected(false);
@@ -552,33 +589,37 @@ public class ConfigManager {
 
     /**
      * Returns whether OpenCL should be used or not
+     *
      * @return true if openCL should be used
      */
-    public boolean useOpenCL() {
+    public boolean useOpenCL () {
         return this.useOpenCL;
     }
 
     /**
      * Returns whether OpenCL Doubles should be used or not
+     *
      * @return true if OpenCL Doubles should be used
      */
-    public boolean useOpenCL_double() {
+    public boolean useOpenCL_double () {
         return this.useOpenCLDouble;
     }
 
     /**
      * Returns true if the cache is disabled
+     *
      * @return boolean
      */
-    public boolean isCacheDisabled() {
+    public boolean isCacheDisabled () {
         return this.isCacheDisabled;
     }
 
     /**
      * Returns true if the zoom is to be animated
+     *
      * @return boolean
      */
-    public boolean isAnimateZoom() {return this.zoomAnimationEnabled; }
+    public boolean isAnimateZoom () {return this.zoomAnimationEnabled; }
     //endregion
 
     //region Event Handlers
@@ -589,7 +630,7 @@ public class ConfigManager {
     private class fractalHandler implements ActionListener {
 
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed (ActionEvent e) {
             ConfigManager.this.fractal = (String) ConfigManager.this.combo_fractal.getSelectedItem();
             ConfigManager.this.fractalChanged();
         }
@@ -601,7 +642,7 @@ public class ConfigManager {
     private class renderHandler implements ActionListener {
 
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed (ActionEvent e) {
             ConfigManager.this.mainWindow.renderMainPanel();
             ConfigManager.this.mainWindow.renderJulia();
         }
@@ -613,7 +654,7 @@ public class ConfigManager {
     private class resetHandler implements ActionListener {
 
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed (ActionEvent e) {
             // Set the values back to defaults
             ConfigManager.this.spinner_iterations.setValue(100);
             ConfigManager.this.spinner_scale.setValue(1.0);
@@ -634,35 +675,31 @@ public class ConfigManager {
     private class optionChangeHandler implements ChangeListener {
 
         @Override
-        public void stateChanged(ChangeEvent e) {
-            if(!(e.getSource() instanceof JSpinner)) return;
-            JSpinner spinner = (JSpinner)e.getSource();
+        public void stateChanged (ChangeEvent e) {
+            if (!( e.getSource() instanceof JSpinner )) return;
+            JSpinner spinner = (JSpinner) e.getSource();
 
-            if(spinner == ConfigManager.this.spinner_iterations){
-                if(ConfigManager.this.iterations == (int)ConfigManager.this.spinner_iterations.getValue()) return;
+            if (spinner == ConfigManager.this.spinner_iterations) {
+                if (ConfigManager.this.iterations == (int) ConfigManager.this.spinner_iterations.getValue()) return;
                 ConfigManager.this.iterations = (int) ConfigManager.this.spinner_iterations.getValue();
                 ConfigManager.this.iterationChange();
-
-            } else if(spinner == ConfigManager.this.spinner_scale) {
-                if(ConfigManager.this.scaleFactor == (double)ConfigManager.this.spinner_scale.getValue()) return;
+            } else if (spinner == ConfigManager.this.spinner_scale) {
+                if (ConfigManager.this.scaleFactor == (double) ConfigManager.this.spinner_scale.getValue()) return;
                 ConfigManager.this.scaleFactor = (double) ConfigManager.this.spinner_scale.getValue();
                 ConfigManager.this.scaleChange();
-
-            } else if(spinner == ConfigManager.this.spinner_shiftX){
-                if(ConfigManager.this.xShift == (double)ConfigManager.this.spinner_shiftX.getValue()) return;
+            } else if (spinner == ConfigManager.this.spinner_shiftX) {
+                if (ConfigManager.this.xShift == (double) ConfigManager.this.spinner_shiftX.getValue()) return;
                 ConfigManager.this.xShift = (double) ConfigManager.this.spinner_shiftX.getValue();
                 ConfigManager.this.xShiftChange();
-
-            } else if(spinner == ConfigManager.this.spinner_shiftY) {
-                if(ConfigManager.this.yShift == (double)ConfigManager.this.spinner_shiftY.getValue()) return;
+            } else if (spinner == ConfigManager.this.spinner_shiftY) {
+                if (ConfigManager.this.yShift == (double) ConfigManager.this.spinner_shiftY.getValue()) return;
                 ConfigManager.this.yShift = (double) ConfigManager.this.spinner_shiftY.getValue();
                 ConfigManager.this.yShiftChange();
-
             } else if (spinner == ConfigManager.this.spinner_escapeRadius) {
 
 
                 double escapeRadius = (double) ConfigManager.this.spinner_escapeRadius.getValue();
-                if(ConfigManager.this.escapeRadiusSquared == escapeRadius * escapeRadius) return;
+                if (ConfigManager.this.escapeRadiusSquared == escapeRadius * escapeRadius) return;
                 ConfigManager.this.escapeRadiusSquared = escapeRadius * escapeRadius;
                 ConfigManager.this.escapeRadiusChanged();
             }
@@ -674,7 +711,7 @@ public class ConfigManager {
      */
     private class colourShiftChangeHandler extends AdvancedChangeAdapter {
         @Override
-        public void changeFinish(ChangeEvent e) {
+        public void changeFinish (ChangeEvent e) {
             ConfigManager.this.hue = (float) ConfigManager.this.slider_hue.getValue() / 360f;
             ConfigManager.this.saturation = (float) ConfigManager.this.slider_saturation.getValue() / 100f;
             ConfigManager.this.brightness = (float) ConfigManager.this.slider_brightness.getValue() / 100f;
@@ -682,50 +719,26 @@ public class ConfigManager {
         }
     }
 
-    /**
-     * Invoked when a Julia checkbox is changed
-     */
-    private class juliaCursorChangeHandler implements ChangeListener {
+    private class checkChangeHanlder implements ChangeListener {
+
         @Override
-        public void stateChanged(ChangeEvent e) {
-            ConfigManager.this.displayJuliaMoveCursor = ConfigManager.this.check_juliaCursor.isSelected();
+        public void stateChanged (ChangeEvent e) {
+            if (!( e.getSource() instanceof JCheckBox )) return;
+            JCheckBox check = (JCheckBox) e.getSource();
+            if (check == ConfigManager.this.check_openCL) {
+                ConfigManager.this.useOpenCL = check.isSelected();
+            } else if (check == ConfigManager.this.check_openCLDouble) {
+                ConfigManager.this.useOpenCLDouble = check.isSelected();
+            } else if (check == ConfigManager.this.check_disableCache) {
+                ConfigManager.this.isCacheDisabled = check.isSelected();
+            } else if (check == ConfigManager.this.check_juliaCursor) {
+                ConfigManager.this.displayJuliaMoveCursor = check.isSelected();
+            } else if (check == ConfigManager.this.check_zoomAnimation) {
+                ConfigManager.this.zoomAnimationEnabled = check.isSelected();
+            }
         }
     }
 
-    /**
-     * Invoked when a OpenCL checkbox is changed
-     */
-    private class openCLChangeHandler implements ChangeListener {
-        @Override
-        public void stateChanged(ChangeEvent e) {
-            ConfigManager.this.useOpenCL = ConfigManager.this.check_openCL.isSelected();
-        }
-    }
-
-    /**
-     * Invoked when a OpenCL Double checkbox is changed
-     */
-    private class openCLDoubleChangeHandler implements ChangeListener {
-        @Override
-        public void stateChanged(ChangeEvent e) {
-            ConfigManager.this.useOpenCLDouble = ConfigManager.this.check_openCLDouble.isSelected();
-        }
-    }
-
-    /**
-     * Invoked when a cache checkbox is changed
-     */
-    private class disableCacheHandler implements ChangeListener {
-        /**
-         * Invoked when the target of the listener has changed its state.
-         *
-         * @param e a ChangeEvent object
-         */
-        @Override
-        public void stateChanged(ChangeEvent e) {
-            ConfigManager.this.isCacheDisabled = ConfigManager.this.check_disableCache.isSelected();
-        }
-    }
 
     //endregion
 }
