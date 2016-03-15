@@ -53,6 +53,7 @@ public class ConfigManager {
     private boolean useOpenCL = true;
     private boolean useOpenCLDouble = false;
     private boolean isCacheDisabled = true;
+    private boolean zoomAnimationEnabled = false;
 
     Complex selectedPoint;
     //endregion
@@ -573,6 +574,11 @@ public class ConfigManager {
         return this.isCacheDisabled;
     }
 
+    /**
+     * Returns true if the zoom is to be animated
+     * @return boolean
+     */
+    public boolean isAnimateZoom() {return this.zoomAnimationEnabled; }
     //endregion
 
     //region Event Handlers
