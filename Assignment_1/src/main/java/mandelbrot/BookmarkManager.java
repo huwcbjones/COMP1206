@@ -68,6 +68,7 @@ public class BookmarkManager {
     /**
      * Creates bookmark panel
      */
+    @SuppressWarnings("unchecked")
     private void init() {
         // Create list model and add elements to it
         this.lm_bookmarks = new DefaultListModel<>();
@@ -167,6 +168,7 @@ public class BookmarkManager {
     /**
      * Saves the bookmarks from memory to file
      */
+    @SuppressWarnings("unchecked")              // Suppress warning because of the 3rd party library
     public void saveBookmarks() {
         Log.Information("Saving bookmarks...");
         try {

@@ -165,14 +165,34 @@ public class ZoomManager extends MouseAdapter implements MouseMotionListener {
 
         @Override
         public void run() {
+            if(ZoomManager.this.config.isAnimateZoom()) {
+                int numberOfSteps = 60;
+                double startScale = ZoomManager.this.config.getScaleFactor();
+                double deltaScale = ( newScale - startScale ) / numberOfSteps;
 
-            for(int s = 0; s < 60; s++){
-                try {
+                double startShiftX = ZoomManager.this.config.getShiftX();
+                double deltaShiftX = ( newShiftX - startShiftX ) / numberOfSteps;
+
+                double startShiftY = ZoomManager.this.config.getShiftY();
+                double deltaShiftY = ( newShiftY - startShiftY ) / numberOfSteps;
+
+                for (int s = 0; s < 60; s++) {
+                    // Set config options after we're done
+                    // Set config options, but don't trigger events (prevents multiple renders)
+                    ZoomManager.this.config.setScaleFactor(startScale + s * deltaScale, false);
+                    ZoomManager.this.config.setShiftX(startShiftX + s * deltaShiftX, false);
+                    ZoomManager.this.config.setShiftY(startShiftY + s * deltaShiftY, false);
+
+                    ZoomManager.this.mainWindow.renderMainPanel();
+               /* try {
                     Thread.sleep(16);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                }*/
                 }
+                return;
             }
+
             // Set config options after we're done
             // Set config options, but don't trigger events (prevents multiple renders)
             ZoomManager.this.config.setShiftX(this.newShiftX, false);
