@@ -7,7 +7,7 @@ import java.util.Arrays;
  * @author Huw Jones
  * @since 11/03/2016
  */
-public class JavaConcantenator {
+public class JavaConcatenator {
 
     public static void main(String[] args){
         if(args.length != 2){
@@ -55,6 +55,7 @@ public class JavaConcantenator {
                 }
             }
             pw.write(fileContents);
+            pw.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
