@@ -1,5 +1,7 @@
+package shared;
+
 /**
- * Thrown when the operation could not complete because the auction is closed
+ * Thrown when the operation could not complete because the client is closed
  *
  * @author Huw Jones
  * @since 24/03/2016

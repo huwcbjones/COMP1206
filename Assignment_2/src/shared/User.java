@@ -1,3 +1,8 @@
+package shared;
+
+import shared.Exceptions.UnsupportedSecurityException;
+import shared.utils.StringUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -5,7 +10,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 /**
- * Represents a User
+ * Represents a shared.User
  *
  * @author Huw Jones
  * @since 24/03/2016

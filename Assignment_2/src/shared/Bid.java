@@ -1,9 +1,11 @@
+package shared;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Represents a Bid on an Item
+ * Represents a shared.Bid on an shared.Item
  *
  * @author Huw Jones
  * @since 24/03/2016

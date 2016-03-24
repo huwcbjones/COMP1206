@@ -1,3 +1,5 @@
+package shared;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -5,7 +7,7 @@ import java.util.Calendar;
 import java.util.UUID;
 
 /**
- * Represents an Item for auction.
+ * Represents an shared.Item for client.
  *
  * @author Huw Jones
  * @since 24/03/2016

@@ -1,3 +1,5 @@
+package shared.Exceptions;
+
 /**
  * Thrown when performing a secure operation and the necessary level of security is not available
  *
