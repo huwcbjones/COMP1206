@@ -1,6 +1,6 @@
 package shared;
 
-import shared.Exceptions.UnsupportedSecurityException;
+import shared.exceptions.UnsupportedSecurityException;
 import shared.utils.StringUtils;
 
 import java.io.UnsupportedEncodingException;

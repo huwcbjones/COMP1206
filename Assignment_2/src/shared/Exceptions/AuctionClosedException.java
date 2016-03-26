@@ -1,4 +1,4 @@
-package shared;
+package shared.exceptions;
 
 /**
  * Thrown when the operation could not complete because the client is closed
