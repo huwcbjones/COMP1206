@@ -2,6 +2,8 @@ package server;
 
 import server.exceptions.ConfigLoadException;
 
+import java.io.File;
+
 /**
  * Server COnfig Manager
  *
@@ -10,11 +12,21 @@ import server.exceptions.ConfigLoadException;
  */
 final class Config {
 
+    private File configFileLocation;
+
     private int port;
     private boolean tlsEnabled;
     private int tlsPort;
 
     public Config () {
+
+    }
+
+    public void setConfigFile(String fileLocation){
+
+    }
+
+    public void setDataDirectory(String directory){
 
     }
 
