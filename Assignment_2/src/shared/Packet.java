@@ -8,7 +8,7 @@ import java.io.Serializable;
  * @author Huw Jones
  * @since 26/03/2016
  */
-public class Packet<T extends Serializable> implements Serializable {
+public final class Packet<T extends Serializable> implements Serializable {
 
     public static final long serialUID = 1L;
 
