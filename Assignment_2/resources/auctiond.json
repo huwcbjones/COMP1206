@@ -1,0 +1,9 @@
+{
+  "server": {
+    "port": 473,
+    "tls": {
+      "enable": false,
+      "port": 474
+    }
+  }
+}
