@@ -1,6 +1,9 @@
+package server;
+
 import java.security.MessageDigest;
 
 import static org.junit.Assert.*;
+import server.User;
 
 /**
  * {DESCRIPTION}
@@ -15,9 +18,12 @@ public class UserTest {
         String password = "testPassword";
 
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(password.getBytes("UTF-8"));
-        byte[] pwd = md.digest();
-        User testUser = new User("Test", "User", pwd);
-        assertTrue("Passwords don't match", testUser.isAuthenticated(password));
+        md.update("blah".getBytes());
+        byte[] salt = md.digest();
+
+        byte[] pwd = User.generatePasswordHash(password.toCharArray(), salt);
+
+        User testUser = new User("Test", "User", pwd, salt);
+        assertTrue("Passwords don't match", testUser.isAuthenticated(password.toCharArray()));
     }
 }
