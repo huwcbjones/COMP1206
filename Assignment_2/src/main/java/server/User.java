@@ -21,7 +21,7 @@ import java.util.Random;
  * @author Huw Jones
  * @since 26/03/2016
  */
-public final class User extends shared.User {
+final class User extends shared.User {
     private byte[] passwordHash;
     private byte[] salt;
     private boolean isLoggedIn = false;
