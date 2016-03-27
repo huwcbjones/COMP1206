@@ -7,6 +7,8 @@ import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Auction Server Daemon
@@ -29,6 +31,12 @@ public final class Server {
     public Server () {
         clients = new HashMap<>();
         config = new Config();
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            @Override
+            public void run () {
+                shutdownServer();
+            }
+        });
     }
 
     public void setConfigFile (String file) {
@@ -84,6 +92,28 @@ public final class Server {
         SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         ServerSocket sslSocket = sslSocketFactory.createServerSocket(this.config.getSecurePort());
         this.secureSocket = new ServerListenThread(this, sslSocket);
+    }
+
+    private void shutdownServer(){
+        Log.Information("Server shutting down...");
+
+        Log.Information("Closing sockets...");
+        this.plainSocket.shutdown();
+        if(config.isSecureConnectionEnabled()){
+            this.secureSocket.shutdown();
+        }
+
+        Log.Information("Sending disconnect to clients...");
+        this.clients.values().forEach(ClientConnection::closeConnection);
+
+        Log.Information("Saving data...");
+        this.saveState();
+
+        Log.Information("Server safely shut down!");
+    }
+
+    public void saveState(){
+
     }
 
     protected long getNextClientID () {

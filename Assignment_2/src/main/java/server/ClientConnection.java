@@ -39,6 +39,10 @@ public final class ClientConnection extends Thread {
         }
     }
 
+    public void closeConnection(){
+
+    }
+
     public long getClientID(){
         return this.clientID;
     }

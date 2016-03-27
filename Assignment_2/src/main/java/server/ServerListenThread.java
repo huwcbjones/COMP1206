@@ -40,4 +40,13 @@ public final class ServerListenThread extends Thread {
             }
         }
     }
+
+    public void shutdown(){
+        this.shouldQuit = true;
+        try {
+            this.socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
