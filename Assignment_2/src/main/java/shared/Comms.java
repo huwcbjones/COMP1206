@@ -18,8 +18,6 @@ public class Comms extends Thread {
 
     private static final Logger log = LogManager.getLogger(Comms.class);
 
-    private final long clientID;
-
     private ArrayList<PacketListener> listeners;
 
     private final ObjectInputStream input;
@@ -27,9 +25,8 @@ public class Comms extends Thread {
 
     private boolean shouldQuit = false;
 
-    public Comms (long clientID, ObjectInputStream input, ObjectOutputStream output) {
-        super("Comms_Thread_" + clientID);
-        this.clientID = clientID;
+    public Comms (ObjectInputStream input, ObjectOutputStream output) {
+        super("Comms_Thread");
         listeners = new ArrayList<>();
         this.input = input;
         this.output = output;
