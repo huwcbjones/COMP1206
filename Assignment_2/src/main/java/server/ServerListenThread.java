@@ -1,10 +1,12 @@
 package server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import shared.exceptions.ConnectionFailedException;
-import shared.utils.Log;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 /**
  * Listens for connections on a server socket
@@ -12,35 +14,44 @@ import java.net.ServerSocket;
  * @author Huw Jones
  * @since 27/03/2016
  */
-public final class ServerListenThread extends Thread {
+class ServerListenThread extends Thread {
+
+    protected static final Logger log = LogManager.getLogger(ServerListenThread.class);
 
     private final Server server;
     private final ServerSocket socket;
     private boolean shouldQuit = false;
 
     public ServerListenThread (Server server, ServerSocket socket) {
-        super("ServerSocketListener_" + socket.getLocalPort());
+        this(server, socket, "PlainServer");
+    }
+
+    protected ServerListenThread (Server server, ServerSocket socket, String name){
+        super(name);
         this.server = server;
         this.socket = socket;
     }
 
     @Override
-    public void run () {
+    public final void run () {
+        log.info("Listening for connections on: {}", this.socket.getLocalPort());
         ClientConnection client;
         while (!this.shouldQuit) {
             try {
                 long clientID = this.server.getNextClientID();
-                client = new ClientConnection(this.socket.accept(), clientID);
-
+                client = connectClient(clientID, this.socket.accept());
                 this.server.addClient(client);
-
                 client.start();
             } catch (ConnectionFailedException | IOException e) {
                 if (!e.getMessage().equals("socket closed")) {
-                    Log.Error(e.getMessage());
+                    log.error(e.getMessage());
                 }
             }
         }
+    }
+
+    protected ClientConnection connectClient(long clientID, Socket socket) throws ConnectionFailedException {
+        return new ClientConnection(clientID, socket);
     }
 
     public void shutdown () {
@@ -48,7 +59,7 @@ public final class ServerListenThread extends Thread {
         try {
             this.socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.debug(e);
         }
     }
 }
