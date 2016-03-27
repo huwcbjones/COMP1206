@@ -56,4 +56,16 @@ public class Server {
     public int getSecurePort () {
         return securePort;
     }
+
+    @Override
+    public String toString () {
+        String toString = this.address;
+
+        if(this.useSecurePort){
+            toString += " (" + this.securePort + ") *";
+        } else{
+            toString += " (" + this.port + ")";
+        }
+        return toString;
+    }
 }
