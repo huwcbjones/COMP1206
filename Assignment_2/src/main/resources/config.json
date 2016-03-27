@@ -1,8 +1,8 @@
 {
   "server": {
-    "data-dir": "",
+    "data-dir": "data",
     "port": 473,
-    "tls": {
+    "secure": {
       "enable": true,
       "port": 474
     }
