@@ -2,7 +2,7 @@ package server;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import shared.Comms;
+import server.utils.Comms;
 import shared.exceptions.ConnectionFailedException;
 
 import java.io.IOException;
