@@ -10,8 +10,6 @@ import client.Client;
 public class auction {
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            Client c = new Client();
-        });
+       Client c = new Client();
     }
 }
