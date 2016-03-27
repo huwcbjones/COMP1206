@@ -6,7 +6,7 @@ package client.utils;
  * @author Huw Jones
  * @since 27/03/2016
  */
-public class Server {
+final class Server {
 
     private final String address;
     private final int port;
