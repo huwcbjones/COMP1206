@@ -18,14 +18,14 @@ public final class ServerListenThread extends Thread {
     private final ServerSocket socket;
     private boolean shouldQuit = false;
 
-    public ServerListenThread(Server server, ServerSocket socket){
+    public ServerListenThread (Server server, ServerSocket socket) {
         super("ServerSocketListener_" + socket.getLocalPort());
         this.server = server;
         this.socket = socket;
     }
 
     @Override
-    public void run(){
+    public void run () {
         ClientConnection client;
         while (!this.shouldQuit) {
             try {
@@ -36,12 +36,14 @@ public final class ServerListenThread extends Thread {
 
                 client.start();
             } catch (ConnectionFailedException | IOException e) {
-                Log.Error(e.getMessage());
+                if (!e.getMessage().equals("socket closed")) {
+                    Log.Error(e.getMessage());
+                }
             }
         }
     }
 
-    public void shutdown(){
+    public void shutdown () {
         this.shouldQuit = true;
         try {
             this.socket.close();

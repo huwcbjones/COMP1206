@@ -31,7 +31,7 @@ public final class Server {
     public Server () {
         clients = new HashMap<>();
         config = new Config();
-        Runtime.getRuntime().addShutdownHook(new Thread(){
+        Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run () {
                 shutdownServer();
@@ -94,12 +94,14 @@ public final class Server {
         this.secureSocket = new ServerListenThread(this, sslSocket);
     }
 
-    private void shutdownServer(){
+    private void shutdownServer () {
         Log.Information("Server shutting down...");
 
         Log.Information("Closing sockets...");
-        this.plainSocket.shutdown();
-        if(config.isSecureConnectionEnabled()){
+        if (this.plainSocket != null) {
+            this.plainSocket.shutdown();
+        }
+        if (config.isSecureConnectionEnabled() && this.secureSocket != null) {
             this.secureSocket.shutdown();
         }
 
@@ -112,7 +114,7 @@ public final class Server {
         Log.Information("Server safely shut down!");
     }
 
-    public void saveState(){
+    public void saveState () {
 
     }
 

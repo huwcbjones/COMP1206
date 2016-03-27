@@ -40,7 +40,11 @@ public final class ClientConnection extends Thread {
     }
 
     public void closeConnection(){
+        try {
+            socket.close();
+        } catch (IOException e) {
 
+        }
     }
 
     public long getClientID(){
