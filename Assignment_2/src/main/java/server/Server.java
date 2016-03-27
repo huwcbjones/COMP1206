@@ -1,14 +1,14 @@
 package server;
 
 import server.exceptions.ConfigLoadException;
-import shared.utils.Log;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Auction Server Daemon
@@ -17,6 +17,8 @@ import java.util.Set;
  * @since 24/03/2016
  */
 public final class Server {
+
+    private static final Logger log = LogManager.getLogger(Server.class);
 
     private boolean shouldQuit = false;
 
@@ -31,12 +33,6 @@ public final class Server {
     public Server () {
         clients = new HashMap<>();
         config = new Config();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run () {
-                shutdownServer();
-            }
-        });
     }
 
     public void setConfigFile (String file) {
@@ -48,13 +44,16 @@ public final class Server {
     }
 
     public void run () {
-        Log.Information("Starting server...");
+        Runtime.getRuntime().addShutdownHook(new shutdownThread());
+
+        log.info("Starting server...");
         this.loadConfig();
         this.loadData();
         try {
             this.createSockets();
         } catch (IOException e) {
-            Log.Fatal("Failed to create socket: " + e.getMessage());
+            log.error("Failed to create socket: {}", e.getMessage());
+            return;
         }
 
         this.plainSocket.start();
@@ -64,40 +63,48 @@ public final class Server {
     }
 
     public void testConfig () {
-        this.loadConfig();
+        try {
+            config.loadConfig();
+        } catch (ConfigLoadException e) {
+            System.err.println("Failed to load config.");
+            System.err.println(e);
+        }
+        System.out.print(config.getConfig());
     }
 
     private void loadConfig () {
-        Log.Information("Loading config...");
+        log.info("Loading config...");
 
         try {
             config.loadConfig();
         } catch (ConfigLoadException e) {
-            Log.Fatal("Failed to load config. Quitting!");
+            log.error("Failed to load config. Quitting!");
+            System.exit(1);
         }
     }
 
     private void loadData () {
-        Log.Information("Loading data...");
+        log.info("Loading data...");
     }
 
     private void createSockets () throws IOException {
         ServerSocket plainSocket = new ServerSocket(this.config.getPlainPort());
         this.plainSocket = new ServerListenThread(this, plainSocket);
-        Log.Information("Unencrypted socket started successfully!");
+        log.info("Plain socket started successfully!");
 
         // Check the config to see if we are listening on a secure socket
         if (!this.config.isSecureConnectionEnabled()) return;
 
         SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         ServerSocket sslSocket = sslSocketFactory.createServerSocket(this.config.getSecurePort());
-        this.secureSocket = new ServerListenThread(this, sslSocket);
+        this.secureSocket = new SecureServerListenThread(this, sslSocket);
+        log.info("Secure socket started successfully!");
     }
 
     private void shutdownServer () {
-        Log.Information("Server shutting down...");
+        log.info("Server shutting down...");
 
-        Log.Information("Closing sockets...");
+        log.info("Closing sockets...");
         if (this.plainSocket != null) {
             this.plainSocket.shutdown();
         }
@@ -105,13 +112,13 @@ public final class Server {
             this.secureSocket.shutdown();
         }
 
-        Log.Information("Sending disconnect to clients...");
+        log.info("Sending disconnect to clients...");
         this.clients.values().forEach(ClientConnection::closeConnection);
 
-        Log.Information("Saving data...");
+        log.info("Saving data...");
         this.saveState();
 
-        Log.Information("Server safely shut down!");
+        log.info("Server safely shut down!");
     }
 
     public void saveState () {
@@ -124,5 +131,16 @@ public final class Server {
 
     protected void addClient (ClientConnection clientConnection) {
         this.clients.put(clientConnection.getClientID(), clientConnection);
+    }
+
+    private class shutdownThread extends Thread {
+        public shutdownThread () {
+            super("ServerShutdown");
+        }
+
+        @Override
+        public void run () {
+            shutdownServer();
+        }
     }
 }
