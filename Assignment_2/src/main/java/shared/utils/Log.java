@@ -29,11 +29,11 @@ public class Log {
     }
 
     public static void Warning (String message) {
-        message("[WARN]\t" + message, true);
+        message("[WARN]\t\t" + message, true);
     }
 
     public static void Information (String message) {
-        message("[INFO]\t" + message, false);
+        message("[INFO]\t\t" + message, false);
     }
 
     private static void message (String message, boolean isError) {

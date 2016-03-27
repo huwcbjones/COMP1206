@@ -15,16 +15,21 @@ import java.util.ArrayList;
  */
 public class Comms extends Thread {
 
+    private final long clientID;
+
     private ArrayList<PacketListener> listeners;
 
-    private ObjectInputStream input;
-    private ObjectOutputStream output;
+    private final ObjectInputStream input;
+    private final ObjectOutputStream output;
 
     private boolean shouldQuit = false;
 
-    public Comms (String threadID) {
-        super("Comms_Thread_" + threadID);
+    public Comms (long clientID, ObjectInputStream input, ObjectOutputStream output) {
+        super("Comms_Thread_" + clientID);
+        this.clientID = clientID;
         listeners = new ArrayList<>();
+        this.input = input;
+        this.output = output;
     }
 
     /**
@@ -82,5 +87,9 @@ public class Comms extends Thread {
                 Log.Warning("Exception whilst reading packet. " + e.getMessage());
             }
         }
+    }
+
+    public void quit(){
+        this.shouldQuit = true;
     }
 }
