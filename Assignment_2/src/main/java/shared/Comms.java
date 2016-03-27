@@ -1,5 +1,7 @@
 package shared;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import shared.events.PacketListener;
 import shared.exceptions.VersionMismatchException;
 import shared.utils.Log;
@@ -14,6 +16,8 @@ import java.util.ArrayList;
  * @since 26/03/2016
  */
 public class Comms extends Thread {
+
+    private static final Logger log = LogManager.getLogger(Comms.class);
 
     private final long clientID;
 
@@ -84,7 +88,8 @@ public class Comms extends Thread {
                     l.packetReceived(packet);
                 }
             } catch (IOException | ClassNotFoundException e) {
-                Log.Warning("Exception whilst reading packet. " + e.getMessage());
+                log.warn("Exception whilst reading packet. {}", e.getMessage());
+                log.debug(e);
             }
         }
     }
