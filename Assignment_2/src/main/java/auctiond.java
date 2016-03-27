@@ -1,6 +1,5 @@
 import server.Server;
 import server.exceptions.ArgumentNotFoundException;
-import shared.utils.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +29,7 @@ public class auctiond {
             try {
                 server.setConfigFile(auctiond.getConfigFileOption(argList));
             } catch (ArgumentNotFoundException e) {
-                Log.Fatal(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
 
@@ -38,7 +37,7 @@ public class auctiond {
             try {
                 server.setDataDirectory(auctiond.getDataDirectoryOption(argList));
             } catch (ArgumentNotFoundException e) {
-                Log.Fatal(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
 

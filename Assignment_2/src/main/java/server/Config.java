@@ -1,11 +1,9 @@
 package server;
 
 import server.exceptions.ConfigLoadException;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import shared.utils.Log;
 
 import java.io.*;
 import java.util.Iterator;

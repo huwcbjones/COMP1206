@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.events.PacketListener;
 import shared.exceptions.VersionMismatchException;
-import shared.utils.Log;
 
 import java.io.*;
 import java.util.ArrayList;
