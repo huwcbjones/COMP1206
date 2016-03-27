@@ -6,7 +6,7 @@ package client.utils;
  * @author Huw Jones
  * @since 27/03/2016
  */
-final class Server {
+public final class Server {
 
     private final String address;
     private final int port;
@@ -61,9 +61,9 @@ final class Server {
     public String toString () {
         String toString = this.address;
 
-        if(this.useSecurePort){
+        if (this.useSecurePort) {
             toString += " (" + this.securePort + ") *";
-        } else{
+        } else {
             toString += " (" + this.port + ")";
         }
         return toString;
