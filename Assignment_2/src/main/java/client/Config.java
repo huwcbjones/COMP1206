@@ -86,6 +86,10 @@ public final class Config {
                             log.warn("Failed to parse a server definition.");
                         }
                     }
+                    // If there are servers, set selected server to 0.
+                    if(this.servers.size() != 0){
+                        this.selectedServer = this.servers.get(0);
+                    }
                 }
             } catch (IOException | ParseException e) {
                 log.debug(e);
