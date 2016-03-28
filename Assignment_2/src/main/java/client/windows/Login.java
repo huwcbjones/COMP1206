@@ -9,6 +9,7 @@ import client.utils.SpringUtilities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
+import shared.events.ConnectionListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,6 +29,8 @@ public final class Login extends JFrame {
     private static Logger log = LogManager.getLogger(Login.class);
 
     private Config config;
+    private boolean isLoggingIn = false;
+
     private ImagePanel panel_banner;
 
     private JPanel panel_fields;
@@ -48,12 +51,14 @@ public final class Login extends JFrame {
     private JButton btn_cancel;
     private JButton btn_login;
 
+    private LoginEventListener loginEventListener;
+
     public Login () {
         super("Login | AuctionSys");
         this.config = Client.getConfig();
 
         // Set frame properties
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setMinimumSize(new Dimension(280, 218));
         this.setMaximumSize(new Dimension(280, 218));
         this.setLocationRelativeTo(null);
@@ -86,7 +91,7 @@ public final class Login extends JFrame {
         //endregion
 
         //region Add Event Handlers
-        Client.addLoginListener(new loginEventHandler());
+        this.loginEventListener = new loginEventHandler();
         this.combo_server.addActionListener(new comboServerChangeHandler());
         //endregion
     }
@@ -175,8 +180,14 @@ public final class Login extends JFrame {
     private class cancelBtnClickHandler implements ActionListener {
         @Override
         public void actionPerformed (ActionEvent e) {
-            Login.this.dispatchEvent(new WindowEvent(Login.this, WindowEvent.WINDOW_CLOSING));
-            Client.shutdown();
+            if(Login.this.isLoggingIn){
+                Client.cancelLogin();
+                Login.this.isLoggingIn = false;
+                Client.removeLoginListener(Login.this.loginEventListener);
+                Login.this.setFormEnabledState(true);
+            } else {
+                Login.this.dispatchEvent(new WindowEvent(Login.this, WindowEvent.WINDOW_CLOSING));
+            }
         }
     }
 
@@ -188,6 +199,8 @@ public final class Login extends JFrame {
         public void actionPerformed (ActionEvent e) {
             // Disable form so only one login can occur at a time
             Login.this.setFormEnabledState(false);
+            Login.this.isLoggingIn = true;
+            Client.addLoginListener(Login.this.loginEventListener);
 
             // Run login in new anonymous thread
             // Also uses nice J8 lamba expressions, instead of
@@ -216,6 +229,8 @@ public final class Login extends JFrame {
          */
         @Override
         public void loginSuccess (User user) {
+            Client.removeLoginListener(Login.this.loginEventListener);
+            Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
         }
 
@@ -226,6 +241,8 @@ public final class Login extends JFrame {
          */
         @Override
         public void loginError (String message) {
+            Client.removeLoginListener(Login.this.loginEventListener);
+            Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
             Login.this.clearFields();
             JOptionPane.showMessageDialog(
@@ -236,6 +253,23 @@ public final class Login extends JFrame {
             );
         }
     }
+
+    private class connectionEventHandler implements ConnectionListener {
+        @Override
+        public void connectionClosed (String reason) {
+            if(Login.this.isLoggingIn){
+                Client.removeLoginListener(Login.this.loginEventListener);
+                Login.this.isLoggingIn = false;
+            }
+            JOptionPane.showMessageDialog(
+                    Login.this,
+                    "The connection to the server was closed.\nReason: " + reason,
+                    "Connection Closed.",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
 
     private void setFormEnabledState (boolean state) {
         this.text_username.setEnabled(state);
