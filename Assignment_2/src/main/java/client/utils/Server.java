@@ -8,6 +8,7 @@ package client.utils;
  */
 public final class Server {
 
+    private final String name;
     private final String address;
     private final int port;
     private final boolean useSecurePort;
@@ -15,10 +16,27 @@ public final class Server {
 
 
     public Server (String address, int port, boolean useSecurePort, int securePort) {
+        this(
+                // this() has to be first statement... let's make us a server name!
+                address + " (" + ( ( useSecurePort ) ? securePort : port ) + ")",
+                address, port, useSecurePort, securePort);
+    }
+
+    public Server (String name, String address, int port, boolean useSecurePort, int securePort) {
+        this.name = name;
         this.address = address;
         this.port = port;
         this.useSecurePort = useSecurePort;
         this.securePort = securePort;
+    }
+
+    /**
+     * Returns the name of the server as the user would like to see it
+     *
+     * @return User defined server name
+     */
+    public String getName () {
+        return name;
     }
 
     /**
@@ -59,13 +77,8 @@ public final class Server {
 
     @Override
     public String toString () {
-        String toString = this.address;
-
-        if (this.useSecurePort) {
-            toString += " (" + this.securePort + ") *";
-        } else {
-            toString += " (" + this.port + ")";
-        }
+        String toString = this.name;
+        if (this.useSecurePort) toString += " *";
         return toString;
     }
 }
