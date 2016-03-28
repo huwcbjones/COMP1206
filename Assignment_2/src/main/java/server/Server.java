@@ -9,6 +9,8 @@ import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Auction Server Daemon
@@ -29,6 +31,7 @@ public final class Server {
     private Config config;
 
     private HashMap<Long, ClientConnection> clients;
+    private ExecutorService workPool;
 
     public Server () {
         clients = new HashMap<>();
@@ -83,6 +86,11 @@ public final class Server {
         }
     }
 
+    private void startWorkers () {
+        log.info("Starting workers...");
+        this.workPool = Executors.newFixedThreadPool(this.config.getWorkers());
+    }
+
     private void loadData () {
         log.info("Loading data...");
     }
@@ -95,6 +103,9 @@ public final class Server {
         // Check the config to see if we are listening on a secure socket
         if (!this.config.isSecureConnectionEnabled()) return;
 
+        //System.setProperty("javax.net.ssl.keyStore", "");
+        //System.setProperty("javax.net.ssl.keyStore", "21234567£$%^&asdfgh");
+
         SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         ServerSocket sslSocket = sslSocketFactory.createServerSocket(this.config.getSecurePort());
         this.secureSocket = new SecureServerListenThread(this, sslSocket);
@@ -104,16 +115,21 @@ public final class Server {
     private void shutdownServer () {
         log.info("Server shutting down...");
 
-        log.info("Closing sockets...");
-        if (this.plainSocket != null) {
+        if (this.plainSocket != null || this.secureSocket != null) {
+            log.info("Closing sockets...");
             this.plainSocket.shutdown();
-        }
-        if (config.isSecureConnectionEnabled() && this.secureSocket != null) {
-            this.secureSocket.shutdown();
-        }
 
-        log.info("Sending disconnect to clients...");
-        this.clients.values().forEach(ClientConnection::closeConnection);
+            // Only shutdown secureSocket if it is enabled
+            if (config.isSecureConnectionEnabled() && this.secureSocket != null) {
+                this.secureSocket.shutdown();
+            }
+
+            // Only send disconnects if there are clients connected
+            if (this.clients.size() != 0) {
+                log.info("Sending disconnect to clients...");
+                this.clients.values().forEach(ClientConnection::closeConnection);
+            }
+        }
 
         log.info("Saving data...");
         this.saveState();
