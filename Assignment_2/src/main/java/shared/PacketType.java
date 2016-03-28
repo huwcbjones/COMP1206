@@ -8,4 +8,25 @@ package shared;
  */
 public enum PacketType {
 
+    /**
+     * Used to say hello between client and server to ensure the two can communicate
+     */
+    HELLO,
+
+    /**
+     * Used to get client/server versions
+     */
+    VERSION,
+
+    /**
+     * Connection should use the secure connection.
+     * Returns the secure port.
+     */
+    USE_SECURE,
+
+    //region Login Types
+    LOGIN,
+    LOGIN_FAIL,
+    LOGIN_SUCCESS,
+    //endregion
 }
