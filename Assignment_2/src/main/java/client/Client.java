@@ -30,6 +30,8 @@ public final class Client {
     private static final Config config = new Config();
     private static User user;
     private static boolean isConnected = false;
+    private static boolean isLoggingIn = false;
+    private static boolean cancelLogin = false;
 
     private static ArrayList<LoginEventListener> loginEventListeners = new ArrayList<>();
 
@@ -37,7 +39,7 @@ public final class Client {
     private static Comms secureComms;
 
     public Client () {
-
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
         try {
             Client.config.loadConfig();
         } catch (ConfigLoadException e) {
@@ -52,7 +54,7 @@ public final class Client {
         return Client.config;
     }
 
-    public static void shutdown () {
+    private void shutdown () {
         log.info("Shutting down client...");
         if(Client.isConnected){
             Client.plainComms.shutdown();
@@ -74,19 +76,23 @@ public final class Client {
             Client.plainComms = new Comms(inputStream, outputStream);
             Client.plainComms.start();
             Client.plainComms.sendMessage(new Packet<>(PacketType.HELLO, "hello"));
-            
+
             Client.isConnected = true;
         } catch (IOException e) {
             log.debug(e);
-            throw new ConnectionFailedException("Failed to connect to server.");
+            throw new ConnectionFailedException(e.getMessage());
         }
     }
 
     public static void login () {
         try {
             Client.connect();
+            if(Client.cancelLogin){
+                Client.cancelLogin = false;
+                return;
+            }
         } catch (ConnectionFailedException e) {
-            log.error(e);
+            log.error("Failed to connect to server! {}", e.getMessage());
         }
     }
 
@@ -106,6 +112,12 @@ public final class Client {
      */
     public static void removeLoginListener (LoginEventListener listener) {
         Client.loginEventListeners.remove(listener);
+    }
+
+    public static void cancelLogin(){
+        if(Client.isLoggingIn){
+            Client.cancelLogin = true;
+        }
     }
 
     private static void fireLoginFailHandler (String message) {

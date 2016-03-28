@@ -4,15 +4,11 @@
       {
         "name": "Charity Auction Server",
         "address":"localhost",
-        "port": 473,
-        "useSecurePort": false,
-        "securePort": 474
+        "port": 473
       },
       {
         "address":"localhost",
-        "port": 473,
-        "useSecurePort": true,
-        "securePort": 474
+        "port": 473
       }
     ]
   }

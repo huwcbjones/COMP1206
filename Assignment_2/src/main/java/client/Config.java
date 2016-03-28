@@ -72,13 +72,11 @@ public final class Config {
                             String name = (String) serverObject.get("name");
                             String serverAddress = (String) serverObject.get("address");
                             Number plainPort = (Number) serverObject.get("port");
-                            boolean useSecurePort = (boolean) serverObject.get("useSecurePort");
-                            Number securePort = (Number) serverObject.get("securePort");
 
                             if(name == null) {
-                                server = new Server(serverAddress, plainPort.intValue(), useSecurePort, securePort.intValue());
+                                server = new Server(serverAddress, plainPort.intValue());
                             } else {
-                                server = new Server(name, serverAddress, plainPort.intValue(), useSecurePort, securePort.intValue());
+                                server = new Server(name, serverAddress, plainPort.intValue());
                             }
                             this.addServer(server);
                         } catch (ClassCastException | NullPointerException e) {
