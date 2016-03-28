@@ -32,11 +32,15 @@ final class ClientConnection extends Thread {
         log.info("New connection from {}:{}", this.socket.getInetAddress(), this.socket.getPort());
 
         try {
+            ObjectOutputStream outputStream = new ObjectOutputStream(this.socket.getOutputStream());
+            ObjectInputStream inputStream = new ObjectInputStream(this.socket.getInputStream());
+
             this.comms = new Comms(
                     clientID,
-                    new ObjectInputStream(this.socket.getInputStream()),
-                    new ObjectOutputStream(this.socket.getOutputStream())
+                    inputStream,
+                    outputStream
             );
+
         } catch (IOException e) {
             log.debug(e);
             throw new ConnectionFailedException("Could not create client connection stream. " + e.getMessage());
