@@ -6,7 +6,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
-import java.util.Iterator;
 
 /**
  * Server COnfig Manager
@@ -27,7 +26,7 @@ final class Config {
     private int workers = 8;
 
     public Config () {
-        this.configFileLocation = new File("config.json");
+        this.configFileLocation = new File("auctiond_config.json");
         this.dataDirectory = configFileLocation.getParentFile();
     }
 

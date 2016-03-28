@@ -64,8 +64,8 @@ public class auctiond {
     private static void help () {
         auctiond.header();
         System.out.println("Arguments:");
-        System.out.println("  -c, --config-file\tSpecifies config file (defaults to execdir/config.json.");
-        System.out.println("  -d, --data-dir\tSpecifies the data storage directory. If unspecified, loads from config.json");
+        System.out.println("  -c, --config-file\tSpecifies config file (defaults to execdir/auctiond_config.json.");
+        System.out.println("  -d, --data-dir\tSpecifies the data storage directory. If unspecified, loads from auctiond_config.json");
         System.out.println("  -h, --help\t\tPrints this help message.");
         System.out.println("  -t, --test-config\tDon't run, just test config file. Will print out server config.");
         System.out.println("  -v, --version\t\tPrints version.");
