@@ -1,5 +1,8 @@
 package server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.json.simple.JSONArray;
 import server.exceptions.ConfigLoadException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -15,6 +18,8 @@ import java.io.*;
  */
 final class Config {
 
+    private static Logger log = LogManager.getLogger(Config.class);
+
     private boolean configFileLocationWasSet = false;
     private File configFileLocation;
     private File dataDirectory;
@@ -23,33 +28,34 @@ final class Config {
     private boolean secureConnectionEnabled = false;
     private int securePort = 474;
 
-    private int workers = 8;
+    private int workers = Runtime.getRuntime().availableProcessors();
 
     public Config () {
-        this.configFileLocation = new File("auctiond_config.json");
+        this.configFileLocation = new File("auctiond_config.json").getAbsoluteFile();
         this.dataDirectory = configFileLocation.getParentFile();
     }
 
-    public void setConfigFile(String fileLocation){
+    public void setConfigFile (String fileLocation) {
         this.configFileLocationWasSet = true;
-        this.configFileLocation = new File(fileLocation);
+        this.configFileLocation = new File(fileLocation).getAbsoluteFile();
         this.dataDirectory = configFileLocation.getParentFile();
     }
 
-    public void setDataDirectory(String directory){
+    public void setDataDirectory (String directory) {
         dataDirectory = new File(directory);
     }
 
     /**
      * Loads the config file
+     *
      * @throws ConfigLoadException
      */
     public void loadConfig () throws ConfigLoadException {
-        if(!configFileLocation.exists()){
+        if (!configFileLocation.exists()) {
             throw new ConfigLoadException("Config file was not found!");
         }
 
-        if(!configFileLocation.canRead()){
+        if (!configFileLocation.canRead()) {
             throw new ConfigLoadException("Could not read config file!");
         }
 
@@ -63,70 +69,109 @@ final class Config {
                 JSONObject root = (JSONObject) parser.parse(reader);
                 JSONObject serverRoot = (JSONObject) root.get("server");
 
-                if(serverRoot == null){
+                if (serverRoot == null) {
                     throw new ConfigLoadException("Failed to find root element.");
                 }
 
-                String dataDir = (String)serverRoot.get("data-dir");
-                if(dataDir != null && !dataDir.equals("")){
-                    if(dataDir.substring(0, 1).equals(File.separator)) {
-                        this.dataDirectory = new File(dataDir);
-                    } else {
-                        this.dataDirectory = new File(this.configFileLocation.getParentFile().getAbsolutePath() + File.separator + dataDir);
-                    }
-                }
-
-                int plainPort = ((Long)serverRoot.get("port")).intValue();
-                this.plainPort = plainPort;
-
-                JSONObject secure = (JSONObject)serverRoot.get("secure");
-                if(secure != null){
-                    boolean enableSecure = (boolean)secure.get("enable");
-                    int securePort = ((Long)secure.get("port")).intValue();
-
-                    this.secureConnectionEnabled = enableSecure;
-                    this.securePort = securePort;
-                }
+                this.loadDataDir(serverRoot);
+                this.loadServerListening(serverRoot);
+                this.loadWorkerPoolSize(serverRoot);
             } catch (IOException | ParseException e) {
                 throw new ConfigLoadException("Failed to load config file! " + e.getMessage());
             }
-
         } catch (FileNotFoundException e) {
             throw new ConfigLoadException("Failed to load config file!" + e.getMessage());
         }
     }
 
+    private void loadDataDir (JSONObject serverRoot) {
+        String dataDir = (String) serverRoot.get("data-dir");
+        if (dataDir != null && !dataDir.equals("")) {
+            if (dataDir.substring(0, 1).equals(File.separator)) {
+                this.dataDirectory = new File(dataDir);
+            } else {
+                File parentDir = this.configFileLocation.getParentFile();
+                this.dataDirectory = new File(parentDir.getAbsolutePath() + File.separator + dataDir);
+            }
+        }
+    }
+
+    private void loadServerListening (JSONObject serverRoot) throws ConfigLoadException {
+        try {
+            Number plainPort = (Number) serverRoot.get("port");
+            this.plainPort = plainPort.intValue();
+
+            JSONObject secure = (JSONObject) serverRoot.get("secure");
+            if (secure != null) {
+                boolean enableSecure = (boolean) secure.get("enable");
+                Number securePort = (Number) secure.get("port");
+
+                this.secureConnectionEnabled = enableSecure;
+                this.securePort = securePort.intValue();
+            }
+        } catch (ClassCastException e) {
+            throw new ConfigLoadException("Failed to parse server config!");
+        }
+    }
+
+    private void loadWorkerPoolSize (JSONObject serverRoot) throws ConfigLoadException {
+        try {
+            Number workerPoolSize = (Number) serverRoot.get("workers");
+            if (workerPoolSize == null) {
+                return;
+            }
+            this.workers = workerPoolSize.intValue();
+            if (this.workers < 1) {
+                log.warn("workers directive was < 1. Setting to 1.");
+                this.workers = 1;
+            }
+        } catch (ClassCastException e) {
+            throw new ConfigLoadException("Failed to parse server config! workers directive was invalid.");
+        }
+    }
+
     /**
      * Gets the port the server listens to (unencrypted)
+     *
      * @return Port number to listen on
      */
     public int getPlainPort () {
-        return plainPort;
+        return this.plainPort;
     }
 
     /**
      * Returns true if a secure is going to be used to protect communication between server and client
+     *
      * @return True if the server should listen on a secure socket
      */
     public boolean isSecureConnectionEnabled () {
-        return secureConnectionEnabled;
+        return this.secureConnectionEnabled;
     }
 
     /**
      * Returns the secure port the server should listen on
+     *
      * @return Secure port
      */
     public int getSecurePort () {
-        return securePort;
+        return this.securePort;
     }
 
-    public String getConfig(){
+    /**
+     * Returns the number of workers the server should use
+     *
+     * @return Number of workers
+     */
+    public int getWorkers () { return this.workers; }
+
+    public String getConfig () {
         String config = "";
 
         config += "config-file: " + this.configFileLocation.getAbsolutePath() + "\n";
         config += "data-dir: " + this.dataDirectory.getAbsolutePath() + "\n";
+        config += "workers: " + this.workers + "\n";
         config += "port: " + this.plainPort + "\n";
-        if(this.isSecureConnectionEnabled()) {
+        if (this.isSecureConnectionEnabled()) {
             config += "SecureListeningEnabled: true" + "\n";
             config += "secure-port: " + this.securePort + "\n";
         }
