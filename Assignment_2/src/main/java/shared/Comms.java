@@ -1,11 +1,15 @@
 package shared;
 
+import client.Client;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import shared.events.ConnectionListener;
 import shared.events.PacketListener;
 import shared.exceptions.VersionMismatchException;
 
 import java.io.*;
+import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -18,16 +22,21 @@ public class Comms extends Thread {
 
     private static final Logger log = LogManager.getLogger(Comms.class);
 
-    private ArrayList<PacketListener> listeners;
+    private ArrayList<PacketListener> packetListeners;
+    private ArrayList<ConnectionListener> connectionListeners;
+
+    private final Socket socket;
 
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
 
     private boolean shouldQuit = false;
 
-    public Comms (ObjectInputStream input, ObjectOutputStream output) {
+    public Comms (Socket socket, ObjectInputStream input, ObjectOutputStream output) {
         super("Comms_Thread");
-        listeners = new ArrayList<>();
+        this.packetListeners = new ArrayList<>();
+        this.connectionListeners = new ArrayList<>();
+        this.socket = socket;
         this.input = input;
         this.output = output;
     }
@@ -38,7 +47,7 @@ public class Comms extends Thread {
      * @param listener the <code>PacketListener</code> to add
      */
     public void addMessageListener (PacketListener listener) {
-        this.listeners.add(listener);
+        this.packetListeners.add(listener);
     }
 
     /**
@@ -47,7 +56,7 @@ public class Comms extends Thread {
      * @param listener the <code>PacketListener</code> to remove
      */
     public void removeMessageListener (PacketListener listener) {
-        this.listeners.remove(listener);
+        this.packetListeners.remove(listener);
     }
 
     /**
@@ -58,8 +67,10 @@ public class Comms extends Thread {
     public void sendMessage (Packet packet) {
         try {
             output.writeObject(packet);
+            log.debug("Sent packet. Type: {}", packet.getType().toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to send packet. Reason: {}", e.getMessage());
+            log.debug(e);
         }
     }
 
@@ -69,7 +80,7 @@ public class Comms extends Thread {
     public Packet receiveMessage () throws VersionMismatchException, IOException {
         try {
             return (Packet) input.readObject();
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException | ClassCastException e) {
             throw new VersionMismatchException();
         }
     }
@@ -80,16 +91,21 @@ public class Comms extends Thread {
         while (!shouldQuit) {
             try {
                 packet = (Packet) input.readObject();
-                for (PacketListener l : this.listeners) {
+                log.debug("Received packet from client. Type: {}", packet.getType().toString());
+                for (PacketListener l : this.packetListeners) {
                     l.packetReceived(packet);
                 }
-            } catch (EOFException e){
-                log.error("Stream was closed.");
-                this.shouldQuit = true;
+            } catch (SocketException e) {
+                log.info("Socket was closed.");
+                this.fireConnectionClosed("Server closed the connection.");
+                this.shutdown();
+            } catch (EOFException e) {
+                this.fireConnectionClosed("Connection lost.");
+                this.shutdown();
             } catch (IOException | ClassNotFoundException e) {
-                if(e.getMessage().toLowerCase().equals("socket closed")){
-                    this.shouldQuit = true;
-                    continue;
+                if (e.getMessage().toLowerCase().equals("socket closed")) {
+                    this.fireConnectionClosed("Connection lost.");
+                    this.shutdown();
                 }
                 log.warn("Exception whilst reading packet. {}", e.getMessage());
                 log.debug(e);
@@ -97,13 +113,18 @@ public class Comms extends Thread {
         }
     }
 
-    public void shutdown (){
+    public void shutdown () {
         this.shouldQuit = true;
         try {
-            this.input.close();
-            this.output.close();
+            this.socket.close();
         } catch (IOException e) {
             log.debug(e);
+        }
+    }
+
+    private void fireConnectionClosed(String reason){
+        for(ConnectionListener l : this.connectionListeners){
+            l.connectionClosed(reason);
         }
     }
 }
