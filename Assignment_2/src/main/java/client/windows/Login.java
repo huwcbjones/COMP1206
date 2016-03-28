@@ -2,11 +2,13 @@ package client.windows;
 
 import client.Client;
 import client.Config;
+import client.events.LoginEventListener;
 import client.utils.ImagePanel;
 import client.utils.Server;
 import client.utils.SpringUtilities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import shared.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -81,6 +83,11 @@ public final class Login extends JFrame {
         };
         this.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
         this.getRootPane().getActionMap().put("ESCAPE", escapeAction);
+        //endregion
+
+        //region Add Event Handlers
+        Client.addLoginListener(new loginEventHandler());
+        this.combo_server.addActionListener(new comboServerChangeHandler());
         //endregion
     }
 
@@ -169,13 +176,76 @@ public final class Login extends JFrame {
         @Override
         public void actionPerformed (ActionEvent e) {
             Login.this.dispatchEvent(new WindowEvent(Login.this, WindowEvent.WINDOW_CLOSING));
+            Client.shutdown();
         }
     }
 
+    /**
+     * Performs the login
+     */
     private class loginBtnClickHandler implements ActionListener {
         @Override
         public void actionPerformed (ActionEvent e) {
+            // Disable form so only one login can occur at a time
+            Login.this.setFormEnabledState(false);
 
+            // Run login in new anonymous thread
+            // Also uses nice J8 lamba expressions, instead of
+            // new Thread(new Runnable(){public void run(){Client.login();}, "Login Thread").start();
+            new Thread(Client::login, "LoginThread").start();
         }
+    }
+
+    /**
+     * Sets the selected server
+     */
+    private class comboServerChangeHandler implements ActionListener {
+        @Override
+        public void actionPerformed (ActionEvent e) {
+            Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
+            Login.this.config.setSelectedServer(selectedServer);
+        }
+    }
+
+    private class loginEventHandler implements LoginEventListener {
+
+        /**
+         * Fired when a successful login occurs
+         *
+         * @param user User object for current user
+         */
+        @Override
+        public void loginSuccess (User user) {
+            Login.this.setFormEnabledState(true);
+        }
+
+        /**
+         * Fire when an unsuccessful login occurs
+         *
+         * @param message Reason why login failed
+         */
+        @Override
+        public void loginError (String message) {
+            Login.this.setFormEnabledState(true);
+            Login.this.clearFields();
+            JOptionPane.showMessageDialog(
+                    Login.this,
+                    message,
+                    "Login Failed",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void setFormEnabledState (boolean state) {
+        this.text_username.setEnabled(state);
+        this.text_password.setEnabled(state);
+        this.combo_server.setEnabled(state);
+        this.btn_login.setEnabled(state);
+    }
+
+    private void clearFields () {
+        this.text_username.setText("");
+        this.text_password.setText("");
     }
 }
