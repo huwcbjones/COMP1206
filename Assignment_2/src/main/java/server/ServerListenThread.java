@@ -26,7 +26,7 @@ class ServerListenThread extends Thread {
         this(server, socket, "PlainServer");
     }
 
-    protected ServerListenThread (Server server, ServerSocket socket, String name){
+    protected ServerListenThread (Server server, ServerSocket socket, String name) {
         super(name);
         this.server = server;
         this.socket = socket;
@@ -40,8 +40,10 @@ class ServerListenThread extends Thread {
             try {
                 long clientID = this.server.getNextClientID();
                 client = connectClient(clientID, this.socket.accept());
-                this.server.addClient(client);
-                client.start();
+                // Check if client connected properly before adding it to the clients pool
+                if (client.connect()) {
+                    this.server.addClient(client);
+                }
             } catch (ConnectionFailedException | IOException e) {
                 if (!e.getMessage().equals("socket closed")) {
                     log.error(e.getMessage());
@@ -50,7 +52,7 @@ class ServerListenThread extends Thread {
         }
     }
 
-    protected ClientConnection connectClient(long clientID, Socket socket) throws ConnectionFailedException {
+    protected ClientConnection connectClient (long clientID, Socket socket) throws ConnectionFailedException {
         return new ClientConnection(clientID, socket);
     }
 

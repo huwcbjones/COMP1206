@@ -1,9 +1,12 @@
 package server;
 
+import server.events.PacketHandler;
+import server.events.ServerPacketListener;
 import server.exceptions.ConfigLoadException;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import shared.Packet;
 
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
@@ -52,6 +55,8 @@ public final class Server {
         log.info("Starting server...");
         this.loadConfig();
         this.loadData();
+        this.startWorkers();
+
         try {
             this.createSockets();
         } catch (IOException e) {
@@ -88,6 +93,7 @@ public final class Server {
 
     private void startWorkers () {
         log.info("Starting workers...");
+        log.debug("New fixed thread pool: " + this.config.getWorkers());
         this.workPool = Executors.newFixedThreadPool(this.config.getWorkers());
     }
 
@@ -147,8 +153,12 @@ public final class Server {
 
     protected void addClient (ClientConnection clientConnection) {
         this.clients.put(clientConnection.getClientID(), clientConnection);
+        clientConnection.addServerPacketListener(new packetTaskHandler());
     }
 
+    /**
+     * Runs the server shutdown in its own thread
+     */
     private class shutdownThread extends Thread {
         public shutdownThread () {
             super("ServerShutdown");
@@ -157,6 +167,14 @@ public final class Server {
         @Override
         public void run () {
             shutdownServer();
+        }
+    }
+
+    private class packetTaskHandler implements ServerPacketListener {
+
+        @Override
+        public void packetRecieved (ClientConnection client, Packet packet) {
+            Server.this.workPool.submit(new PacketHandler(client, packet));
         }
     }
 }
