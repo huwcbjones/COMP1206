@@ -35,7 +35,7 @@ public final class Client {
         try {
             Client.config.loadConfig();
         } catch (ConfigLoadException e) {
-
+            log.warn(e.getMessage());
         }
         Login loginWindow = new Login();
 
