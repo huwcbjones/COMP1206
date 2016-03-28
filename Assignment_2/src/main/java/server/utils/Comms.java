@@ -2,9 +2,10 @@ package server.utils;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 /**
- * Server side COmmunications class
+ * Server side Communications class
  *
  * @author Huw Jones
  * @since 27/03/2016
@@ -12,8 +13,8 @@ import java.io.ObjectOutputStream;
 public final class Comms extends shared.Comms {
     private final long clientID;
 
-    public Comms (long clientID, ObjectInputStream input, ObjectOutputStream output) {
-        super(input, output);
+    public Comms (long clientID, Socket socket, ObjectInputStream input, ObjectOutputStream output) {
+        super(socket, input, output);
         this.setName("Comms_Thread_" + clientID);
         this.clientID = clientID;
     }
