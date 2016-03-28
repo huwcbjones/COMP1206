@@ -2,6 +2,7 @@
   "client": {
     "servers":[
       {
+        "name": "Charity Auction Server",
         "address":"localhost",
         "port": 473,
         "useSecurePort": false,
