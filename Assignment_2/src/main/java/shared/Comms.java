@@ -83,14 +83,27 @@ public class Comms extends Thread {
                 for (PacketListener l : this.listeners) {
                     l.packetReceived(packet);
                 }
+            } catch (EOFException e){
+                log.error("Stream was closed.");
+                this.shouldQuit = true;
             } catch (IOException | ClassNotFoundException e) {
+                if(e.getMessage().toLowerCase().equals("socket closed")){
+                    this.shouldQuit = true;
+                    continue;
+                }
                 log.warn("Exception whilst reading packet. {}", e.getMessage());
                 log.debug(e);
             }
         }
     }
 
-    public void quit(){
+    public void shutdown (){
         this.shouldQuit = true;
+        try {
+            this.input.close();
+            this.output.close();
+        } catch (IOException e) {
+            log.debug(e);
+        }
     }
 }
