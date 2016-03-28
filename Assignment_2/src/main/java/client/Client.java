@@ -10,8 +10,10 @@ import shared.Comms;
 import shared.Packet;
 import shared.PacketType;
 import shared.User;
+import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -35,8 +37,9 @@ public final class Client {
 
     private static ArrayList<LoginEventListener> loginEventListeners = new ArrayList<>();
 
-    private static Comms plainComms;
-    private static Comms secureComms;
+    private static Comms comms;
+
+    private static final Object waitForReply = new Object();
 
     public Client () {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
@@ -56,12 +59,8 @@ public final class Client {
 
     private void shutdown () {
         log.info("Shutting down client...");
-        if(Client.isConnected){
-            Client.plainComms.shutdown();
-
-            if(Client.secureComms != null && Client.config.getSelectedServer().useSecurePort()){
-                Client.secureComms.shutdown();
-            }
+        if (Client.isConnected) {
+            Client.comms.shutdown();
         }
     }
 
@@ -73,11 +72,27 @@ public final class Client {
             ObjectOutputStream outputStream = new ObjectOutputStream(plainSocket.getOutputStream());
             ObjectInputStream inputStream = new ObjectInputStream(plainSocket.getInputStream());
 
-            Client.plainComms = new Comms(inputStream, outputStream);
-            Client.plainComms.start();
-            Client.plainComms.sendMessage(new Packet<>(PacketType.HELLO, "hello"));
+            Client.comms = new Comms(plainSocket, inputStream, outputStream);
+            Client.comms.start();
+            helloReplyHandler helloHandler = new helloReplyHandler();
+            Client.comms.addMessageListener(helloHandler);
 
-            Client.isConnected = true;
+            log.info("Saying HELLO to the server...");
+            Client.comms.sendMessage(new Packet<>(PacketType.HELLO, "hello"));
+            synchronized (Client.waitForReply) {
+
+                try {
+                    log.info("Waiting for server response...");
+                    Client.waitForReply.wait(5 * 1000);
+                } catch (InterruptedException e) {
+                    log.debug(e);
+                }
+            }
+            Client.comms.removeMessageListener(helloHandler);
+            if(!Client.isConnected){
+                Client.comms.shutdown();
+                throw new ConnectionFailedException("Handshake was unsuccessful.");
+            }
         } catch (IOException e) {
             log.debug(e);
             throw new ConnectionFailedException(e.getMessage());
@@ -86,8 +101,10 @@ public final class Client {
 
     public static void login () {
         try {
-            Client.connect();
-            if(Client.cancelLogin){
+            if(!Client.isConnected) {
+                Client.connect();
+            }
+            if (Client.cancelLogin) {
                 Client.cancelLogin = false;
                 return;
             }
@@ -114,8 +131,8 @@ public final class Client {
         Client.loginEventListeners.remove(listener);
     }
 
-    public static void cancelLogin(){
-        if(Client.isLoggingIn){
+    public static void cancelLogin () {
+        if (Client.isLoggingIn) {
             Client.cancelLogin = true;
         }
     }
@@ -129,6 +146,19 @@ public final class Client {
     private static void fireLoginSuccessHandler (User user) {
         for (LoginEventListener l : Client.loginEventListeners) {
             l.loginSuccess(user);
+        }
+    }
+
+    private static class helloReplyHandler implements PacketListener {
+        @Override
+        public void packetReceived (Packet packet) {
+            if (packet.getType() == PacketType.HELLO) {
+                synchronized (Client.waitForReply) {
+                    log.info("Server says: {}", packet.getPayload());
+                    Client.isConnected = true;
+                    Client.waitForReply.notify();
+                }
+            }
         }
     }
 }
