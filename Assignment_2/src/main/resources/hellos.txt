@@ -1,1068 +1,192 @@
-Бзиа збаша
-Сэлам
-Haai
-Kamusta
-Fâla
-Ç'kemi
 Aang
+Ahoj
+Aloha
+Aluu
+Aniin
+Assalaamu Alaikum
+Assalām ‘alaikum 
+Avuxeni
+Ba'ax ka wa'alik?
+Bojour
+Bok
+Bon dia
+Bondjoû
+Bone die
+Bonjorn
+Bonjou
+Bonjour
+Buaregh
+Bula
+Bunâ dzuâ
+Buoris
+Bures
+Chào anh
+Ciao
+Ciau
+Ç'kemi
+Cześć
+Dia dhuit
+Dobar dan
+Dumela
+Dumêlang
+Dydh da
+Ẹ n lẹ
+Ēalā
+Elo
+Fâla
+God dag
+Godaw
+Goddag
+Gouden Dai
+Grüezi
+Gude
+Guuten takh
+Haai
+Habari
+Hafa Adai
+Håfa ådai
+Halau
+Halauġikpiñ
+Halito
 Hallo
-ሰላም።
+Halló
+Halo
+Halò
+Hau
+Héébee
+Hej
+Hello
+Ħello
+Helô
+Heus
+Hi
+Hoi
+Hoj
+Hola
+I nhlikanhi
+Ia ora na
+Is ka warran
+Isänme
+Jeeka, ma tzuula
+Jó napot kívánok
+Kaixo
+Kamusta
+kao
+kedụ
+Kia ora
+Ko na mauri
+Kwei
+Labas
+Lumela
+Mālō e lelei
+Manao ahoana e
+Mandi
+Mar7aba
+Mɔkɔm
+Merhaba
+Merheba
+Mhoro
+Miga
+Mogethin
+Moghrey mie
+Moien
+Moin
+Molo
+Moni
+Mono
+Muraho
+Musta
+Na nga def
+Namaskār
+Ngurrju mayinpa
+Niltze
+Nyob zoo
+Oi
+Ola
+Olá
+Pozdravljeni
+Rimaykullayki
+Salam
+Salibonani
+Salom
+Salud
+Salut
+Salute
+Saluto
+Sannu
+Sastipe
+Sawubona
+Seavus
+Selam
+Selamat pagi
+Shlomo
+Sillaw
+Sveiki
+Talofa
+Tere
+Tereq
+Terve
+Tiervâ
+Tjike
+Wai
+Werte
+Witôjze
+Yá'át'ééh
+ʔédlánet’é
+Γειά
+АсаламугIалейкум
+Бзиа збаша
+бирибиэт
+Вітаю
+Здравейте
+Здраво
+Здравствуйте
+Сайн уу?
+Салам
+Сәлем
+сәләм
+Сән бәәцхәнт
+Сородэ
+Сэлам
+բարև
+Բարեւ
+გამარჯობა
+אַ גוטן טאָג
+שלום
+اسلا عليكم
 السلام عليكم
 ألسّلام عليكم
-Mar7aba
-اسلا عليكم
-Ola
-Shlomo
-
- <td>Héébee (m)<br>
-  Tous (f/m&gt;f)</td>
-</tr>
-<tr>
- 
- <td>բարև(Barev) inf<br>
- ԲարևՁեզ (Barev dzez) frm </td>
-</tr>
-<tr>
- 
- <td>Բարեւ: (Parev) inf<br>
- Բարեւ ձեզ: (Parev tsez) frm</td>
-</tr>
-<tr>
- 
- <td>Bunâ dzuâ</td>
-</tr>
-<tr>
- 
- <td>Werte</td>
-</tr>
-<tr>
- 
- <td>নমস্কাৰ (nômôskar)</td>
-</tr>
-<tr>
- 
- <td>Hola<br>
-  Bonos díes</td>
-</tr>
-<tr>
- 
- <td>Kwei<br>
-   Matcaci</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/azeri/hello_az.mp3">Salam</a><br>
-  <a href="/soundfiles/azeri/hello2_az.mp3">Salam əleyküm</a><br>
-  Əleyküm salam (reply)</td>
-</tr>
-<tr>
- 
- <td>сәләм<br>
- (säläm)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/basque/hello_eu.mp3">Kaixo</a></td>
-</tr>
-<tr>
- 
- <td>Seavus<br>
- Grias god<br>
- Grias di<br>
- Moizaid (<em>mealtime greeting</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/belarusian/hello1_belarusian.mp3">Вітаю</a> (Vitaju)<br>
- <a href="/soundfiles/belarusian/hello2_belarusian.mp3">Дзень добры</a> (Dzień dobry)<br>
- <a href="/soundfiles/belarusian/hello3_belarusian.mp3">Дабрыдзень</a> (Dabrydzień)<br>
- <a href="/soundfiles/belarusian/hello4_belarusian.mp3">Прывітанне</a> (Pryvitańnie) - inf</td>
-</tr>
-<tr>
- 
- <td>নমস্কার
-  (nômoshkar) - <em>for Hindus</em><br>
-  আসসালামু আলাইকুম 
-  (assalamualaikum)<br>
-  স্লামালিকুম (slamalikum) - <em>for Muslims</em></td>
-</tr>
-<tr>
- 
- <td>प्रणाम (prannam)</td>
-</tr>
-<tr>
- 
- <td>Dobar dan (frm)<br>
-  Zdravo</td>
-</tr>
-<tr>
- 
- <td>Salud<br>
-  Mat an traoù?<br>
-  Mat an traoù ganit? (inf)<br>
-  Mat an traoù ganeoc'h (frm/pl) </td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/bulgarian/hello1_bg.mp3">Здравейте</a> (Zdravejte) frm<br>
-  <a href="/soundfiles/bulgarian/hello2_bg.mp3">Здравей</a> (Zdravej) inf<br> 
-  <a href="/soundfiles/bulgarian/hello3_bg.mp3">Здрасти</a> (Zdrasti) inf<br>
-  <a href="/soundfiles/bulgarian/hello6_bg.mp3">Привет</a> (Privet) - regards, greetings</td>
-</tr>
-<tr>
- 
- <td>မဂႆလာပၝ (min-ga-la-ba)</td>
-</tr>
-<tr>
- 
- <td>Olá<br>
- Oi</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/catalan/hello1_ca.mp3">Hola</a><br>
-  <a href="/soundfiles/catalan/hello2_ca.mp3">Bon dia</a></td>
-</tr>
-<tr>
- 
- <td>Hello<br>
-  Hoy<br>
-  Uy</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/chabacano/hello1_chabacano.mp3">Que tal?</a> Hola!</td>
-</tr>
-<tr>
- 
- <td>Ola</td>
-</tr>
-<tr>
- 
- <td>Håfa ådai<br>Buenas</td>
-</tr>
-<tr>
- 
- <td>Hafa Adai</td>
-</tr>
-<tr>
- 
- <td>Салам (Salam)</td>
-</tr>
-<tr>
- 
- <td>ᎣᏏᏲ (Osiyo)<br>
-'ᏏᏲ (Siyo)</td>
-</tr>
-<tr>
- 
- <td>Moni</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/cantonese/hello_ca.mp3">你好</a> (néih hóu)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/hakka/hello1_hakka.mp3">你好</a> (ngi<sup>2</sup> ho<sup>3</sup>)<br>
-<a href="/soundfiles/hakka/howareyou_hakka.mp3">你好冇？</a> (ngi<sup>2</sup> ho<sup>3</sup> mo?)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/mandarin/hello_mandarin.mp3">你好</a> (nǐ hǎo) - inf<br>
-  <a href="/soundfiles/mandarin/hello2_mandarin.mp3">您好</a> (nín hǎo) - frm</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/shanghainese/hello1_shanghainese.mp3">侬好</a> (nóng hō)<br> 
-  <a href="/soundfiles/shanghainese/hello2_shanghainese.mp3">大家好！</a> (dâka hō!) - <em>hello everybody</em><br>
-  <a href="/soundfiles/shanghainese/haveyoueaten_shanghainese.mp3">饭吃过伐？</a> (ve qik gu va?)<br>
- <a href="/soundfiles/shanghainese/hello3_shanghainese.mp3">飯吃了嗎？</a> - <em>"have you eaten?"</em></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/taiwanese/hello_taiwanese.mp3">你好</a> (lí-hó) - sg<br>
-恁好 (lín-hó) - pl</td>
-</tr>
-<tr>
- 
- <td>汝好 (leu<sup>2</sup> ho<sup>2</sup>)</td>
-</tr>
-<tr>
- 
- <td>ʔédlánet’é</td>
-</tr>
-<tr>
- 
- <td>Halito</td>
-</tr>
-<tr>
- 
- <td>Guuten takh!</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/cornish/hello_kw.mp3">Dydh da</a><br> 
- <a href="/soundfiles/cornish/hello2_kw.mp3">Hou</a><br> 
- <a href="/soundfiles/cornish/hello3_kw.mp3">Ha</a><br> 
- <a href="/soundfiles/cornish/hello4_kw.mp3">Hou sos</a><br>
- Lowena dhis (sg)<br>
- Lowena dhywgh (pl)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/corsican/hello_corsican.mp3">Salute</a><br>
-  <a href="/soundfiles/corsican/goodmorning_corsican.mp3">Bonghjornu</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/croatian/hello1_hr.mp3">Bok</a><br>
- <a href="/soundfiles/croatian/hello2_hr.mp3">Ćao</a><br>
- <a href="/soundfiles/croatian/hello3_hr.mp3">Dobar Dan</a></td>
-</tr>
-<tr>
- 
- <td>Hello; Kamosta?</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/czech/hello1_cs.mp3">Ahoj</a> (inf)<br>
- <a href="/soundfiles/czech/goodbye2_cs.mp3">Čau</a> (inf)<br>
- <a href="/soundfiles/czech/goodbye3_cs.mp3">Čus</a> (inf)<br> 
- <a href="/soundfiles/czech/goodbye4_cs.mp3">Nazdar</a> (inf)<br> 
- <a href="/soundfiles/czech/hello4_cs.mp3">Dobrý</a> (inf)<br>
- <a href="/soundfiles/czech/hello2_cs.mp3">Dobrý den</a> (frm)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/danish/hello1_dk.mp3">Hej</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/dutch/hello1_nl.mp3">Hallo</a><br>
-  <a href="/soundfiles/dutch/hello2_nl.mp3">Goededag</a><br>
-   Goeiedag (inf)</td>
-</tr>
-<tr>
- 
- <td>Mɔkɔm</td>
-</tr>
-<tr>
- 
- <td>Hej<br>
- Høj<br>
- Góðdag</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/english/hello_en.mp3">Hello</a><br>
-  <a href="/soundfiles/english/hello2_en.mp3">Hi</a> (inf)</td>
-</tr>
-<tr>
- 
- <td>Tere<br>
-  Tervist</td>
-</tr>
-<tr>
- 
- <td>Hallo<br>
-  Hey</td>
-</tr>
-<tr>
- 
- <td>Bula (inf)<br>
-  Drau bula (dl)<br>
-  Dou bula (pl)<br>
-  Nibula (mp)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/finnish/hello1_fi.mp3">Terve</a><br>
-  <a href="/soundfiles/finnish/hello2_fi.mp3">Hyvää päivää</a><br> 
-  <a href="/soundfiles/finnish/hello3_fi.mp3">Päivää</a><br> 
-  <a href="/soundfiles/finnish/hello4_fi.mp3">Moi</a><br> 
-  <a href="/soundfiles/finnish/hello5_fi.mp3">Hei</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/french/hello1_fr.mp3">Bonjour</a> (frm)<br>
-<a href="/soundfiles/french/hello2_fr.mp3">Salut</a> (inf)</td>
-</tr>
-<tr>
- 
- <td>Moin<br>
- Guundach</td>
-</tr>
-<tr>
- 
- <td>Gouden Dai</td>
-</tr>
-<tr>
- 
- <td>Hoi<br>Goeie<br>A goeie<br>Goedei</td>
-</tr>
-<tr>
- 
- <td>Mandi</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/galician/hello_gl.mp3">Ola</a></td>
-</tr>
-<tr>
- 
- <td>გამარჯობა (gamarjoba)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/german/hello1_de.mp3">Hallo</a><br>
-  <a href="/soundfiles/german/hello2_de.mp3">Guten Tag</a><br> 
-  <a href="/soundfiles/german/hello3_de.mp3">Servus</a> (<em>used in Austria &amp; Bavaria</em>)<br> 
-  Moin</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/greek/hello1_el.mp3">Γειά!</a> (Ya) - inf <br>
-  <a href="/soundfiles/greek/hello2_el.mp3">Γειά σου</a> (Ya su) - inf<br>
-  <a href="/soundfiles/greek/hello3_el.mp3">Γειά σας</a> (Ya sas) - frm</td>
-</tr>
-<tr>
- 
- <td>Aluu (inf)<br>
- Inuugujoq<br>
- Kutaa (frm)</td>
-</tr>
-<tr>
- 
- <td>નમસ્તે (namaste)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/haitiancreole/hello_haitiancreole.mp3">Bonjou</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/hausa/hello1_hausa.mp3">Sannu</a><br>
-<a href="/soundfiles/hausa/hello2_hausa.mp3">Salama alaikum</a><br>
-<a href="/soundfiles/hausa/hello3_hausa.mp3">A gaishai ka</a><br>
-<a href="/soundfiles/hausa/hello4_hausa.mp3">Amin. Alaikum salam</a> (<em>reply</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/hawaiian/welcome_hawaiian.mp3">Aloha</a></td>
-</tr>
-<tr>
- 
- <td class="right">(Shalom) <span dir="rtl">שלום</span></td>
-</tr>
-<tr>
- 
- <td>Tjike</td>
-</tr>
-<tr>
- 
- <td>Mono</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/hindi/hello1_hindi.mp3">नमस्ते</a> (namaste)<br>
-  <a href="/soundfiles/hindi/hello2_hindi.mp3">नमस्कार</a> (namaskār)</td>
-</tr>
-<tr>
- 
- <td>Nyob zoo (<em>live well</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/hungarian/hello_hu.mp3">Jó napot kívánok</a><br>
-  <a href="/soundfiles/hungarian/hello2_hu.mp3">Szervusz</a><br>
-  <a href="/soundfiles/hungarian/hello3_hu.mp3">Szia</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/icelandic/hello1_is.mp3">Halló</a><br> 
-  <a href="/soundfiles/icelandic/hello2_is.mp3">Góðan dag</a><br> 
-  <a href="/soundfiles/icelandic/hello3_is.mp3">Góðan daginn</a><br> 
-  <a href="/soundfiles/icelandic/hello4_is.mp3">Sæll</a> (&gt;m)<br>
-  <a href="/soundfiles/icelandic/hello5_is.mp3">Sæl</a> (&gt;f)</td>
-</tr>
-<tr>
- 
- <td>Saluto<br>
- Bona jorno</td>
-</tr>
-<tr>
- 
- <td>kedụ</td>
-</tr>
-<tr>
- 
- <td>Tiervâ<br>
- Pyeri peivi (<em>good day</em>)</td>
-</tr>
-<tr>
- 
- <td>Hi<br>
-  Apa kabar?</td>
-</tr>
-<tr>
- 
- <td>ᐊᐃ (Ai) <br>
- ᐊᐃᓐᖓᐃ (Ainngai)</td>
-</tr>
-<tr>
- 
- <td>Halauġikpiñ</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/irish/hello1_ga.mp3">Dia dhuit</a> (sg)<br>
- <a href="/soundfiles/irish/hello2_ga.mp3">Dia dhaoibh</a> (pl)<br> 
- Dia is Muire dhuit (sg) - <em>reply</em><br>
- <a href="/soundfiles/irish/hello4_ga.mp3">Dia is Muire dhaoibh</a> (pl) - <em>reply</em></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/italian/goodbye1_it.mp3">Ciao</a><br>
-  <a href="/soundfiles/italian/hello2_it.mp3">Salve</a></td>
-</tr>
-<tr>
- 
- <td>Godaw</td>
-</tr>
-<tr>
- 
- <td>今日は (konnichiwa)<br>
-  おっす (ossu) - <em>used between close male friends</em></td>
-</tr>
-<tr>
- 
- <td>Halo</td>
-</tr>
-<tr>
- 
- <td>Salut<br> 
- Bouônjour</td>
-</tr>
-<tr>
- 
- <td>Сән бәәцхәнт! (Sän bäätsxänt)<br>
- Мендвт (Mendvt)<br>
- Менд  (Mend) - inf</td>
-</tr>
-<tr>
- 
- <td>Witôjze</td>
-</tr>
-<tr>
- 
- <td><a href="http://www.omniglot.com/soundfiles/kannada/hello1_kn.mp3">ನಮಸ್ತೆ</a> (namaste)<br> 
-  <a href="http://www.omniglot.com/soundfiles/kannada/hello2_kn.mp3">ನಮಸ್ಕಾರ</a> (namaskāra)</td>
-</tr>
-<tr>
- 
- <td>Assalām ‘alaikum (<em>&gt;Muslims</em>)<br>Namaskār (<em>&gt;Hindus</em>)<br>Halo (inf) आदाब । (aadaab)</td>
-</tr>
-<tr>
- 
- <td>Сәлем! (Sälem!) - inf<br>
-  Сәлеметсіз бе? (Sälemetsiz be?) - frm</td>
-</tr>
-<tr>
- 
- <td>ជំរាបសួរ (johm riab sua) - frm<br>
- surs dey (inf)</td>
-</tr>
-<tr>
- 
- <td>Halau</td>
-</tr>
-<tr>
- 
- <td>Muraho / Bite (inf)</td>
-</tr>
-<tr>
- 
- <td>Ko na mauri<br>
-  Mauri</td>
-</tr>
-<tr>
- 
- <td>안녕하십니까 (annyeong-hasimnikka) - frm<br>
-<a href="/soundfiles/korean/hello1_kr.mp3">안녕하세요</a> (annyeonghaseyo) - inf<br>
-  안녕 (annyeong) - inf</td>
-</tr>
-<tr>
- 
- <td>!kao</td>
-</tr>
-<tr>
- 
- <td>Merheba<br>
-Silav<br>
-Silamun eleykum<br>
-Rojbaş (inf)</td>
-</tr>
-<tr>
- 
- <td>Sillaw<br>
- Ew kata bash<br> 
- Em kata bash</td>
-</tr>
-<tr>
- 
- <td>Салам! (Salam!) - sg/inf<br>
-Саламатсыңбы! (Salamatsyngby!) - sg/inf<br>
-Саламатсыңарбы! (Salamatsyngarby!) - sg/inf<br>
-Саламатсызбы! (Salamatsyzby!) - sg/frm<br>
-Саламатсыздарбы! (Salamatsyzdarby!) - pl/frm<br>
-Саламатчылык! (Salamatchylyk) - reply/frm<br>
-Ассалом алейкум! (Assalom aleykum!) - m/&gt;m<br>
-Алейкум Ассалам! (Aleykum Assalam!) - <em>reply</em><br>
-Саламат! (Salamat!) - <em>short reply</em><br>
-Саламатчылык! (Salamatchylyk) - <em>full reply</em><br>
-Арыбаңыз! (Arybangyz!) - sg/frm<br>
-Бар болуңуз! (Bar bolunguz!) - reply</td>
-</tr>
-<tr>
- 
- <td>Hau (m)</td>
-</tr>
-<tr>
- 
- <td>ສະບາຍດີ (sába̖ai-di̖i)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/latin/hello1_latin.mp3">Heus</a> (inf)<br> 
-  <a href="/soundfiles/latin/hello2_latin.mp3">Ave</a><br>
-  <a href="/soundfiles/latin/hello3_latin.mp3">Salve</a> (sg)<br> 
-  <a href="/soundfiles/latin/hello4_latin.mp3">Salvete</a> (pl)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/latvian/hello_lv.mp3">Sveiki</a></td>
-</tr>
-<tr>
- 
- <td>Hallo</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/lithuanian/hello1_lt.mp3">Labas</a><br>
- <a href="/soundfiles/lithuanian/hello2_lt.mp3">Sveikas</a><br>
- <a href="/soundfiles/lithuanian/hello3_lt.mp3">Sveiki</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/lowsaxon/hello_ls.mp3">Moin</a></td>
-</tr>
-<tr>
- 
- <td>Lumela (sg)<br>
- Mlumeleng (pl)</td>
-</tr>
-<tr>
- 
- <td>Buoris</td>
-</tr>
-<tr>
- 
- <td><a href="http://www.omniglot.com/soundfiles/luxembourgish/hello_lb.mp3">Moien</a><br> 
- <a href="http://www.omniglot.com/soundfiles/luxembourgish/hello2_lb.mp3">Salut</a></td>
-</tr>
-<tr>
- 
- <td><a href="http://www.omniglot.com/soundfiles/macedonian/hello.mp3">Здраво</a> (Zdravo)</td>
-</tr>
-<tr>
- 
- <td>Manao ahoana e</td>
-</tr>
-<tr>
- 
- <td>Selamat pagi (good morning)<br>
-  Selamat petang (good afternoon)<br>
-  Selamat malam (good night)<br>
-  Assalamualaikum (used by Muslims)</td>
-</tr>
-<tr>
- 
- <td>നമസ്തെ (namaste)<br>നമസ്കാരം (namaskaram)</td>
-</tr>
-<tr>
- 
- <td>Jeeka, ma tzuula (sg)<br>
-  Jeeka, ma chi uula (pl)<br>
-   Ma (<em>reply</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/manx/goodmorning_gv.mp3">Moghrey mie</a> (<em>morning</em>)<br>
- <a href="/soundfiles/manx/goodevening_gv.mp3">Fastyr mie</a> (<em>afternoon / evening</em>)</td>
-</tr>
-<tr>
- 
- <td>Assalaamu Alaikum (frm)<br>
- Kihineh? (inf)</td>
-</tr>
-<tr>
- 
- <td>Ħello<br>
-  Hawn<br>
-  Aw</td>
-</tr>
-<tr>
- 
- <td>Kia ora<br>
- Kia ora rā kōrua (dl)<br>
- Kia ora koutou (pl)<br>
- Tēnā koe (sg/frm)<br>
- Tēnā kōrua (dl/frm)<br>
- Tēnā koutou (pl/frm)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/marathi/hello_mr.mp3">नमस्कार</a> (namaskār)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/mongolian/hello1_mn.mp3">Сайн уу?</a> (Sain uu?)<br>
-  <a href="/soundfiles/mongolian/hello2_mn.mp3">Сайн байна уу?</a> (Sain baina uu)</td>
-</tr>
-<tr>
- 
- <td>Niltze<br>
- Tialli<br>
- Pialli</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/navajo/hello_nav.mp3"></a>Yá'át'ééh</td>
-</tr>
-<tr>
- 
- <td>ज्वजलपा </td>
-</tr>
-<tr>
- 
- <td>Salibonani</td>
-</tr>
-<tr>
- 
- <td>नमस्ते (namaste)</td>
-</tr>
-<tr>
- 
- <td>Bures<br>
-Bures bures (reply)</td>
-</tr>
-<tr>
- 
- <td>Dumêlang<br>
-  Thôbêla<br>
-  Helele<br>
-  Hai</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/norwegian/hello1_no.mp3">Goddag</a><br>
-  <a href="/soundfiles/norwegian/hello2_no.mp3">Hei</a><br>
-  <a href="/soundfiles/norwegian/hello3_no.mp3">Morn</a></td>
-</tr>
-<tr>
- 
- <td><a href="http://www.omniglot.com/soundfiles/occitan/hello1_oc.mp3">Bonjorn!</a><br>
-  <a href="http://www.omniglot.com/soundfiles/occitan/hello2_oc.mp3">Adieu!</a><br>
-  <a href="http://www.omniglot.com/soundfiles/occitan/hello3_oc.mp3">Adieussiatz!</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/ojibwe/hello1_oj.mp3">Aniin</a> (inf)<br>
-<a href="/soundfiles/ojibwe/hello2_oj.mp3">Bozhoo</a> (frm)</td>
-</tr>
-<tr>
- 
- <td>Ēalā</td>
-</tr>
-<tr>
- 
- <td>ନମସ୍କାର (namascara)<br>
- ଶୁଣିବେ?  (sunibe?)<br>
- ହାଏ (hāē)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/papiamento/hello1_papiamento.mp3">Bon dia</a><br>
-  <a href="/soundfiles/papiamento/hello2_papiamento.mp3">Halo</a></td>
-</tr>
-<tr>
- 
- <td class="right">(khe chare) <span dir="rtl">ښې چارې</span><br>
-(salaam) <a href="/soundfiles/pashto/hello1_ps.mp3"><span dir="rtl">سلام</span></a><br>
-  (as-salaamu' alaykum) <a href="/soundfiles/pashto/hello2_ps.mp3"><span dir="rtl">السلام عايكم</span></a></td>
-</tr>
-<tr>
- 
- <td class="right">(dorood) <span dir="rtl">درود</span><br>
- (salâm) <a href="/soundfiles/persian/hello_fa.mp3"><span dir="rtl">سلام</span></a><br>
- </td>
-</tr>
-<tr>
- 
- <td>Bojour<br>
- Bojour mes gins (frm)<br>
- Salut ti z'aute (inf)</td>
-</tr>
-<tr>
- 
- <td>Wai<br>
- Wai palya</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/polish/hello1_pl.mp3">Cześć</a> (inf)<br>
- <a href="/soundfiles/polish/hello2_pl.mp3">Siema</a> (vinf)<br>
- <a href="/soundfiles/polish/hello3_pl.mp3">Siemano</a> (vinf)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/portuguese/hello_pt.mp3">Olá</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/portuguese_br/hello1_pt-br.mp3">Oi!</a><br> 
- <a href="/soundfiles/portuguese_br/hello2_pt-br.mp3">E aí?</a><br>
- <a href="/soundfiles/portuguese_br/hello3_pt-br.mp3">Tudo bem?</a><br>
- <a href="/soundfiles/portuguese_br/hello4_pt-br.mp3">Tudo certo?</a><br>
- <a href="/soundfiles/portuguese_br/hello5_pt-br.mp3">Opa!</a></td>
-</tr>
-<tr> 
- 
- <td><a href="/soundfiles/punjabi/hello1_pa.mp3">ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ। / <span dir="rtl">ست سِری اَکال</span></a> (sat srī akāl)<br>
-  ਨਮਸਕਾਰ / <span dir="rtl">نمسکار</span> (namaskar)</td>
-</tr>
-<tr>
- 
- <td>Rimaykullayki / Napaykullayki</td>
-</tr>
-<tr>
- 
- <td>Sastipe!<br>
- Lachho dives (<em>Good day</em>)<br>
- Kushti divvus (<em>British Romany</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/romanian/hello1_ro.mp3">Salut</a><br>
- <a href="/soundfiles/romanian/hello2_ro.mp3">Bună ziua</a></td>
-</tr>
-<tr>
- 
- <td>Ciao<br>
- Tgau<br>
- Allegra</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/russian/hello_ru.mp3">Здравствуйте!</a> (Zdravstvujte!) - frm<br>
-Привет! (Privet!) - inf</td>
-</tr>
-<tr>
- 
- <td>бирибиэт (biribiet) - frm<br>
-<a href="/soundfiles/sakha/hello2_sakha.mp3">Дорообо</a> (doroobo) - inf</td>
-</tr>
-<tr>
- 
- <td>Talofa / Falopa</td>
-</tr>
-<tr>
- 
- <td>नमस्ते (namaste)<br>
-  नमो नमः (namo namaḥ)<br>
-  नमस्कारः (namaskāraḥ)</td>
-</tr>
-<tr>
- 
- <td>Bone die</td>
-</tr>
-<tr>
- 
- <td>Hello</td>
-</tr>
-<tr>
- 
- <td>Halò<br>
- Ciamar a tha thu? (inf)<br>
- Ciamar a tha sibh? (frm/pl)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/serbian/hello_sr.mp3">Здраво</a> (Zdravo)</td>
-</tr>
-<tr>
- 
- <td>Lumela<br>
- Dumela (sg)<br>
- Dumelang (pl)<br>
- Helele</td>
-</tr>
-<tr>
- 
- <td>Mhoro (sg)<br>
- Mhoroi (pl)</td>
-</tr>
-<tr>
- 
- <td>Ciau<br>
-  Salutamu<br>
-  Assa binidica <br>
-  Sabbinidica [assabbini'ɾika] (<em>formal for elderly people</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/sinhala/hello_sinhala.mp3">ආයුඛෝවන්</a> (āyubūvan)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/slovak/hello1_sk.mp3">Ahoj</a> (sg/inf)<br>
- <a href="/soundfiles/slovak/hello2_sk.mp3">Ahojte</a> (pl/frm)<br>
- Nazdar<br>
- Servus</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/slovenian/hello1_sl.mp3">Pozdravljeni</a><br>  
-  <a href="/soundfiles/slovenian/hello2_sl.mp3">Živjo</a><br> 
-  <a href="/soundfiles/slovenian/hello3_sl.mp3">Zdravo</a> (<em>in cities</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/somali/howareyou_so.mp3">Is ka warran</a></td>
-</tr>
-<tr>
- 
- <td>Buaregh<br>
- Bööresth<br>
- Buerie biejjie (<em>Good day</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/spanish/hello_es.mp3">¡Hola!</a></td>
-</tr>
-<tr>
- 
- <td>Hoj</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/sundanese/hello_su.mp3">Halo</a> (<em>borrowed from Indonesian</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/swahili/howareyou1_swahili.mp3">Habari</a> (inf)<br>
-  <a href="/soundfiles/swahili/hello2_swahili.mp3">Hujambo</a> (sg)<br>
-  <a href="/soundfiles/swahili/howareyou2_swahili.mp3">Hamjambo</a> (pl)<br>
-  <a href="/soundfiles/swahili/hello4_swahili.mp3">Sijambo</a> (reply) </td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/swedish/hello3_se.mp3">God dag</a> (frm)<br>
- <a href="/soundfiles/swedish/hello_se.mp3">Hej</a> (inf)<br>
- <a href="/soundfiles/swedish/hello2_se.mp3">Hallå</a> (inf)<br>
- Tjena<br>
- Tja (vinf)</td>
-</tr>
-<tr>
- 
- <td>Grüezi (frm)<br>
- Sali (inf)<br>
- Grüezi mittenand (pl/frm)<br>
- Sali zämme (pl/inf)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/tagalog/hello1_tagalog.mp3">Musta?</a> (inf)<br>
-<a href="/soundfiles/tagalog/hello2_tagalog.mp3">Kumusta?</a> (frm)<br>
-Hello<br>
-Hi</td>
-</tr>
-<tr>
- 
- <td>Ia ora na</td>
-</tr>
-<tr>
- 
- <td>வணக்கம்! (vaṇakkam)
- [<a href="/soundfiles/tamil/hello-m1_ta.mp3">ml</a>]
- [<a href="/soundfiles/tamil/hello-f2_ta.mp3">fm</a>]</td>
-</tr>
-<tr>
- 
- <td>வணக்க0! (vaṇakkã)
- [<a href="/soundfiles/tamil/hello-f1_ta.mp3">fm</a>]</td>
-</tr>
-<tr>
- 
- <td>Isänme(sez)<br>
- Sawmı(sız)<br>
- Sälam (inf)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/telugu/hello_te.mp3">నమస్కారం</a> (namaskārām)</td>
-</tr>
-<tr>
- 
- <td>Elo<br>
-  Hi</td>
-</tr>
-<tr>
- 
- <td>Miga (<em>said by a visitor</em>)<br>
- Kobe (<em>said to a visitor</em>)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/thai/hello1_th.mp3">สวัสดี</a> (sà-wàt-dee)</td>
-</tr>
-<tr>
- 
- <td>བཀྲ་ཤིས་བདེ་ལེགས། (tashi delek)*</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/tigrinya/hello_tigrinya.mp3">ሰላም</a> (selam)</td>
-</tr>
-<tr>
- 
- <td>Gude<br>Hi<br>Hai</td>
-</tr>
-<tr>
- 
- <td>Mālō e lelei (inf)<br>
- Mālō ‘etau lava (frm)</td>
-</tr>
-<tr>
- 
- <td>Avuxeni<br>
- Ahee (<em>reply</em>)</td>
-</tr>
-<tr>
- 
- <td>Dumela</td>
-</tr>
-<tr>
- 
- <td>АсаламугIалейкум! (Asalamuʔaleykum!)<br>
-  СаламгIапейкум! (Salamʔaleykum!)<br>
-  СаламгIапейкум! (Biziyä!) (&gt;f)<br>
-  Изийаь! (Iziyä!) (&gt;m)<br>
-  Ризийаь! (Riziyä!) (&gt;pl)</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/turkish/hello_tr.mp3">Merhaba</a><br>
-  <a href="/soundfiles/turkish/hello2_tr.mp3">Selam</a><br>
-  <a href="/soundfiles/turkish/hello3_tr.mp3">İyi günler</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/ukrainian/hello1_uk.mp3">Вітаю</a> (Vitayu) - frm<br>
-  <a href="/soundfiles/ukrainian/hello2_uk.mp3">Агов</a> (Ahov) - inf</td>
-</tr>
-<tr>
- 
- <td>Сородэ</td>
-</tr>
-<tr>
- 
- <td class="right">(āssālam 'alaykum)
-  <a href="/soundfiles/urdu/hello_ur.mp3"><span dir="rtl">السلام علیکم</span></a><br>
-  reply - (wālaikum assalām) وعليكم السلام<br>
-  inf - (salām) سلام</td>
-</tr>
-<tr>
- 
- <td class="right"><span dir="rtl">ئەسسالامۇ ئەلەيكۇم!</span><br>
- frm - (Ässalamu äläykum!)<br>
- <span dir="rtl">ۋەئەلەيكۇم ئەسسالام!</span><br>
- <em>reply</em> - (Wä'äläykum ässalam!)<br>
- <span dir="rtl">ياخشىمۇسىز!</span><br>
- inf - (Yaxshimusız!) </td>
-</tr>
-<tr>
- 
- <td>Salom</td>
-</tr>
-<tr>
- 
- <td>I nhlikanhi</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/venetian/hello_venetian.mp3">Ciao!</a></td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/vietnamese/goodbye1_vi.mp3">Chào anh</a> (&gt;m)<br>
-  <a href="/soundfiles/vietnamese/goodbye2_vi.mp3">Chào chị</a> (&gt;f)</td>
-</tr>
-<tr>
- 
- <td>Tereq</td>
-</tr>
-<tr>
- 
- <td>Bondjoû</td>
-</tr>
-<tr>
- 
- <td>Ngurrju mayinpa</td>
-</tr>
-<tr>
- 
- <td><a href="/soundfiles/welsh/hello_cy.mp3">Helô</a><br>
-<a href="/soundfiles/welsh/hello2_cy.mp3">Hylô</a><br>
-<a href="/soundfiles/welsh/hello3_cy.mp3">Shwmae</a><br>
-S'mae</td>
-</tr>
-<tr>
- 
- <td>Na nga def (sg)<br>
-Na ngeen def (pl)<br>
-Salaam aleekum</td>
-</tr>
-<tr>
- 
- <td>Molo (sg)<br>
-  Molweni (pl)</td>
-</tr>
-<tr>
- 
- <td>Mogethin</td>
-</tr>
-<tr>
- 
- <td class="right">(A gutn tog) <a href="/soundfiles/yiddish/hello_yd.mp3"><span dir="rtl">אַ גוטן טאָג</span></a></td>
-</tr>
-<tr>
- 
- <td>Ẹ n lẹ</td>
-</tr>
-<tr>
- 
- <td>Ba'ax ka wa'alik?</td>
-</tr>
-<tr>
- 
- <td>Selam<br>
- Ma be xér<br>
- Demê şıma be xeyr</td>
-</tr>
-<tr>
- 
- <td>Sawubona (sg)<br>Sanibonani (pl)</td>
-</tr>
-</tbody></table>
+السلام علیکم
+درود
+ښې چارې
+ئەسسالامۇ ئەلەيكۇم
+आदाब
+ज्वजलपा
+नमस्कार
+नमस्ते
+प्रणाम
+নমস্কার
+নমস্কাৰ
+ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ।
+નમસ્તે
+ନମସ୍କାର
+வணக்க0
+வணக்கம்
+నమస్కారం
+ನಮಸ್ತೆ
+നമസ്തെ
+ආයුඛෝවන්
+สวัสดี
+မဂႆလာပၝ
+བཀྲ་ཤིས་བདེ་ལེགས།
+ສະບາຍດີ 
+ជំរាបសួរ
+ᐊᐃ
+ᎣᏏᏲ
+ሰላም
+ሰላም።
+안녕하십니까
+今日は
+你好
+侬好
+汝好
