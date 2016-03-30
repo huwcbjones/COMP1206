@@ -76,7 +76,7 @@ public final class ClientConnection implements PacketListener {
         if(!isConnected){
             return false;
         }
-        this.comms.sendMessage(new Packet<>(PacketType.HELLO, "hello"));
+        this.comms.sendMessage(new Packet<>(PacketType.HELLO, Server.config.getRandomHello() + " (hello)"));
         return true;
     }
 

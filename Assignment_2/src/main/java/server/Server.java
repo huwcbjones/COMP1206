@@ -31,14 +31,13 @@ public final class Server {
 
     private ServerListenThread plainSocket;
     private ServerListenThread secureSocket;
-    private Config config;
+    public static final Config config = new Config();
 
     private HashMap<Long, ClientConnection> clients;
     private ExecutorService workPool;
 
     public Server () {
         clients = new HashMap<>();
-        config = new Config();
     }
 
     public void setConfigFile (String file) {

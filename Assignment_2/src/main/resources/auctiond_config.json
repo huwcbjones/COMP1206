@@ -1,6 +1,7 @@
 {
   "server": {
     "data-dir": "data",
+    "hellos": "hellos.txt",
     "port": 473,
     "secure": {
       "enable": true,

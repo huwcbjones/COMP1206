@@ -2,13 +2,14 @@ package server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.simple.JSONArray;
-import server.exceptions.ConfigLoadException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import server.exceptions.ConfigLoadException;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Server COnfig Manager
@@ -18,12 +19,15 @@ import java.io.*;
  */
 final class Config {
 
+    public static final int VERSION = 1;
+
     private static Logger log = LogManager.getLogger(Config.class);
 
     private boolean configFileLocationWasSet = false;
     private File configFileLocation;
     private File dataDirectory;
 
+    private ArrayList<String> hellos = new ArrayList<>();
     private int plainPort = 473;
     private boolean secureConnectionEnabled = false;
     private int securePort = 474;
@@ -76,6 +80,7 @@ final class Config {
                 this.loadDataDir(serverRoot);
                 this.loadServerListening(serverRoot);
                 this.loadWorkerPoolSize(serverRoot);
+                this.loadHellos(serverRoot);
             } catch (IOException | ParseException e) {
                 throw new ConfigLoadException("Failed to load config file! " + e.getMessage());
             }
@@ -130,6 +135,31 @@ final class Config {
         }
     }
 
+    private void loadHellos(JSONObject serverRoot) {
+        File hellosFile = new File((String) serverRoot.get("hellos"));
+        if (hellosFile == null) {
+            return;
+        }
+        if (!hellosFile.canRead()) {
+            this.hellos.add("Hello");
+            return;
+        }
+        try {
+            FileInputStream fileInputStream = new FileInputStream(hellosFile);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                this.hellos.add(line);
+            }
+            bufferedReader.close();
+
+        } catch (FileNotFoundException e) {
+            log.warn("Failed to open " + hellosFile.getAbsolutePath());
+        } catch (IOException e) {
+            log.error("Error whilst reading file. {}", e.getMessage());
+        }
+    }
+
     /**
      * Gets the port the server listens to (unencrypted)
      *
@@ -164,6 +194,9 @@ final class Config {
      */
     public int getWorkers () { return this.workers; }
 
+    public String getRandomHello() {
+        return this.hellos.get(new Random().nextInt(this.hellos.size()));
+    }
     public String getConfig () {
         String config = "";
 
