@@ -19,6 +19,12 @@ public enum PacketType {
     VERSION,
 
     /**
+     * Used to disconnect clients
+     * On receiving this packet, a client should disconnect as the server has stopped listening
+     */
+    DISCONNECT,
+
+    /**
      * Connection should use the secure connection.
      * Returns the secure port.
      */
