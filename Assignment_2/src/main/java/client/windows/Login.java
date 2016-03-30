@@ -205,7 +205,11 @@ public final class Login extends JFrame {
             // Run login in new anonymous thread
             // Also uses nice J8 lamba expressions, instead of
             // new Thread(new Runnable(){public void run(){Client.login();}, "Login Thread").start();
-            new Thread(Client::login, "LoginThread").start();
+            // Well I was going to do it this way, until I realised how useful it would be to pass the username
+            // and password to the login function!
+            new Thread(() -> {
+                Client.login(Login.this.text_username.getText(), Login.this.text_password.getPassword());
+            }, "LoginThread").start();
         }
     }
 
@@ -229,9 +233,9 @@ public final class Login extends JFrame {
          */
         @Override
         public void loginSuccess (User user) {
-            Client.removeLoginListener(Login.this.loginEventListener);
             Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
+            Client.removeLoginListener(Login.this.loginEventListener);
         }
 
         /**
@@ -241,7 +245,6 @@ public final class Login extends JFrame {
          */
         @Override
         public void loginError (String message) {
-            Client.removeLoginListener(Login.this.loginEventListener);
             Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
             Login.this.clearFields();
@@ -251,6 +254,7 @@ public final class Login extends JFrame {
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE
             );
+            Client.removeLoginListener(Login.this.loginEventListener);
         }
     }
 

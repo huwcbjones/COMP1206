@@ -13,7 +13,6 @@ import shared.User;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -40,6 +39,7 @@ public final class Client {
     private static Comms comms;
 
     private static final Object waitForReply = new Object();
+    private static boolean replyTimedOut = true;
 
     public Client () {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
@@ -64,6 +64,25 @@ public final class Client {
         }
     }
 
+    public static void login(String username, char[] password) {
+        try {
+            if (!Client.isConnected) {
+                Client.connect();
+            }
+            if (Client.cancelLogin) {
+                Client.cancelLogin = false;
+                return;
+            }
+            Client.comms.sendMessage(new Packet<>(PacketType.LOGIN, new char[][]{username.toCharArray(), password}));
+            Client.waitForReply(5  * 1000);
+            if(Client.replyTimedOut){
+                fireLoginFailHandler("Request timed out.");
+            }
+        } catch (ConnectionFailedException e) {
+            log.error("Failed to connect to server! {}", e.getMessage());
+        }
+    }
+
     public static void connect () throws ConnectionFailedException {
         Server server = Client.config.getSelectedServer();
         log.info("Connecting to {} ({} on {})...", server.getName(), server.getAddress(), server.getPort());
@@ -74,42 +93,23 @@ public final class Client {
 
             Client.comms = new Comms(plainSocket, inputStream, outputStream);
             Client.comms.start();
-            helloReplyHandler helloHandler = new helloReplyHandler();
+            replyHandler helloHandler = new replyHandler();
             Client.comms.addMessageListener(helloHandler);
 
             log.info("Saying HELLO to the server...");
             Client.comms.sendMessage(new Packet<>(PacketType.HELLO, "hello"));
-            synchronized (Client.waitForReply) {
-
-                try {
-                    log.info("Waiting for server response...");
-                    Client.waitForReply.wait(5 * 1000);
-                } catch (InterruptedException e) {
-                    log.debug(e);
-                }
-            }
+            Client.waitForReply(5 * 1000);
             Client.comms.removeMessageListener(helloHandler);
-            if(!Client.isConnected){
+            if (Client.replyTimedOut) {
                 Client.comms.shutdown();
                 throw new ConnectionFailedException("Handshake was unsuccessful.");
             }
+
+            Client.comms.sendMessage(new Packet<>(PacketType.VERSION, Config.VERSION));
+
         } catch (IOException e) {
             log.debug(e);
             throw new ConnectionFailedException(e.getMessage());
-        }
-    }
-
-    public static void login () {
-        try {
-            if(!Client.isConnected) {
-                Client.connect();
-            }
-            if (Client.cancelLogin) {
-                Client.cancelLogin = false;
-                return;
-            }
-        } catch (ConnectionFailedException e) {
-            log.error("Failed to connect to server! {}", e.getMessage());
         }
     }
 
@@ -138,26 +138,69 @@ public final class Client {
     }
 
     private static void fireLoginFailHandler (String message) {
-        for (LoginEventListener l : Client.loginEventListeners) {
+        // This gets around concurrent modification exceptions if the listener removes itself when being called
+        ArrayList<LoginEventListener> listeners = new ArrayList<>();
+        listeners.addAll(Client.loginEventListeners);
+        for (LoginEventListener l : listeners) {
             l.loginError(message);
         }
     }
 
     private static void fireLoginSuccessHandler (User user) {
-        for (LoginEventListener l : Client.loginEventListeners) {
+        // This gets around concurrent modification exceptions if the listener removes itself when being called
+        ArrayList<LoginEventListener> listeners = new ArrayList<>();
+        listeners.addAll(Client.loginEventListeners);
+        for (LoginEventListener l : listeners) {
             l.loginSuccess(user);
         }
     }
 
-    private static class helloReplyHandler implements PacketListener {
+    /**
+     * Causes the thread this method is called in to wait, until the timeout occurs, or we are notified of a message
+     *
+     * @param timeout How long to wait before timing out
+     */
+    private static void waitForReply(int timeout) {
+        synchronized (Client.waitForReply) {
+            try {
+                // Change reply timed out to true, if we received a reply, the handling code should change this to false
+                Client.replyTimedOut = true;
+
+                log.info("Waiting for server reply...");
+                Client.waitForReply.wait(timeout);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Unblocks a waitForReply
+     */
+    private static void replyReceived() {
+        // Change reply timed out to false as we didn't time out
+        Client.replyTimedOut = false;
+        synchronized (Client.waitForReply) {
+            Client.waitForReply.notify();
+        }
+    }
+
+    private static class replyHandler implements PacketListener {
         @Override
         public void packetReceived (Packet packet) {
-            if (packet.getType() == PacketType.HELLO) {
-                synchronized (Client.waitForReply) {
+            switch (packet.getType()) {
+                case HELLO:
                     log.info("Server says: {}", packet.getPayload());
-                    Client.isConnected = true;
-                    Client.waitForReply.notify();
-                }
+                    Client.replyReceived();
+                    break;
+                case LOGIN_SUCCESS:
+                    Client.fireLoginSuccessHandler((User) packet.getPayload());
+                    Client.replyReceived();
+                    break;
+                case LOGIN_FAIL:
+                    Client.fireLoginFailHandler((String)packet.getPayload());
+                    Client.replyReceived();
+                    break;
             }
         }
     }

@@ -21,6 +21,8 @@ import java.util.Iterator;
  */
 public final class Config {
 
+    public static final int VERSION = 1;
+
     private static final Logger log = LogManager.getLogger(Config.class);
 
     File configFileLocation = new File("auction_config.json");
