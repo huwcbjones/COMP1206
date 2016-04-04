@@ -19,6 +19,16 @@ public enum PacketType {
     VERSION,
 
     /**
+     * Used to say OK to a message
+     */
+    OK,
+
+    /**
+     * Used to say Not OK to a message
+     */
+    NOK,
+
+    /**
      * Used to disconnect clients
      * On receiving this packet, a client should disconnect as the server has stopped listening
      */
