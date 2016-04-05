@@ -8,5 +8,20 @@ package shared.events;
  */
 public interface ConnectionListener {
 
+    /**
+     * Fires when the connection succeeds
+     */
+    void connectionSucceeded();
+
+    /**
+     * Fires when the connection fails
+     * @param reason Reason why connection failed
+     */
+    void connectionFailed(String reason);
+
+    /**
+     * Fires when the connection is closed
+     * @param reason Reason why the connection is closed
+     */
     void connectionClosed(String reason);
 }

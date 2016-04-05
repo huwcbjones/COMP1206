@@ -19,20 +19,44 @@ public enum PacketType {
     VERSION,
 
     /**
+     * Used to say OK to a message
+     */
+    OK,
+
+    /**
+     * Used to say Not OK to a message
+     */
+    NOK,
+
+    /**
      * Used to disconnect clients
      * On receiving this packet, a client should disconnect as the server has stopped listening
      */
     DISCONNECT,
 
     /**
-     * Connection should use the secure connection.
-     * Returns the secure port.
+     * Sends the secure port the server is listening on
      */
-    USE_SECURE,
+    SECURE,
 
     //region Login Types
     LOGIN,
     LOGIN_FAIL,
     LOGIN_SUCCESS,
+
+    LOGOUT,
+    //endregion
+
+    //region Connection Maintenance
+    // Let's create a game of ping pong to maintain connection
+    /**
+     * Server sends a ping to client to check client is alive
+     */
+    PING,
+
+    /**
+     * Client sends a pong to the server to say it is still alive
+     */
+    PONG
     //endregion
 }

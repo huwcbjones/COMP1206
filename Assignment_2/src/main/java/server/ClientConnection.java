@@ -1,11 +1,12 @@
 package server;
 
-import org.apache.logging.log4j.Logger;
+import server.utils.ConnectHandler;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import server.events.ServerPacketListener;
 import server.utils.Comms;
 import shared.Packet;
-import shared.PacketType;
+import shared.events.ConnectionAdapter;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
 
@@ -21,11 +22,11 @@ import java.util.ArrayList;
  * @author Huw Jones
  * @since 27/03/2016
  */
-public final class ClientConnection implements PacketListener {
+public final class ClientConnection extends ConnectionAdapter implements PacketListener {
 
     private static final Logger log = LogManager.getLogger(ClientConnection.class);
 
-    private ArrayList<ServerPacketListener> packetListeners;
+    private ArrayList<ServerPacketListener> serverPacketListeners;
 
     private final long clientID;
     private final Socket socket;
@@ -35,7 +36,7 @@ public final class ClientConnection implements PacketListener {
     public ClientConnection (long clientID, Socket socket) throws ConnectionFailedException {
         this.clientID = clientID;
         this.socket = socket;
-        this.packetListeners = new ArrayList<>();
+        this.serverPacketListeners = new ArrayList<>();
 
         log.info("New connection from {}:{}", this.socket.getInetAddress(), this.socket.getPort());
 
@@ -49,6 +50,7 @@ public final class ClientConnection implements PacketListener {
                     inputStream,
                     outputStream
             );
+            this.comms.addConnectionListener(this);
             this.comms.start();
         } catch (IOException e) {
             log.debug(e);
@@ -56,31 +58,13 @@ public final class ClientConnection implements PacketListener {
         }
     }
 
-    public boolean connect(){
-        Object waitForHello = new Object();
-        this.comms.addMessageListener((packet -> {
-            synchronized (waitForHello) {
-                isConnected = true;
-                waitForHello.notify();
-            }
-        }));
-        synchronized (waitForHello){
-            try {
-                log.info("Waiting for HELLO...");
-                waitForHello.wait(5 * 1000);
-                log.info("HELLO Client #{}", this.clientID);
-            } catch (InterruptedException e) {
-                log.debug(e);
-            }
-        }
-        if(!isConnected){
-            return false;
-        }
-        this.comms.sendMessage(new Packet<>(PacketType.HELLO, Server.config.getRandomHello() + " (hello)"));
-        return true;
+    public void connect() throws ConnectionFailedException {
+        ConnectHandler connectHandler = new ConnectHandler(this);
+        connectHandler.connect();
     }
 
     public void closeConnection () {
+        log.info("Closing client connection...");
         try {
             socket.close();
         } catch (IOException e) {
@@ -88,34 +72,86 @@ public final class ClientConnection implements PacketListener {
         }
     }
 
+    /**
+     * Gets the client ID for this client
+     *
+     * @return Client ID
+     */
     public long getClientID () {
         return this.clientID;
     }
 
+    //region Event Handling
+    /**
+     * Handle packet received from Comms class.
+     * Fire ServerPacketReceived so action can be carried out in server worker thread.
+     * Fire PacketReceived so that action can be carried out internally (e.g.: ConnectHandler)
+     *
+     * @param packet Packet that was received from client
+     */
     @Override
     public void packetReceived (Packet packet) {
-        firePacketReceivedEvent(packet);
-    }
-
-    public void addServerPacketListener(ServerPacketListener listener){
-        this.packetListeners.add(listener);
-    }
-
-    public void removeServerPacketListener(ServerPacketListener listener){
-        this.packetListeners.remove(listener);
-    }
-
-    private void firePacketReceivedEvent (Packet packet) {
-        for (ServerPacketListener l : this.packetListeners) {
-            l.packetRecieved(this, packet);
+        ArrayList<ServerPacketListener> serverPacketListeners = new ArrayList<>(this.serverPacketListeners);
+        for (ServerPacketListener l : serverPacketListeners) {
+            l.packetReceived(this, packet);
         }
+    }
+
+    /**
+     * Adds a PacketListener to this client
+     *
+     * @param listener Listener to add
+     */
+    public void addPacketListener(PacketListener listener) {
+        this.comms.addMessageListener(listener);
+    }
+
+    /**
+     * Removes a PacketListener from this client
+     *
+     * @param listener Listener to remove
+     */
+    public void removePacketListener(PacketListener listener) {
+        this.comms.removeMessageListener(listener);
+    }
+
+    /**
+     * Adds a ServerPacketListener to this client
+     *
+     * @param listener Listener to add
+     */
+    public void addServerPacketListener(ServerPacketListener listener) {
+        this.serverPacketListeners.add(listener);
+    }
+
+    /**
+     * Removes a ServerPacketListener from this client
+     *
+     * @param listener Listener to remove
+     */
+    public void removeServerPacketListener(ServerPacketListener listener) {
+        this.serverPacketListeners.remove(listener);
     }
 
     /**
      * Sends a packet to the client
      * @param packet Packet to send
      */
-    public void sendMessage(Packet packet){
+    public void sendPacket(Packet packet){
         this.comms.sendMessage(packet);
     }
+
+    /**
+     * Fires when the connection is closed
+     * Subclasses should override this method if they want to listen to this event.
+     *
+     * @param reason Reason why the connection is closed
+     */
+    @Override
+    public void connectionClosed(String reason) {
+        log.info("Client #{}, connection closed: {}", this.clientID, reason);
+        Server.getServer().removeClient(this);
+        this.closeConnection();
+    }
+    //endregion
 }

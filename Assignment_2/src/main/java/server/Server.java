@@ -1,11 +1,10 @@
 package server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import server.events.PacketHandler;
 import server.events.ServerPacketListener;
 import server.exceptions.ConfigLoadException;
-
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import shared.Packet;
 
 import javax.net.ssl.SSLServerSocketFactory;
@@ -31,13 +30,17 @@ public final class Server {
 
     private ServerListenThread plainSocket;
     private ServerListenThread secureSocket;
-    public static final Config config = new Config();
+    private static final Config config = new Config();
+    private static Server server;
+
+    private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
 
     private HashMap<Long, ClientConnection> clients;
     private ExecutorService workPool;
 
     public Server () {
         clients = new HashMap<>();
+        Server.server = this;
     }
 
     public void setConfigFile (String file) {
@@ -48,25 +51,8 @@ public final class Server {
         config.setDataDirectory(dir);
     }
 
-    public void run () {
-        Runtime.getRuntime().addShutdownHook(new shutdownThread());
-
-        log.info("Starting server...");
-        this.loadConfig();
-        this.loadData();
-        this.startWorkers();
-
-        try {
-            this.createSockets();
-        } catch (IOException e) {
-            log.error("Failed to create socket: {}", e.getMessage());
-            return;
-        }
-
-        this.plainSocket.start();
-        if (this.config.isSecureConnectionEnabled()) {
-            this.secureSocket.start();
-        }
+    public static Config getConfig() {
+        return Server.config;
     }
 
     public void testConfig () {
@@ -90,31 +76,35 @@ public final class Server {
         }
     }
 
-    private void startWorkers () {
-        log.info("Starting workers...");
-        log.debug("New fixed thread pool: " + this.config.getWorkers());
-        this.workPool = Executors.newFixedThreadPool(this.config.getWorkers());
+    public void run () {
+        Runtime.getRuntime().addShutdownHook(new shutdownThread());
+
+        log.info("Starting server...");
+        this.loadConfig();
+        this.loadData();
+        this.startWorkers();
+
+        try {
+            this.createSockets();
+        } catch (IOException e) {
+            log.error("Failed to create socket: {}", e.getMessage());
+            return;
+        }
+
+        this.plainSocket.start();
+        if (Server.config.isSecureConnectionEnabled()) {
+            this.secureSocket.start();
+        }
     }
 
     private void loadData () {
         log.info("Loading data...");
     }
 
-    private void createSockets () throws IOException {
-        ServerSocket plainSocket = new ServerSocket(this.config.getPlainPort());
-        this.plainSocket = new ServerListenThread(this, plainSocket);
-        log.info("Plain socket started successfully!");
-
-        // Check the config to see if we are listening on a secure socket
-        if (!this.config.isSecureConnectionEnabled()) return;
-
-        //System.setProperty("javax.net.ssl.keyStore", "");
-        //System.setProperty("javax.net.ssl.keyStore", "21234567£$%^&asdfgh");
-
-        SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        ServerSocket sslSocket = sslSocketFactory.createServerSocket(this.config.getSecurePort());
-        this.secureSocket = new SecureServerListenThread(this, sslSocket);
-        log.info("Secure socket started successfully!");
+    private void startWorkers () {
+        log.info("Starting workers...");
+        log.debug("New worker pool: " + Server.config.getWorkers());
+        this.workPool = Executors.newFixedThreadPool(Server.config.getWorkers());
     }
 
     private void shutdownServer () {
@@ -150,9 +140,30 @@ public final class Server {
         return this.clientConnectionCounter++;
     }
 
-    protected void addClient (ClientConnection clientConnection) {
+    private void createSockets () throws IOException {
+        ServerSocket plainSocket = new ServerSocket(Server.config.getPlainPort());
+        this.plainSocket = new ServerListenThread(this, plainSocket);
+        log.info("Plain socket started successfully!");
+
+        // Check the config to see if we are listening on a secure socket
+        if (!Server.config.isSecureConnectionEnabled()) return;
+
+        //System.setProperty("javax.net.ssl.keyStore", "");
+        //System.setProperty("javax.net.ssl.keyStore", "21234567£$%^&asdfgh");
+
+        SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        ServerSocket sslSocket = sslSocketFactory.createServerSocket(Server.config.getSecurePort());
+        this.secureSocket = new SecureServerListenThread(this, sslSocket);
+        log.info("Secure socket started successfully!");
+    }
+
+    public static Server getServer() {
+        return Server.server;
+    }
+
+    void addClient(ClientConnection clientConnection) {
         this.clients.put(clientConnection.getClientID(), clientConnection);
-        clientConnection.addServerPacketListener(new packetTaskHandler());
+        clientConnection.addServerPacketListener(this.packetTaskHandler);
     }
 
     /**
@@ -169,10 +180,15 @@ public final class Server {
         }
     }
 
-    private class packetTaskHandler implements ServerPacketListener {
+    void removeClient(ClientConnection clientConnection) {
+        this.clients.remove(clientConnection.getClientID());
+        clientConnection.removeServerPacketListener(this.packetTaskHandler);
+    }
+
+    private class PacketTaskHandler implements ServerPacketListener {
 
         @Override
-        public void packetRecieved (ClientConnection client, Packet packet) {
+        public void packetReceived(ClientConnection client, Packet packet) {
             Server.this.workPool.submit(new PacketHandler(client, packet));
         }
     }

@@ -15,7 +15,8 @@ public final class Comms extends shared.Comms {
 
     public Comms (long clientID, Socket socket, ObjectInputStream input, ObjectOutputStream output) {
         super(socket, input, output);
-        this.setName("Comms_Thread_" + clientID);
+        this.readThread.setName("Comms_Thread_r_" + clientID);
+        this.writeThread.setName("Comms_Thread_w_" + clientID);
         this.clientID = clientID;
     }
 }
