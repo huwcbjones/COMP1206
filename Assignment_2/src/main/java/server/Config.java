@@ -17,7 +17,7 @@ import java.util.Random;
  * @author Huw Jones
  * @since 26/03/2016
  */
-final class Config {
+public final class Config {
 
     public static final int VERSION = 1;
 
@@ -31,6 +31,7 @@ final class Config {
     private int plainPort = 473;
     private boolean secureConnectionEnabled = false;
     private int securePort = 474;
+    private int timeoutTime = 5 * 1000;
 
     private int workers = Runtime.getRuntime().availableProcessors();
 
@@ -197,6 +198,14 @@ final class Config {
     public String getRandomHello() {
         return this.hellos.get(new Random().nextInt(this.hellos.size()));
     }
+
+    /**
+     * Returns the number of milliseconds the server should wait for a reply from the client
+     *
+     * @return timeout
+     */
+    public int getTimeout() { return this.timeoutTime; }
+
     public String getConfig () {
         String config = "";
 

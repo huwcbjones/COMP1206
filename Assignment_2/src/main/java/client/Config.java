@@ -29,6 +29,7 @@ public final class Config {
 
     private ArrayList<Server> servers;
     private Server selectedServer;
+    private int timeoutTime = 5 * 1000;
 
     public Config () {
         this.servers = new ArrayList<>();
@@ -147,5 +148,14 @@ public final class Config {
     public void setSelectedServer (Server server) {
         log.info("Selected server is '{}'.", server.getName());
         this.selectedServer = server;
+    }
+
+    /**
+     * Gets the amount of time in milliseconds the client should wait for replies from the server
+     *
+     * @return int, milliseconds, timeout time
+     */
+    public int getTimeout() {
+        return this.timeoutTime;
     }
 }
