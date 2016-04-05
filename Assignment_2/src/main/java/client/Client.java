@@ -1,6 +1,8 @@
 package client;
 
-import client.events.LoginEventListener;
+import client.events.LoginListener;
+import client.utils.ConnectHandler;
+import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Login;
 import org.apache.logging.log4j.LogManager;
@@ -10,14 +12,17 @@ import shared.Comms;
 import shared.Packet;
 import shared.PacketType;
 import shared.User;
+import shared.events.ConnectionListener;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
+import shared.utils.ReplyWaiter;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Auction Client
@@ -34,12 +39,10 @@ public final class Client {
     private static boolean isLoggingIn = false;
     private static boolean cancelLogin = false;
 
-    private static ArrayList<LoginEventListener> loginEventListeners = new ArrayList<>();
+    private static ArrayList<LoginListener> loginListeners = new ArrayList<>();
+    private static ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
 
     private static Comms comms;
-
-    private static final Object waitForReply = new Object();
-    private static boolean replyTimedOut = true;
 
     public Client () {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
@@ -64,53 +67,180 @@ public final class Client {
         }
     }
 
-    public static void login(String username, char[] password) {
-        try {
-            if (!Client.isConnected) {
-                Client.connect();
-            }
-            if (Client.cancelLogin) {
-                Client.cancelLogin = false;
-                return;
-            }
-            Client.comms.sendMessage(new Packet<>(PacketType.LOGIN, new char[][]{username.toCharArray(), password}));
-            Client.waitForReply(5  * 1000);
-            if(Client.replyTimedOut){
-                fireLoginFailHandler("Request timed out.");
-            }
-        } catch (ConnectionFailedException e) {
-            log.error("Failed to connect to server! {}", e.getMessage());
-        }
-    }
-
-    public static void connect () throws ConnectionFailedException {
+    /**
+     * Connects to the server
+     */
+    public static void connect() {
         Server server = Client.config.getSelectedServer();
         log.info("Connecting to {} ({} on {})...", server.getName(), server.getAddress(), server.getPort());
         try {
+            // Create socket
             Socket plainSocket = new Socket(server.getAddress(), server.getPort());
             ObjectOutputStream outputStream = new ObjectOutputStream(plainSocket.getOutputStream());
             ObjectInputStream inputStream = new ObjectInputStream(plainSocket.getInputStream());
 
+            // Create comms class
             Client.comms = new Comms(plainSocket, inputStream, outputStream);
             Client.comms.start();
-            replyHandler helloHandler = new replyHandler();
-            Client.comms.addMessageListener(helloHandler);
 
-            log.info("Saying HELLO to the server...");
-            Client.comms.sendMessage(new Packet<>(PacketType.HELLO, "hello"));
-            Client.waitForReply(5 * 1000);
-            Client.comms.removeMessageListener(helloHandler);
-            if (Client.replyTimedOut) {
-                Client.comms.shutdown();
-                throw new ConnectionFailedException("Handshake was unsuccessful.");
-            }
+            ConnectHandler connectHandler = new ConnectHandler();
+            connectHandler.connect();
+            Client.isConnected = true;
 
-            Client.comms.sendMessage(new Packet<>(PacketType.VERSION, Config.VERSION));
-
-        } catch (IOException e) {
+        } catch (ConnectionFailedException | IOException e) {
+            log.info("Connection failed. {}", e.getMessage());
             log.debug(e);
-            throw new ConnectionFailedException(e.getMessage());
+            fireConnectionFailed(e.getMessage());
         }
+    }
+
+    /**
+     * Log the client into the server
+     *
+     * @param username username for client
+     * @param password password for client
+     */
+    public static void login(String username, char[] password) {
+        if (!Client.isConnected) {
+            Client.connect();
+        }
+        if (Client.cancelLogin || !Client.isConnected) {
+            Client.cancelLogin = false;
+            return;
+        }
+        NotificationWaiter waiter = new NotificationWaiter();
+
+        // Create an anonymous waiter to wait for servers reply to the login message
+        ReplyWaiter handler = new ReplyWaiter(waiter) {
+            @Override
+            public void packetReceived(Packet packet) {
+                switch (packet.getType()) {
+                    case LOGIN_SUCCESS:
+                        // Set the client's user details
+                        Client.user = (User) packet.getPayload();
+                        Client.fireLoginSuccessHandler((User) packet.getPayload());
+                        break;
+                    case LOGIN_FAIL:
+                        Client.fireLoginFailHandler((String) packet.getPayload());
+                        break;
+                }
+                waiter.replyReceived();
+            }
+        };
+
+        Client.comms.addMessageListener(handler);
+        Client.comms.sendMessage(new Packet<>(PacketType.LOGIN, new char[][]{username.toCharArray(), password}));
+        Arrays.fill(password, '\u0000'); // Clear password
+
+        waiter.waitForReply(5 * 1000);
+        if (waiter.isReplyTimedOut()) {
+            // Need to handle timeouts because the fail event only fires if we get a LOGIN_FAIL from the server
+            fireLoginFailHandler("Request timed out.");
+        }
+    }
+
+    //region Send/Receive Packets
+
+    /**
+     * Sends a packet
+     * @param packet
+     */
+    public static void sendPacket(Packet packet){
+        Client.comms.sendMessage(packet);
+    }
+    //endregion
+
+    //region Event Trigger Methods
+
+    /**
+     * Fires LoginSuccess Event
+     *
+     * @param user User details of user that logged in
+     */
+    private static void fireLoginSuccessHandler(User user) {
+        // This gets around concurrent modification exceptions if the listener removes itself when being called
+        ArrayList<LoginListener> listeners = new ArrayList<>();
+        listeners.addAll(Client.loginListeners);
+        for (LoginListener l : listeners) {
+            l.loginSuccess(user);
+        }
+    }
+
+    /**
+     * Fires LoginFailed Event
+     *
+     * @param message Reason why login failed
+     */
+    private static void fireLoginFailHandler(String message) {
+        // This gets around concurrent modification exceptions if the listener removes itself when being called
+        ArrayList<LoginListener> listeners = new ArrayList<>();
+        listeners.addAll(Client.loginListeners);
+        for (LoginListener l : listeners) {
+            l.loginError(message);
+        }
+    }
+
+    /**
+     * Fires ConnectionFailed Event
+     *
+     * @param reason Reason why connection failed
+     */
+    private static void fireConnectionFailed(String reason) {
+        ArrayList<ConnectionListener> listeners = new ArrayList<>();
+        listeners.addAll(Client.connectionListeners);
+        for (ConnectionListener l : listeners) {
+            l.connectionFailed(reason);
+        }
+    }
+
+    public static void cancelLogin() {
+        if (Client.isLoggingIn) {
+            Client.cancelLogin = true;
+        }
+    }
+
+    /**
+     * Fires ConnectionClosed Event
+     *
+     * @param reason Reason why connection was closed
+     */
+    private static void fireConnectionClosed(String reason) {
+        ArrayList<ConnectionListener> listeners = new ArrayList<>();
+        listeners.addAll(Client.connectionListeners);
+        for (ConnectionListener l : listeners) {
+            l.connectionClosed(reason);
+        }
+    }
+
+    /**
+     * Fires ConnectionSucceeded Event
+     */
+    private static void fireConnectionSuccess() {
+        ArrayList<ConnectionListener> listeners = new ArrayList<>();
+        listeners.addAll(Client.connectionListeners);
+        listeners.forEach(ConnectionListener::connectionSucceeded);
+    }
+
+    //endregion
+
+    //region Add/Remove Event Handlers
+
+    /**
+     * Adds a packet listener to the communications handler
+     *
+     * @param listener Listener to add
+     */
+    public static void addPacketListener(PacketListener listener) {
+        Client.comms.addMessageListener(listener);
+    }
+
+    /**
+     * Removes a packet listener to the communications handler
+     *
+     * @param listener Listener to remove
+     */
+    public static void removePacketListener(PacketListener listener) {
+        Client.comms.removeMessageListener(listener);
     }
 
     /**
@@ -118,8 +248,8 @@ public final class Client {
      *
      * @param listener Listener to add
      */
-    public static void addLoginListener (LoginEventListener listener) {
-        Client.loginEventListeners.add(listener);
+    public static void addLoginListener(LoginListener listener) {
+        Client.loginListeners.add(listener);
     }
 
     /**
@@ -127,81 +257,27 @@ public final class Client {
      *
      * @param listener Listener to remove
      */
-    public static void removeLoginListener (LoginEventListener listener) {
-        Client.loginEventListeners.remove(listener);
-    }
-
-    public static void cancelLogin () {
-        if (Client.isLoggingIn) {
-            Client.cancelLogin = true;
-        }
-    }
-
-    private static void fireLoginFailHandler (String message) {
-        // This gets around concurrent modification exceptions if the listener removes itself when being called
-        ArrayList<LoginEventListener> listeners = new ArrayList<>();
-        listeners.addAll(Client.loginEventListeners);
-        for (LoginEventListener l : listeners) {
-            l.loginError(message);
-        }
-    }
-
-    private static void fireLoginSuccessHandler (User user) {
-        // This gets around concurrent modification exceptions if the listener removes itself when being called
-        ArrayList<LoginEventListener> listeners = new ArrayList<>();
-        listeners.addAll(Client.loginEventListeners);
-        for (LoginEventListener l : listeners) {
-            l.loginSuccess(user);
-        }
+    public static void removeLoginListener(LoginListener listener) {
+        Client.loginListeners.remove(listener);
     }
 
     /**
-     * Causes the thread this method is called in to wait, until the timeout occurs, or we are notified of a message
+     * Adds a connection listener to the Client
      *
-     * @param timeout How long to wait before timing out
+     * @param listener Listener to add
      */
-    private static void waitForReply(int timeout) {
-        synchronized (Client.waitForReply) {
-            try {
-                // Change reply timed out to true, if we received a reply, the handling code should change this to false
-                Client.replyTimedOut = true;
-
-                log.info("Waiting for server reply...");
-                Client.waitForReply.wait(timeout);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    public static void addConnectionListener(ConnectionListener listener) {
+        Client.connectionListeners.add(listener);
     }
 
     /**
-     * Unblocks a waitForReply
+     * Removes a connection listener to the Client
+     *
+     * @param listener Listener to remove
      */
-    private static void replyReceived() {
-        // Change reply timed out to false as we didn't time out
-        Client.replyTimedOut = false;
-        synchronized (Client.waitForReply) {
-            Client.waitForReply.notify();
-        }
+    public static void removeConnectionListener(ConnectionListener listener) {
+        Client.connectionListeners.remove(listener);
     }
 
-    private static class replyHandler implements PacketListener {
-        @Override
-        public void packetReceived (Packet packet) {
-            switch (packet.getType()) {
-                case HELLO:
-                    log.info("Server says: {}", packet.getPayload());
-                    Client.replyReceived();
-                    break;
-                case LOGIN_SUCCESS:
-                    Client.fireLoginSuccessHandler((User) packet.getPayload());
-                    Client.replyReceived();
-                    break;
-                case LOGIN_FAIL:
-                    Client.fireLoginFailHandler((String)packet.getPayload());
-                    Client.replyReceived();
-                    break;
-            }
-        }
-    }
+    //endregion
 }
