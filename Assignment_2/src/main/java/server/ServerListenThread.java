@@ -2,6 +2,7 @@ package server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import shared.Packet;
 import shared.exceptions.ConnectionFailedException;
 
 import java.io.IOException;
@@ -43,6 +44,8 @@ class ServerListenThread extends Thread {
                 // Check if client connected properly before adding it to the clients pool
                 if (client.connect()) {
                     this.server.addClient(client);
+                } else {
+                    client.sendPacket(Packet.Disconnect(""));
                 }
             } catch (ConnectionFailedException | IOException e) {
                 if (!e.getMessage().equals("socket closed")) {
