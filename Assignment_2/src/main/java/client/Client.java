@@ -5,6 +5,7 @@ import client.utils.ConnectHandler;
 import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Login;
+import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import server.exceptions.ConfigLoadException;
@@ -15,11 +16,15 @@ import shared.User;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
+import shared.exceptions.ConnectionUpgradeException;
 import shared.utils.ReplyWaiter;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,7 +89,35 @@ public final class Client {
             Client.comms.start();
 
             ConnectHandler connectHandler = new ConnectHandler();
-            connectHandler.connect();
+            try {
+                connectHandler.connect();
+            } catch (ConnectionUpgradeException e) {
+                // Terminate plain socket
+                Client.comms.shutdown();
+                server = Client.config.getSelectedServer();
+
+                // Create SSLSocket
+                SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
+                SSLSocket secureSocket = (SSLSocket)sf.createSocket(server.getAddress(), server.getPort());
+                secureSocket.setUseClientMode(true);
+                secureSocket.setEnabledProtocols(StrongTls.intersection(secureSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
+                log.debug("Enabled Protocols: ");
+                for (String protocol : secureSocket.getEnabledProtocols()) {
+                    log.debug("\t- {}", protocol);
+                }
+                secureSocket.setEnabledCipherSuites(StrongTls.intersection(secureSocket.getSupportedCipherSuites(), StrongTls.ENABLED_CIPHER_SUITES));
+                log.debug("Enabled Cipher Suites: ");
+                for (String cipherSuite : secureSocket.getEnabledCipherSuites()) {
+                    log.debug("\t- {}", cipherSuite);
+                }
+                secureSocket.startHandshake();
+                outputStream = new ObjectOutputStream(secureSocket.getOutputStream());
+                inputStream = new ObjectInputStream(secureSocket.getInputStream());
+
+                // Create comms class
+                Client.comms = new Comms(secureSocket, inputStream, outputStream);
+                Client.comms.start();
+            }
             Client.isConnected = true;
 
         } catch (ConnectionFailedException | IOException e) {

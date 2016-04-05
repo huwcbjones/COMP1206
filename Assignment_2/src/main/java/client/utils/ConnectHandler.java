@@ -8,6 +8,7 @@ import shared.Packet;
 import shared.PacketType;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
+import shared.exceptions.ConnectionUpgradeException;
 import shared.utils.ReplyWaiter;
 
 /**
@@ -22,7 +23,7 @@ public class ConnectHandler {
 
     private NotificationWaiter waiter;
 
-    public void connect() throws ConnectionFailedException {
+    public void connect() throws ConnectionFailedException, ConnectionUpgradeException {
         // Create wait/reply handler
         this.waiter = new NotificationWaiter();
 
@@ -109,6 +110,11 @@ public class ConnectHandler {
             return;
         }
         int securePort = secureHandler.getSecurePort();
+        Config config = Client.getConfig();
+        Server selectedServer = config.getSelectedServer();
+        Server secureServer = new Server(selectedServer.getName(), selectedServer.getAddress(), securePort);
+        config.setSelectedServer(secureServer);
+        throw new ConnectionUpgradeException();
         //endregion
     }
 
