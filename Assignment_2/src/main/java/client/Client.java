@@ -56,6 +56,9 @@ public final class Client {
         } catch (ConfigLoadException e) {
             log.warn(e.getMessage());
         }
+        System.setProperty("javax.net.ssl.trustStore", "keys/auction");
+        System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
+
         Login loginWindow = new Login();
 
         loginWindow.setVisible(true);
@@ -92,6 +95,7 @@ public final class Client {
             try {
                 connectHandler.connect();
             } catch (ConnectionUpgradeException e) {
+                log.info("Switching to secure connection...");
                 // Terminate plain socket
                 Client.comms.shutdown();
                 server = Client.config.getSelectedServer();
@@ -105,18 +109,15 @@ public final class Client {
                 for (String protocol : secureSocket.getEnabledProtocols()) {
                     log.debug("\t- {}", protocol);
                 }
-                secureSocket.setEnabledCipherSuites(StrongTls.intersection(secureSocket.getSupportedCipherSuites(), StrongTls.ENABLED_CIPHER_SUITES));
-                log.debug("Enabled Cipher Suites: ");
-                for (String cipherSuite : secureSocket.getEnabledCipherSuites()) {
-                    log.debug("\t- {}", cipherSuite);
-                }
-                secureSocket.startHandshake();
+                //secureSocket.startHandshake();
                 outputStream = new ObjectOutputStream(secureSocket.getOutputStream());
                 inputStream = new ObjectInputStream(secureSocket.getInputStream());
 
                 // Create comms class
                 Client.comms = new Comms(secureSocket, inputStream, outputStream);
                 Client.comms.start();
+
+                connectHandler.secureConnect();
             }
             Client.isConnected = true;
 

@@ -21,12 +21,35 @@ public class ConnectHandler {
 
     private static Logger log = LogManager.getLogger(ConnectHandler.class);
 
-    private NotificationWaiter waiter;
+    private NotificationWaiter waiter = new NotificationWaiter();
 
     public void connect() throws ConnectionFailedException, ConnectionUpgradeException {
-        // Create wait/reply handler
-        this.waiter = new NotificationWaiter();
+        this.doConnect();
 
+        //region Secure Connection
+        SecureHandler secureHandler = new SecureHandler(this.waiter);
+        Client.addPacketListener(secureHandler);
+
+        // Tell server everything up to now is OK
+        Client.sendPacket(Packet.wasOK(true));
+
+        waiter.waitForReply();
+        if (waiter.isReplyTimedOut()) {
+            throw new ConnectionFailedException("Handshake was unsuccessful.");
+        }
+        if (secureHandler.getSecurePort() == -1) {
+            return;
+        }
+        int securePort = secureHandler.getSecurePort();
+        Config config = Client.getConfig();
+        Server selectedServer = config.getSelectedServer();
+        Server secureServer = new Server(selectedServer.getName(), selectedServer.getAddress(), securePort);
+        config.setSelectedServer(secureServer);
+        throw new ConnectionUpgradeException();
+        //endregion
+    }
+
+    private void doConnect() throws ConnectionFailedException {
         //region Wait for Server OK
         PacketListener okListener = packet -> {
             if (packet.getType() == PacketType.OK) waiter.replyReceived();
@@ -94,30 +117,14 @@ public class ConnectHandler {
         Client.removePacketListener(versionOKHandler);
         Client.removePacketListener(serverVersionHandler);
         //endregion
+    }
 
-        //region Secure Connection
-        SecureHandler secureHandler = new SecureHandler(this.waiter);
-        Client.addPacketListener(secureHandler);
+    public void secureConnect() throws ConnectionFailedException {
+        this.doConnect();
 
         // Tell server everything up to now is OK
         Client.sendPacket(Packet.wasOK(true));
-
-        waiter.waitForReply();
-        if(waiter.isReplyTimedOut()){
-            throw new ConnectionFailedException("Handshake was unsuccessful.");
-        }
-        if(secureHandler.getSecurePort() == -1){
-            return;
-        }
-        int securePort = secureHandler.getSecurePort();
-        Config config = Client.getConfig();
-        Server selectedServer = config.getSelectedServer();
-        Server secureServer = new Server(selectedServer.getName(), selectedServer.getAddress(), securePort);
-        config.setSelectedServer(secureServer);
-        throw new ConnectionUpgradeException();
-        //endregion
     }
-
     private class VersionOKHandler extends ReplyWaiter {
         boolean versionIsOK = false;
 

@@ -86,7 +86,7 @@ public class ConnectHandler {
         }
         this.client.removePacketListener(okListener);
 
-        if(!Server.getConfig().isSecureConnectionEnabled()){
+        if(!Server.getConfig().isSecureConnectionEnabled() || this.client.isSecureConnection()){
             this.client.sendPacket(Packet.wasOK(true));
             return;
         }

@@ -1,10 +1,10 @@
 package server;
 
-import server.utils.ConnectHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import server.events.ServerPacketListener;
 import server.utils.Comms;
+import server.utils.ConnectHandler;
 import shared.Packet;
 import shared.events.ConnectionAdapter;
 import shared.events.PacketListener;
@@ -31,11 +31,17 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     private final long clientID;
     private final Socket socket;
     private final Comms comms;
+    private final boolean isSecureConnection;
     private boolean isConnected = false;
 
-    public ClientConnection (long clientID, Socket socket) throws ConnectionFailedException {
+    public ClientConnection(long clientID, Socket socket) throws ConnectionFailedException {
+        this(clientID, socket, false);
+    }
+
+    public ClientConnection(long clientID, Socket socket, boolean isSecureConnection) throws ConnectionFailedException {
         this.clientID = clientID;
         this.socket = socket;
+        this.isSecureConnection = isSecureConnection;
         this.serverPacketListeners = new ArrayList<>();
 
         log.info("New connection from {}:{}", this.socket.getInetAddress(), this.socket.getPort());
@@ -79,6 +85,15 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      */
     public long getClientID () {
         return this.clientID;
+    }
+
+    /**
+     * Returns whether or not this client connection is secure
+     *
+     * @return True if client connection is secure
+     */
+    public boolean isSecureConnection() {
+        return this.isSecureConnection;
     }
 
     //region Event Handling

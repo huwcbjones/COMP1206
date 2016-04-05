@@ -150,8 +150,8 @@ public final class Server {
         // Check the config to see if we are listening on a secure socket
         if (!Server.config.isSecureConnectionEnabled()) return;
 
-        //System.setProperty("javax.net.ssl.keyStore", "");
-        //System.setProperty("javax.net.ssl.keyStore", "21234567£$%^&asdfgh");
+        System.setProperty("javax.net.ssl.keyStore", "keys/auction");
+        System.setProperty("javax.net.ssl.keyStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
         SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         SSLServerSocket sslSocket = (SSLServerSocket) sslSocketFactory.createServerSocket(Server.config.getSecurePort());
