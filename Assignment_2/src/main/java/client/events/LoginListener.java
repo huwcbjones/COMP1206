@@ -8,7 +8,7 @@ import shared.User;
  * @author Huw Jones
  * @since 28/03/2016
  */
-public interface LoginEventListener {
+public interface LoginListener {
 
     /**
      * Fired when a successful login occurs
