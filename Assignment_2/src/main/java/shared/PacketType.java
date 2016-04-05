@@ -35,14 +35,28 @@ public enum PacketType {
     DISCONNECT,
 
     /**
-     * Connection should use the secure connection.
-     * Returns the secure port.
+     * Sends the secure port the server is listening on
      */
-    USE_SECURE,
+    SECURE,
 
     //region Login Types
     LOGIN,
     LOGIN_FAIL,
     LOGIN_SUCCESS,
+
+    LOGOUT,
+    //endregion
+
+    //region Connection Maintenance
+    // Let's create a game of ping pong to maintain connection
+    /**
+     * Server sends a ping to client to check client is alive
+     */
+    PING,
+
+    /**
+     * Client sends a pong to the server to say it is still alive
+     */
+    PONG
     //endregion
 }
