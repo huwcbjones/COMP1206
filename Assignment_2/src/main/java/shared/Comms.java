@@ -129,7 +129,7 @@ public class Comms {
         }
     }
 
-    class CommsWriteThread extends Thread {
+    public class CommsWriteThread extends Thread {
 
         CommsWriteThread() {
             super("Comms_Thread_w");
@@ -161,7 +161,7 @@ public class Comms {
         }
     }
 
-    class CommsReadThread extends Thread {
+    public class CommsReadThread extends Thread {
 
         CommsReadThread() {
             super("Comms_Thread_r");
