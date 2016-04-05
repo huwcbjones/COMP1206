@@ -1,5 +1,6 @@
 package server;
 
+import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import server.events.PacketHandler;
@@ -7,6 +8,7 @@ import server.events.ServerPacketListener;
 import server.exceptions.ConfigLoadException;
 import shared.Packet;
 
+import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -152,7 +154,18 @@ public final class Server {
         //System.setProperty("javax.net.ssl.keyStore", "21234567£$%^&asdfgh");
 
         SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        ServerSocket sslSocket = sslSocketFactory.createServerSocket(Server.config.getSecurePort());
+        SSLServerSocket sslSocket = (SSLServerSocket) sslSocketFactory.createServerSocket(Server.config.getSecurePort());
+        sslSocket.setUseClientMode(false);
+        sslSocket.setEnabledProtocols(StrongTls.intersection(sslSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
+        log.debug("Enabled Protocols: ");
+        for (String protocol : sslSocket.getEnabledProtocols()) {
+            log.debug("\t- {}", protocol);
+        }
+        sslSocket.setEnabledCipherSuites(StrongTls.intersection(sslSocket.getSupportedCipherSuites(), StrongTls.ENABLED_CIPHER_SUITES));
+        log.debug("Enabled Cipher Suites: ");
+        for (String cipherSuite : sslSocket.getEnabledCipherSuites()) {
+            log.debug("\t- {}", cipherSuite);
+        }
         this.secureSocket = new SecureServerListenThread(this, sslSocket);
         log.info("Secure socket started successfully!");
     }

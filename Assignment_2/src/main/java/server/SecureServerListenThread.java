@@ -4,6 +4,7 @@ import shared.exceptions.ConnectionFailedException;
 
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -23,15 +24,21 @@ class SecureServerListenThread extends ServerListenThread {
 
     @Override
     protected ClientConnection connectClient (long clientID, Socket socket) throws ConnectionFailedException {
+        SSLSocket sslSocket = (SSLSocket) socket;
+        try {
+            sslSocket.startHandshake();
+        } catch (IOException e) {
+            throw new ConnectionFailedException(e.getMessage());
+        }
         SSLSession session = (( SSLSocket) socket).getSession();
         Certificate[] clientCertChain = session.getLocalCertificates();
-        for (int i = 0; i < clientCertChain.length; i++) {
+        /*for (int i = 0; i < clientCertChain.length; i++) {
             System.out.println(((X509Certificate) clientCertChain[i]).getSubjectDN());
-        }
+        }*/
         log.trace("Peer host is {}", session.getPeerHost());
         log.trace("Cipher is {}", session.getCipherSuite());
         log.trace("Protocol is {}", session.getProtocol());
-        log.trace("ID is {}", new BigInteger(session.getId()));
+        //log.trace("ID is {}", new BigInteger(session.getId()));
         log.trace("Session created in {}", session.getCreationTime());
         log.trace("Session accessed in {}", session.getLastAccessedTime());
 

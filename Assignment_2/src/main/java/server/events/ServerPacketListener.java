@@ -11,5 +11,5 @@ import shared.Packet;
  */
 public interface ServerPacketListener {
 
-    void packetRecieved(ClientConnection client, Packet packet);
+    void packetReceived(ClientConnection client, Packet packet);
 }
