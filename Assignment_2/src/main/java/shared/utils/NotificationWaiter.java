@@ -6,7 +6,7 @@ package shared.utils;
  * @author Huw Jones
  * @since 31/03/2016
  */
-public class NotificationWaiter {
+public abstract class NotificationWaiter {
 
     private final Object waitForReply = new Object();
     private boolean replyTimedOut = true;
@@ -21,6 +21,8 @@ public class NotificationWaiter {
             this.waitForReply.notify();
         }
     }
+
+    public abstract void waitForReply();
 
     public void waitForReply(int timeout) {
         synchronized (this.waitForReply) {
