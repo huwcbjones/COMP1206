@@ -2,14 +2,16 @@ package client.windows;
 
 import client.Client;
 import client.Config;
-import client.events.LoginEventListener;
+import client.events.LoginListener;
 import client.utils.ImagePanel;
 import client.utils.Server;
 import client.utils.SpringUtilities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
+import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;
+import shared.exceptions.ConnectionFailedException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,7 +53,8 @@ public final class Login extends JFrame {
     private JButton btn_cancel;
     private JButton btn_login;
 
-    private LoginEventListener loginEventListener;
+    private LoginListener loginListener;
+    private ConnectionListener connectionListener;
 
     public Login () {
         super("Login | AuctionSys");
@@ -91,7 +94,9 @@ public final class Login extends JFrame {
         //endregion
 
         //region Add Event Handlers
-        this.loginEventListener = new loginEventHandler();
+        this.loginListener = new loginHandler();
+        this.connectionListener = new connectionListener();
+        Client.addConnectionListener(connectionListener);
         this.combo_server.addActionListener(new comboServerChangeHandler());
         //endregion
     }
@@ -183,7 +188,7 @@ public final class Login extends JFrame {
             if(Login.this.isLoggingIn){
                 Client.cancelLogin();
                 Login.this.isLoggingIn = false;
-                Client.removeLoginListener(Login.this.loginEventListener);
+                Client.removeLoginListener(Login.this.loginListener);
                 Login.this.setFormEnabledState(true);
             } else {
                 Login.this.dispatchEvent(new WindowEvent(Login.this, WindowEvent.WINDOW_CLOSING));
@@ -200,10 +205,10 @@ public final class Login extends JFrame {
             // Disable form so only one login can occur at a time
             Login.this.setFormEnabledState(false);
             Login.this.isLoggingIn = true;
-            Client.addLoginListener(Login.this.loginEventListener);
+            Client.addLoginListener(Login.this.loginListener);
 
             // Run login in new anonymous thread
-            // Also uses nice J8 lamba expressions, instead of
+            // Also uses nice J8 lambda expressions, instead of
             // new Thread(new Runnable(){public void run(){Client.login();}, "Login Thread").start();
             // Well I was going to do it this way, until I realised how useful it would be to pass the username
             // and password to the login function!
@@ -221,10 +226,11 @@ public final class Login extends JFrame {
         public void actionPerformed (ActionEvent e) {
             Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
             Login.this.config.setSelectedServer(selectedServer);
+            new Thread(Client::connect, "LoginThread").start();
         }
     }
 
-    private class loginEventHandler implements LoginEventListener {
+    private class loginHandler implements LoginListener {
 
         /**
          * Fired when a successful login occurs
@@ -235,7 +241,7 @@ public final class Login extends JFrame {
         public void loginSuccess (User user) {
             Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
-            Client.removeLoginListener(Login.this.loginEventListener);
+            Client.removeLoginListener(Login.this.loginListener);
         }
 
         /**
@@ -254,21 +260,31 @@ public final class Login extends JFrame {
                     "Login Failed",
                     JOptionPane.ERROR_MESSAGE
             );
-            Client.removeLoginListener(Login.this.loginEventListener);
+            Client.removeLoginListener(Login.this.loginListener);
         }
     }
 
-    private class connectionEventHandler implements ConnectionListener {
+    private class connectionListener extends ConnectionAdapter {
         @Override
         public void connectionClosed (String reason) {
             if(Login.this.isLoggingIn){
-                Client.removeLoginListener(Login.this.loginEventListener);
+                Client.removeLoginListener(Login.this.loginListener);
                 Login.this.isLoggingIn = false;
             }
             JOptionPane.showMessageDialog(
                     Login.this,
                     "The connection to the server was closed.\nReason: " + reason,
                     "Connection Closed.",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+
+        @Override
+        public void connectionFailed(String reason) {
+            JOptionPane.showMessageDialog(
+                    Login.this,
+                    "The connection to the server was failed.\nReason: " + reason,
+                    "Connection Failed.",
                     JOptionPane.ERROR_MESSAGE
             );
         }
