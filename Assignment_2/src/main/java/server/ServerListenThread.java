@@ -42,10 +42,11 @@ class ServerListenThread extends Thread {
                 long clientID = this.server.getNextClientID();
                 client = connectClient(clientID, this.socket.accept());
                 // Check if client connected properly before adding it to the clients pool
-                if (client.connect()) {
+                try {
+                    client.connect();
                     this.server.addClient(client);
-                } else {
-                    client.sendPacket(Packet.Disconnect(""));
+                } catch  (ConnectionFailedException e){
+                    client.sendPacket(Packet.Disconnect(e.getMessage()));
                 }
             } catch (ConnectionFailedException | IOException e) {
                 if (!e.getMessage().equals("socket closed")) {
