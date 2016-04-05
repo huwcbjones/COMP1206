@@ -1,10 +1,8 @@
 package server.events;
 
 import server.ClientConnection;
-import server.events.ServerPacketListener;
 import shared.Packet;
 import shared.PacketType;
-import shared.events.PacketListener;
 
 /**
  * Handles Packets
@@ -26,7 +24,7 @@ public final class PacketHandler implements Runnable {
     public void run () {
         switch(this.packet.getType()){
             case HELLO:
-                this.client.sendMessage(new Packet<>(PacketType.HELLO, "hello"));
+                this.client.sendPacket(new Packet<>(PacketType.HELLO, "hello"));
                 break;
         }
     }
