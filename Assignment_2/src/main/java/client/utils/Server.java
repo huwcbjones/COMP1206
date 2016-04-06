@@ -11,6 +11,7 @@ public final class Server {
     private final String name;
     private final String address;
     private final int port;
+    private int securePort;
 
 
     public Server (String address, int port) {
@@ -18,9 +19,14 @@ public final class Server {
     }
 
     public Server (String name, String address, int port) {
+        this(name, address, port, -1);
+    }
+
+    public Server(String name, String address, int port, int securePort) {
         this.name = name;
         this.address = address;
         this.port = port;
+        this.securePort = securePort;
     }
 
     /**
@@ -48,6 +54,15 @@ public final class Server {
      */
     public int getPort () {
         return port;
+    }
+
+    /**
+     * Returns the secure port the server is listening on
+     *
+     * @return int, the secure port number
+     */
+    public int getSecurePort() {
+        return this.securePort;
     }
 
     @Override

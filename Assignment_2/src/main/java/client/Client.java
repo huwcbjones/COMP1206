@@ -80,6 +80,8 @@ public final class Client implements ConnectionListener {
     public static void disconnect() {
         if (!Client.isConnected) return;
         Client.comms.shutdown();
+        Client.comms = null;
+        Client.isConnected = false;
     }
 
     private static void doConnect() {
@@ -106,7 +108,7 @@ public final class Client implements ConnectionListener {
 
                 // Create SSLSocket
                 SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
-                SSLSocket secureSocket = (SSLSocket)sf.createSocket(server.getAddress(), server.getPort());
+                SSLSocket secureSocket = (SSLSocket)sf.createSocket(server.getAddress(), server.getSecurePort());
                 secureSocket.setUseClientMode(true);
                 secureSocket.setEnabledProtocols(StrongTls.intersection(secureSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
                 log.debug("Enabled Protocols: ");
@@ -164,6 +166,7 @@ public final class Client implements ConnectionListener {
     }
 
     private static void doLogin(String username, char[] password) {
+        log.trace("** DO LOGIN CALLED **");
         NotificationWaiter waiter = new NotificationWaiter();
 
         // Create an anonymous waiter to wait for servers reply to the login message

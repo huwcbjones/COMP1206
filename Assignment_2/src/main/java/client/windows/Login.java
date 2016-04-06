@@ -92,8 +92,6 @@ public final class Login extends JFrame {
 
         //region Add Event Handlers
         this.loginListener = new loginHandler();
-        this.connectionListener = new connectionListener();
-        Client.addConnectionListener(connectionListener);
         this.combo_server.addActionListener(new comboServerChangeHandler());
         this.addWindowListener(new WindowAdapter(){
             /**
@@ -104,8 +102,7 @@ public final class Login extends JFrame {
              */
             @Override
             public void windowClosing(WindowEvent e) {
-                Client.removeLoginListener(loginListener);
-                Client.removeConnectionListener(connectionListener);
+                Client.removeLoginListener(Login.this.loginListener);
             }
         });
         //endregion
@@ -214,10 +211,7 @@ public final class Login extends JFrame {
             // Disable form so only one login can occur at a time
             Login.this.setFormEnabledState(false);
             Login.this.isLoggingIn = true;
-            Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
-            Login.this.config.setSelectedServer(selectedServer);
 
-            Client.addConnectionListener(Login.this.connectionListener);
             Client.addLoginListener(Login.this.loginListener);
             Client.login(Login.this.text_username.getText(), Login.this.text_password.getPassword());
         }
@@ -229,10 +223,13 @@ public final class Login extends JFrame {
     private class comboServerChangeHandler implements ActionListener {
         @Override
         public void actionPerformed (ActionEvent e) {
+            Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
+            if(selectedServer.equals(Client.getConfig().getSelectedServer())) return;
             if(Client.isConnected()){
-                Client.removeConnectionListener(Login.this.connectionListener);
                 Client.disconnect();
             }
+
+            Login.this.config.setSelectedServer(selectedServer);
         }
     }
 
@@ -245,9 +242,9 @@ public final class Login extends JFrame {
          */
         @Override
         public void loginSuccess (User user) {
+            Client.removeLoginListener(Login.this.loginListener);
             Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
-            Client.removeLoginListener(Login.this.loginListener);
         }
 
         /**
@@ -257,6 +254,7 @@ public final class Login extends JFrame {
          */
         @Override
         public void loginError (String message) {
+            Client.removeLoginListener(Login.this.loginListener);
             Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
             Login.this.clearFields();
@@ -264,33 +262,6 @@ public final class Login extends JFrame {
                     Login.this,
                     message,
                     "Login Failed",
-                    JOptionPane.ERROR_MESSAGE
-            );
-            Client.removeLoginListener(Login.this.loginListener);
-        }
-    }
-
-    private class connectionListener extends ConnectionAdapter {
-        @Override
-        public void connectionClosed (String reason) {
-            if(Login.this.isLoggingIn){
-                Client.removeLoginListener(Login.this.loginListener);
-                Login.this.isLoggingIn = false;
-            }
-            JOptionPane.showMessageDialog(
-                    Login.this,
-                    "The connection to the server was closed.\nReason: " + reason,
-                    "Connection Closed.",
-                    JOptionPane.ERROR_MESSAGE
-            );
-        }
-
-        @Override
-        public void connectionFailed(String reason) {
-            JOptionPane.showMessageDialog(
-                    Login.this,
-                    "The connection to the server was failed.\nReason: " + reason,
-                    "Connection Failed.",
                     JOptionPane.ERROR_MESSAGE
             );
         }

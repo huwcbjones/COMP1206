@@ -43,7 +43,7 @@ public class ConnectHandler {
         int securePort = secureHandler.getSecurePort();
         Config config = Client.getConfig();
         Server selectedServer = config.getSelectedServer();
-        Server secureServer = new Server(selectedServer.getName(), selectedServer.getAddress(), securePort);
+        Server secureServer = new Server(selectedServer.getName(), selectedServer.getAddress(), selectedServer.getPort(), securePort);
         config.setSelectedServer(secureServer);
         throw new ConnectionUpgradeException();
         //endregion
