@@ -15,10 +15,7 @@ import shared.exceptions.ConnectionFailedException;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 
 /**
  * Login window
@@ -98,6 +95,19 @@ public final class Login extends JFrame {
         this.connectionListener = new connectionListener();
         Client.addConnectionListener(connectionListener);
         this.combo_server.addActionListener(new comboServerChangeHandler());
+        this.addWindowListener(new WindowAdapter(){
+            /**
+             * Invoked when a window is in the process of being closed.
+             * The close operation can be overridden at this point.
+             *
+             * @param e
+             */
+            @Override
+            public void windowClosing(WindowEvent e) {
+                Client.removeLoginListener(loginListener);
+                Client.removeConnectionListener(connectionListener);
+            }
+        });
         //endregion
     }
 
@@ -186,7 +196,6 @@ public final class Login extends JFrame {
         @Override
         public void actionPerformed (ActionEvent e) {
             if(Login.this.isLoggingIn){
-                Client.cancelLogin();
                 Login.this.isLoggingIn = false;
                 Client.removeLoginListener(Login.this.loginListener);
                 Login.this.setFormEnabledState(true);
@@ -205,16 +214,12 @@ public final class Login extends JFrame {
             // Disable form so only one login can occur at a time
             Login.this.setFormEnabledState(false);
             Login.this.isLoggingIn = true;
-            Client.addLoginListener(Login.this.loginListener);
+            Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
+            Login.this.config.setSelectedServer(selectedServer);
 
-            // Run login in new anonymous thread
-            // Also uses nice J8 lambda expressions, instead of
-            // new Thread(new Runnable(){public void run(){Client.login();}, "Login Thread").start();
-            // Well I was going to do it this way, until I realised how useful it would be to pass the username
-            // and password to the login function!
-            new Thread(() -> {
-                Client.login(Login.this.text_username.getText(), Login.this.text_password.getPassword());
-            }, "LoginThread").start();
+            Client.addConnectionListener(Login.this.connectionListener);
+            Client.addLoginListener(Login.this.loginListener);
+            Client.login(Login.this.text_username.getText(), Login.this.text_password.getPassword());
         }
     }
 
@@ -224,9 +229,10 @@ public final class Login extends JFrame {
     private class comboServerChangeHandler implements ActionListener {
         @Override
         public void actionPerformed (ActionEvent e) {
-            Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
-            Login.this.config.setSelectedServer(selectedServer);
-            new Thread(Client::connect, "LoginThread").start();
+            if(Client.isConnected()){
+                Client.removeConnectionListener(Login.this.connectionListener);
+                Client.disconnect();
+            }
         }
     }
 

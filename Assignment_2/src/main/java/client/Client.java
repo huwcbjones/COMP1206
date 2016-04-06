@@ -13,6 +13,7 @@ import shared.Comms;
 import shared.Packet;
 import shared.PacketType;
 import shared.User;
+import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
@@ -24,7 +25,6 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +35,7 @@ import java.util.Arrays;
  * @author Huw Jones
  * @since 24/03/2016
  */
-public final class Client {
+public final class Client implements ConnectionListener {
 
     private static Logger log = LogManager.getLogger(Client.class);
     private static final Config config = new Config();
@@ -48,8 +48,10 @@ public final class Client {
     private static ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
 
     private static Comms comms;
+    private static Client client;
 
     public Client () {
+        Client.client = this;
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
         try {
             Client.config.loadConfig();
@@ -75,10 +77,12 @@ public final class Client {
         }
     }
 
-    /**
-     * Connects to the server
-     */
-    public static void connect() {
+    public static void disconnect() {
+        if (!Client.isConnected) return;
+        Client.comms.shutdown();
+    }
+
+    private static void doConnect() {
         Server server = Client.config.getSelectedServer();
         log.info("Connecting to {} ({} on {})...", server.getName(), server.getAddress(), server.getPort());
         try {
@@ -120,6 +124,8 @@ public final class Client {
                 connectHandler.secureConnect();
             }
             Client.isConnected = true;
+            Client.comms.addConnectionListener(Client.client);
+            Client.fireConnectionSucceeded();
             log.info("Connection successfully established!");
 
         } catch (ConnectionFailedException | IOException e) {
@@ -137,12 +143,27 @@ public final class Client {
      */
     public static void login(String username, char[] password) {
         if (!Client.isConnected) {
+            ConnectionListener listener = new ConnectionAdapter() {
+                @Override
+                public void connectionSucceeded() {
+                    Client.login(username, password);
+                }
+
+                @Override
+                public void connectionFailed(String reason) {
+                    fireLoginFailHandler(reason);
+                }
+            };
+            Client.addConnectionListener(listener);
             Client.connect();
+        } else {
+            new Thread(() -> {
+                Client.doLogin(username, password);
+            }, "LoginThread").start();
         }
-        if (Client.cancelLogin || !Client.isConnected) {
-            Client.cancelLogin = false;
-            return;
-        }
+    }
+
+    private static void doLogin(String username, char[] password) {
         NotificationWaiter waiter = new NotificationWaiter();
 
         // Create an anonymous waiter to wait for servers reply to the login message
@@ -158,6 +179,9 @@ public final class Client {
                     case LOGIN_FAIL:
                         Client.fireLoginFailHandler((String) packet.getPayload());
                         break;
+                    case NOK:
+                        Client.fireLoginFailHandler("Server failed to process request.");
+                        break;
                 }
                 waiter.replyReceived();
             }
@@ -167,12 +191,25 @@ public final class Client {
         Client.comms.sendMessage(new Packet<>(PacketType.LOGIN, new char[][]{username.toCharArray(), password}));
         Arrays.fill(password, '\u0000'); // Clear password
 
-        waiter.waitForReply(5 * 1000);
+        waiter.waitForReply();
         if (waiter.isReplyTimedOut()) {
             // Need to handle timeouts because the fail event only fires if we get a LOGIN_FAIL from the server
             fireLoginFailHandler("Request timed out.");
         }
     }
+
+    /**
+     * Connects to the server
+     */
+    public static void connect() {
+        new Thread(Client::doConnect, "ConnectionThread").start();
+    }
+
+    //region Get Methods
+    public static boolean isConnected() {
+        return Client.isConnected;
+    }
+    //endregion
 
     //region Send/Receive Packets
 
@@ -228,12 +265,6 @@ public final class Client {
         }
     }
 
-    public static void cancelLogin() {
-        if (Client.isLoggingIn) {
-            Client.cancelLogin = true;
-        }
-    }
-
     /**
      * Fires ConnectionClosed Event
      *
@@ -248,14 +279,43 @@ public final class Client {
     }
 
     /**
+     * Fires when the connection succeeds
+     */
+    @Override
+    public void connectionSucceeded() {
+        fireConnectionSucceeded();
+    }
+
+    /**
      * Fires ConnectionSucceeded Event
      */
-    private static void fireConnectionSuccess() {
+    private static void fireConnectionSucceeded() {
         ArrayList<ConnectionListener> listeners = new ArrayList<>();
         listeners.addAll(Client.connectionListeners);
         listeners.forEach(ConnectionListener::connectionSucceeded);
     }
 
+    /**
+     * Fires when the connection fails
+     *
+     * @param reason Reason why connection failed
+     */
+    @Override
+    public void connectionFailed(String reason) {
+        Client.isConnected = false;
+        fireConnectionFailed(reason);
+    }
+
+    /**
+     * Fires when the connection is closed
+     *
+     * @param reason Reason why the connection is closed
+     */
+    @Override
+    public void connectionClosed(String reason) {
+        Client.isConnected = false;
+        fireConnectionClosed(reason);
+    }
     //endregion
 
     //region Add/Remove Event Handlers
@@ -313,6 +373,5 @@ public final class Client {
     public static void removeConnectionListener(ConnectionListener listener) {
         Client.connectionListeners.remove(listener);
     }
-
     //endregion
 }
