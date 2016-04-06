@@ -38,7 +38,7 @@ public final class Server {
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
 
     private HashMap<Long, ClientConnection> clients;
-    private ExecutorService workPool;
+    private WorkerPool workPool;
 
     public Server () {
         clients = new HashMap<>();
@@ -105,8 +105,7 @@ public final class Server {
 
     private void startWorkers () {
         log.info("Starting workers...");
-        log.debug("New worker pool: " + Server.config.getWorkers());
-        this.workPool = Executors.newFixedThreadPool(Server.config.getWorkers());
+        this.workPool = new WorkerPool(Server.config.getWorkers());
     }
 
     private void shutdownServer () {
@@ -127,6 +126,8 @@ public final class Server {
                 this.clients.values().forEach(ClientConnection::closeConnection);
             }
         }
+
+        this.workPool.shutdown();
 
         log.info("Saving data...");
         this.saveState();
@@ -204,7 +205,7 @@ public final class Server {
 
         @Override
         public void packetReceived(ClientConnection client, Packet packet) {
-            Server.this.workPool.submit(new PacketHandler(client, packet));
+            Server.this.workPool.queueTask(new PacketHandler(client, packet));
         }
     }
 }
