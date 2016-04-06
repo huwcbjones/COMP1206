@@ -154,6 +154,7 @@ public final class Client implements ConnectionListener {
 
                 @Override
                 public void connectionFailed(String reason) {
+                    Client.removeConnectionListener(this);
                     fireLoginFailHandler(reason);
                 }
             };
