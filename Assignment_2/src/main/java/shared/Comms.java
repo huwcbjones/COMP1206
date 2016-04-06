@@ -31,7 +31,7 @@ public class Comms {
 
     protected final CommsReadThread readThread;
     protected final CommsWriteThread writeThread;
-    private final Queue<Packet> packetQueue;
+    private Queue<Packet> packetQueue;
 
     private final Socket socket;
 
@@ -124,6 +124,12 @@ public class Comms {
             this.output.close();
             this.input.close();
             this.socket.close();
+            synchronized (this.readThread){
+                this.readThread.notify();
+            }
+            synchronized (this.writeThread){
+                this.writeThread.notify();
+            }
         } catch (IOException e) {
             log.debug(e);
         }
@@ -140,16 +146,16 @@ public class Comms {
             final Logger log = LogManager.getLogger(CommsWriteThread.class);
             Packet packet;
             while (!shouldQuit) {
-                while (Comms.this.packetQueue.size() != 0) {
+                log.trace("Write queue size: {}", Comms.this.packetQueue.size());
+                while ((packet = Comms.this.packetQueue.poll()) != null) {
                     try {
-                        packet = Comms.this.packetQueue.poll();
-                        if(packet ==  null) continue;
                         output.writeObject(packet);
                         log.debug("Sent packet. Type: {}", packet.getType().toString());
                     } catch (IOException e) {
                         log.error("Failed to send packet. Reason: {}", e.getMessage());
                         log.debug(e);
                     }
+                    log.trace("Write queue size: {}", Comms.this.packetQueue.size());
                 }
                 synchronized (this) {
                     try {
