@@ -9,9 +9,7 @@ import client.utils.SpringUtilities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
-import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;
-import shared.exceptions.ConnectionFailedException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,7 +32,13 @@ public final class Login extends JFrame {
 
     private JPanel panel_fields;
     private JPanel panel_loginButtons;
-    private JPanel panel_extraButtons;
+
+    private JMenuBar menuBar;
+    private JMenu menu_file;
+    private JMenuItem menu_file_register;
+    private JMenuItem menu_file_exit;
+    private JMenu menu_options;
+    private JMenuItem menu_options_servers;
 
     //region panel_fields controls
     private JLabel label_username;
@@ -51,7 +55,6 @@ public final class Login extends JFrame {
     private JButton btn_login;
 
     private LoginListener loginListener;
-    private ConnectionListener connectionListener;
 
     public Login () {
         super("Login | AuctionSys");
@@ -93,7 +96,7 @@ public final class Login extends JFrame {
         //region Add Event Handlers
         this.loginListener = new loginHandler();
         this.combo_server.addActionListener(new comboServerChangeHandler());
-        this.addWindowListener(new WindowAdapter(){
+        this.addWindowListener(new WindowAdapter() {
             /**
              * Invoked when a window is in the process of being closed.
              * The close operation can be overridden at this point.
@@ -101,7 +104,7 @@ public final class Login extends JFrame {
              * @param e
              */
             @Override
-            public void windowClosing(WindowEvent e) {
+            public void windowClosing (WindowEvent e) {
                 Client.removeLoginListener(Login.this.loginListener);
             }
         });
@@ -109,6 +112,27 @@ public final class Login extends JFrame {
     }
 
     private void initComponents () {
+        this.menuBar = new JMenuBar();
+        this.menu_file = new JMenu("File");
+        this.menu_file.setMnemonic('f');
+        this.menu_file_register = new JMenuItem("Register");
+        this.menu_file_register.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.CTRL_MASK));
+        this.menu_file_register.getAccessibleContext().setAccessibleDescription("Register for an account.");
+        this.menu_file.add(this.menu_file_register);
+
+        this.menu_file.addSeparator();
+
+        this.menu_file_exit = new JMenuItem("Exit");
+        this.menu_file_exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, ActionEvent.ALT_MASK));
+        this.menu_file.add(this.menu_file_exit);
+
+        this.menuBar.add(this.menu_file);
+        this.menu_options = new JMenu("Options");
+        this.menu_options.setMnemonic('o');
+        this.menuBar.add(this.menu_options);
+
+        this.setJMenuBar(this.menuBar);
+
         GridBagConstraints c;
 
         Container container = this.getContentPane();
@@ -192,13 +216,8 @@ public final class Login extends JFrame {
     private class cancelBtnClickHandler implements ActionListener {
         @Override
         public void actionPerformed (ActionEvent e) {
-            if(Login.this.isLoggingIn){
-                Login.this.isLoggingIn = false;
-                Client.removeLoginListener(Login.this.loginListener);
-                Login.this.setFormEnabledState(true);
-            } else {
-                Login.this.dispatchEvent(new WindowEvent(Login.this, WindowEvent.WINDOW_CLOSING));
-            }
+            Client.removeLoginListener(Login.this.loginListener);
+            Login.this.setFormEnabledState(true);
         }
     }
 
@@ -224,8 +243,8 @@ public final class Login extends JFrame {
         @Override
         public void actionPerformed (ActionEvent e) {
             Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
-            if(selectedServer.equals(Client.getConfig().getSelectedServer())) return;
-            if(Client.isConnected()){
+            if (selectedServer.equals(Client.getConfig().getSelectedServer())) return;
+            if (Client.isConnected()) {
                 Client.disconnect();
             }
 
