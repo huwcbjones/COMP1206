@@ -12,6 +12,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -123,7 +124,8 @@ public final class Server {
             // Only send disconnects if there are clients connected
             if (this.clients.size() != 0) {
                 log.info("Sending disconnect to clients...");
-                this.clients.values().forEach(ClientConnection::closeConnection);
+                ArrayList<ClientConnection> clients = new ArrayList<>(this.clients.values());
+                clients.forEach(ClientConnection::closeConnection);
             }
         }
 
