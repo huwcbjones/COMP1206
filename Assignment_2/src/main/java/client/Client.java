@@ -148,6 +148,7 @@ public final class Client implements ConnectionListener {
             ConnectionListener listener = new ConnectionAdapter() {
                 @Override
                 public void connectionSucceeded() {
+                    Client.removeConnectionListener(this);
                     Client.login(username, password);
                 }
 
