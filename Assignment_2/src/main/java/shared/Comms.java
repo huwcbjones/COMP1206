@@ -146,7 +146,6 @@ public class Comms {
             final Logger log = LogManager.getLogger(CommsWriteThread.class);
             Packet packet;
             while (!shouldQuit) {
-                log.trace("Write queue size: {}", Comms.this.packetQueue.size());
                 while ((packet = Comms.this.packetQueue.poll()) != null) {
                     try {
                         output.writeObject(packet);
@@ -155,7 +154,6 @@ public class Comms {
                         log.error("Failed to send packet. Reason: {}", e.getMessage());
                         log.debug(e);
                     }
-                    log.trace("Write queue size: {}", Comms.this.packetQueue.size());
                 }
                 synchronized (this) {
                     try {
