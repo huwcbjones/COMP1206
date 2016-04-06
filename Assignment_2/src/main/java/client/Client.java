@@ -168,7 +168,6 @@ public final class Client implements ConnectionListener {
     }
 
     private static void doLogin(String username, char[] password) {
-        log.trace("** DO LOGIN CALLED **");
         NotificationWaiter waiter = new NotificationWaiter();
 
         // Create an anonymous waiter to wait for servers reply to the login message
