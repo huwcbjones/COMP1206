@@ -124,6 +124,20 @@ public class ConnectHandler {
 
         // Tell server everything is now OK
         Client.sendPacket(Packet.wasOK(true));
+
+        //region Wait for Server OK
+        PacketListener okListener = packet -> {
+            if (packet.getType() == PacketType.OK) waiter.replyReceived();
+        };
+        Client.addPacketListener(okListener);
+
+        log.debug("Waiting for server to get ready...");
+        this.waiter.waitForReply();
+        if (this.waiter.isReplyTimedOut()) {
+            throw new ConnectionFailedException("Server never connected.");
+        }
+        Client.removePacketListener(okListener);
+        //endregion
     }
     private class VersionOKHandler extends ReplyWaiter {
         boolean versionIsOK = false;
