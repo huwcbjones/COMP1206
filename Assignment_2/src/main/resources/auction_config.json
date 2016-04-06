@@ -2,8 +2,8 @@
   "client": {
     "servers":[
       {
-        "name": "Charity Auction Server",
-        "address":"localhost",
+        "name": "HCBJ-PC Home IP (to sniff)",
+        "address":"10.1.1.4",
         "port": 473
       },
       {

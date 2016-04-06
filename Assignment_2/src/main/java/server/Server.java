@@ -143,6 +143,7 @@ public final class Server {
     }
 
     private void createSockets () throws IOException {
+        log.info("Starting plain socket...");
         ServerSocket plainSocket = new ServerSocket(Server.config.getPlainPort());
         this.plainSocket = new ServerListenThread(this, plainSocket);
         log.info("Plain socket started successfully!");
@@ -150,6 +151,7 @@ public final class Server {
         // Check the config to see if we are listening on a secure socket
         if (!Server.config.isSecureConnectionEnabled()) return;
 
+        log.info("Starting secure socket...");
         System.setProperty("javax.net.ssl.keyStore", "keys/auction");
         System.setProperty("javax.net.ssl.keyStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 

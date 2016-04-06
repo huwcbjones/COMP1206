@@ -53,9 +53,9 @@ public class Comms {
     }
 
     public void start() {
-        log.info("Starting read thread...");
+        log.debug("Starting comms read thread...");
         readThread.start();
-        log.info("Starting write thread...");
+        log.debug("Starting comms write thread...");
         writeThread.start();
     }
 

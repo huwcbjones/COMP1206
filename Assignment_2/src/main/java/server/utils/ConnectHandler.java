@@ -37,19 +37,19 @@ public class ConnectHandler {
         };
         this.client.addPacketListener(helloListener);
 
-        log.info("Telling client we are now ready.");
+        log.debug("Telling client we are now ready.");
 
         this.client.sendPacket(Packet.wasOK(true));
         //endregion
 
         //region Say HELLO
-        log.info("Waiting for HELLO...");
+        log.debug("Waiting for HELLO...");
         waiter.waitForReply();
 
         if (waiter.isReplyTimedOut()) {
             throw new ConnectionFailedException("Client failed to send hello.");
         }
-        log.info("HELLO Client #{}", this.client.getClientID());
+        log.debug("HELLO Client #{}", this.client.getClientID());
         this.client.removePacketListener(helloListener);
 
         // Add version listener before we send a reply as we should get a version back as soon as we say hello
@@ -59,13 +59,13 @@ public class ConnectHandler {
         //endregion
 
         //region Handle Versions
-        log.info("Waiting for client to send VERSION...");
+        log.debug("Waiting for client to send VERSION...");
         this.waiter.waitForReply();
         if (this.waiter.isReplyTimedOut()) {
             throw new ConnectionFailedException("Client failed to respond to hello and send version.");
         }
         int clientVersion = versionListener.getClientVersion();
-        log.info("Client VERSION is: {}", clientVersion);
+        log.debug("Client VERSION is: {}", clientVersion);
         if (Config.VERSION != clientVersion) {
             this.client.sendPacket(Packet.wasOK(false));
             throw new ConnectionFailedException("Client version (" + clientVersion + ") is incompatible with server version (" + Config.VERSION + ").");
@@ -79,7 +79,7 @@ public class ConnectHandler {
             if (packet.getType() == PacketType.OK) waiter.replyReceived();
         };
         this.client.addPacketListener(okListener);
-        log.info("Waiting for client to ready...");
+        log.debug("Waiting for client to ready...");
         this.waiter.waitForReply();
         if (this.waiter.isReplyTimedOut()) {
             throw new ConnectionFailedException("Client never got ready.");

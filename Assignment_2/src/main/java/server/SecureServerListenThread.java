@@ -33,10 +33,7 @@ class SecureServerListenThread extends ServerListenThread {
             throw new ConnectionFailedException(e.getMessage());
         }
         SSLSession session = (( SSLSocket) socket).getSession();
-        log.trace("Peer host is {}", session.getPeerHost());
-        log.trace("Cipher is {}", session.getCipherSuite());
-        log.trace("Protocol is {}", session.getProtocol());
-        log.trace("ID is {}", new BigInteger(session.getId()));
+        log.trace("Secure client connecting from {}, using {} with {}", session.getPeerHost(), session.getProtocol(), session.getCipherSuite());
 
         return new ClientConnection(clientID, socket, true);
     }

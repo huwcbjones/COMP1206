@@ -26,6 +26,9 @@ public final class PacketHandler implements Runnable {
             case HELLO:
                 this.client.sendPacket(new Packet<>(PacketType.HELLO, "hello"));
                 break;
+            default:
+                this.client.sendPacket(Packet.wasOK(false));
+                break;
         }
     }
 }

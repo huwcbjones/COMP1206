@@ -44,7 +44,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         this.isSecureConnection = isSecureConnection;
         this.serverPacketListeners = new ArrayList<>();
 
-        log.info("New connection from {}:{}", this.socket.getInetAddress(), this.socket.getPort());
+        log.info("New {} client connection #{}, from {}:{}", (isSecureConnection?"secure":""), this.clientID, this.socket.getInetAddress(), this.socket.getPort());
 
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(this.socket.getOutputStream());
@@ -67,6 +67,8 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     public void connect() throws ConnectionFailedException {
         ConnectHandler connectHandler = new ConnectHandler(this);
         connectHandler.connect();
+        log.info("Client #{} successfully connected!", this.clientID);
+        this.comms.addMessageListener(this);
     }
 
     public void closeConnection () {

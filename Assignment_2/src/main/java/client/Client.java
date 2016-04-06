@@ -120,6 +120,7 @@ public final class Client {
                 connectHandler.secureConnect();
             }
             Client.isConnected = true;
+            log.info("Connection successfully established!");
 
         } catch (ConnectionFailedException | IOException e) {
             log.info("Connection failed. {}", e.getMessage());

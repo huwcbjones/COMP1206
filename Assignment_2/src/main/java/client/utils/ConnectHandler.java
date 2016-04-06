@@ -56,7 +56,7 @@ public class ConnectHandler {
         };
         Client.addPacketListener(okListener);
 
-        log.info("Waiting for server to get ready...");
+        log.debug("Waiting for server to get ready...");
         this.waiter.waitForReply();
         if (this.waiter.isReplyTimedOut()) {
             throw new ConnectionFailedException("Server never connected.");
@@ -65,13 +65,13 @@ public class ConnectHandler {
         //endregion
 
         //region Say HELLO to server
-        log.info("Saying HELLO to the server...");
+        log.debug("Saying HELLO to the server...");
         ReplyWaiter replyHandler = new ReplyWaiter(this.waiter) {
             @Override
             public void packetReceived(Packet packet) {
                 switch (packet.getType()) {
                     case HELLO:
-                        log.info("Server says: {}", packet.getPayload());
+                        log.debug("Server says: {}", packet.getPayload());
                         waiter.replyReceived();
                         break;
                 }
@@ -97,7 +97,7 @@ public class ConnectHandler {
         Client.addPacketListener(versionOKHandler);
         Client.addPacketListener(serverVersionHandler);
 
-        log.info("Sending server our version number...");
+        log.debug("Sending server our version number...");
         Client.sendPacket(new Packet<>(PacketType.VERSION, Config.VERSION));
         waiter.waitForReply();
 
@@ -122,7 +122,7 @@ public class ConnectHandler {
     public void secureConnect() throws ConnectionFailedException {
         this.doConnect();
 
-        // Tell server everything up to now is OK
+        // Tell server everything is now OK
         Client.sendPacket(Packet.wasOK(true));
     }
     private class VersionOKHandler extends ReplyWaiter {
