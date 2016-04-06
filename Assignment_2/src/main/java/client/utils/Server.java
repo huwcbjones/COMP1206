@@ -51,6 +51,14 @@ public final class Server {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Server)) return false;
+        Server server = (Server) obj;
+
+        return this.name.equals(server.getName()) && this.address.equals(server.getAddress()) && this.port == server.port;
+    }
+
+    @Override
     public String toString () {
         return this.name;
     }
