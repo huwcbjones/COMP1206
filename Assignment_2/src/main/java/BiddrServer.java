@@ -4,7 +4,7 @@
  * @author Huw Jones
  * @since 07/04/2016
  */
-public class AuctionServer {
+public class BiddrServer {
 
     public static void main(String[] args){
 
