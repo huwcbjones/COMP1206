@@ -3,7 +3,7 @@ package server;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import server.events.PacketHandler;
+import server.tasks.PacketHandler;
 import server.events.ServerPacketListener;
 import server.exceptions.ConfigLoadException;
 import shared.Packet;
@@ -31,11 +31,10 @@ public final class Server {
     private ServerListenThread secureSocket;
     private static final Config config = new Config();
     private static Server server;
+    private static WorkerPool workPool;
 
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
-
     private final HashMap<Long, ClientConnection> clients;
-    private WorkerPool workPool;
 
     public Server () {
         clients = new HashMap<>();
@@ -48,10 +47,6 @@ public final class Server {
 
     public void setDataDirectory (String dir) {
         config.setDataDirectory(dir);
-    }
-
-    public static Config getConfig() {
-        return Server.config;
     }
 
     public void testConfig () {
@@ -102,7 +97,7 @@ public final class Server {
 
     private void startWorkers () {
         log.info("Starting workers...");
-        this.workPool = new WorkerPool(Server.config.getWorkers());
+        Server.workPool = new WorkerPool(Server.config.getWorkers());
     }
 
     private void shutdownServer () {
@@ -125,7 +120,7 @@ public final class Server {
             }
         }
 
-        this.workPool.shutdown();
+        Server.workPool.shutdown();
 
         log.info("Saving data...");
         this.saveState();
@@ -171,9 +166,29 @@ public final class Server {
         log.info("Secure socket started successfully!");
     }
 
+    /**
+     * Gets the Server instance from a static context
+     *
+     * @return Server instance
+     */
     public static Server getServer() {
         return Server.server;
     }
+
+    /**
+     * Gets the config instance from a static context
+     *
+     * @return Config instance
+     */
+    public static Config getConfig() {
+        return Server.config;
+    }
+
+    /**
+     * Gets the WorkerPool instance from a static context
+     * @return WorkerPoll instance
+     */
+    public static WorkerPool getWorkerPool() { return Server.workPool; }
 
     void addClient(ClientConnection clientConnection) {
         this.clients.put(clientConnection.getClientID(), clientConnection);
@@ -203,7 +218,7 @@ public final class Server {
 
         @Override
         public void packetReceived(ClientConnection client, Packet packet) {
-            Server.this.workPool.queueTask(new PacketHandler(client, packet));
+            Server.workPool.queueTask(new PacketHandler(client, packet));
         }
     }
 }

@@ -1,6 +1,8 @@
-package server.events;
+package server.tasks;
 
 import server.ClientConnection;
+import server.Server;
+import server.utils.Comms;
 import shared.Packet;
 import shared.PacketType;
 
@@ -25,6 +27,11 @@ public final class PacketHandler implements Runnable {
         switch(this.packet.getType()){
             case HELLO:
                 this.client.sendPacket(new Packet<>(PacketType.HELLO, "hello"));
+                break;
+            case PING:
+                // Send the packet back slightly earlier to prevent accidental timeouts because
+                // of the physical time it takes to send the TCP packet.
+                Server.getWorkerPool().scheduleTask(new PingPongTask(this.client), (int)(Comms.PING_TIMEOUT * 0.95));
                 break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));
