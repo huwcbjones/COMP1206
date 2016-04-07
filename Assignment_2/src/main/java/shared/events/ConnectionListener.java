@@ -1,12 +1,14 @@
 package shared.events;
 
+import java.util.EventListener;
+
 /**
  * Event handler for connection events
  *
  * @author Huw Jones
  * @since 28/03/2016
  */
-public interface ConnectionListener {
+public interface ConnectionListener extends EventListener {
 
     /**
      * Fires when the connection succeeds

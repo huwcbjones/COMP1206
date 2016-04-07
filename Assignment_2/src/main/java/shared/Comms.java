@@ -1,11 +1,14 @@
 package shared;
 
+import client.Client;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
 import shared.exceptions.VersionMismatchException;
 
+import javax.swing.*;
+import javax.swing.event.EventListenerList;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -22,12 +25,11 @@ import java.util.Queue;
  * @author Huw Jones
  * @since 26/03/2016
  */
-public class Comms {
+public class Comms implements PacketListener {
 
     private static final Logger log = LogManager.getLogger(Comms.class);
 
-    private final ArrayList<PacketListener> packetListeners;
-    private final ArrayList<ConnectionListener> connectionListeners;
+    protected final EventListenerList listenerList = new EventListenerList();
 
     protected final CommsReadThread readThread;
     protected final CommsWriteThread writeThread;
@@ -40,9 +42,9 @@ public class Comms {
 
     private boolean shouldQuit = false;
 
+    protected Timer lastPingTimer;
+
     public Comms (Socket socket, ObjectInputStream input, ObjectOutputStream output) {
-        this.packetListeners = new ArrayList<>();
-        this.connectionListeners = new ArrayList<>();
         this.packetQueue = new LinkedList<>();
         this.socket = socket;
         this.output = output;
@@ -50,6 +52,10 @@ public class Comms {
 
         readThread = new CommsReadThread();
         writeThread = new CommsWriteThread();
+        this.lastPingTimer = new Timer((int)(Client.getConfig().getTimeout() * 1.05), e ->{
+            this.shutdown();
+            fireConnectionClosed("Lost connection to server");});
+        this.lastPingTimer.setRepeats(false);
     }
 
     public void start() {
@@ -59,13 +65,14 @@ public class Comms {
         writeThread.start();
     }
 
+    //region Event Listening
     /**
      * Adds a <code>ConnectionListener</code> to this Comms instance.
      *
      * @param listener the <code>ConnectionListener</code> to add
      */
     public void addConnectionListener (ConnectionListener listener) {
-        this.connectionListeners.add(listener);
+        this.listenerList.add(ConnectionListener.class, listener);
     }
 
     /**
@@ -74,7 +81,7 @@ public class Comms {
      * @param listener the <code>ConnectionListener</code> to remove
      */
     public void removeConnectionListener (ConnectionListener listener) {
-        this.connectionListeners.remove(listener);
+        this.listenerList.remove(ConnectionListener.class, listener);
     }
 
     /**
@@ -83,7 +90,7 @@ public class Comms {
      * @param listener the <code>PacketListener</code> to add
      */
     public void addMessageListener (PacketListener listener) {
-        this.packetListeners.add(listener);
+        this.listenerList.add(PacketListener.class, listener);
     }
 
     /**
@@ -92,9 +99,29 @@ public class Comms {
      * @param listener the <code>PacketListener</code> to remove
      */
     public void removeMessageListener (PacketListener listener) {
-        this.packetListeners.remove(listener);
+        this.listenerList.remove(PacketListener.class, listener);
     }
 
+    private void fireConnectionClosed(String reason){
+        Object[] listeners = this.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==ConnectionListener.class) {
+                ((ConnectionListener)listeners[i+1]).connectionClosed(reason);
+            }
+        }
+    }
+
+    private void firePacketReceived(Packet packet){
+        Object[] listeners = this.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==PacketListener.class) {
+                ((PacketListener)listeners[i+1]).packetReceived(packet);
+            }
+        }
+    }
+    //endregion
+
+    //region Mandatory Spec methods
     /**
      * Sends a message
      *
@@ -117,7 +144,11 @@ public class Comms {
             throw new VersionMismatchException();
         }
     }
+    //endregion
 
+    /**
+     * Shuts down this Comms class
+     */
     public void shutdown () {
         this.shouldQuit = true;
         try {
@@ -132,6 +163,14 @@ public class Comms {
             }
         } catch (IOException e) {
             log.debug(e);
+        }
+    }
+
+    @Override
+    public void packetReceived(Packet packet) {
+        if(packet.getType() == PacketType.PING){
+            this.lastPingTimer.restart();
+            this.sendMessage(Packet.Ping());
         }
     }
 
@@ -182,10 +221,7 @@ public class Comms {
                     if(packet.getType() == PacketType.DISCONNECT){
                         Comms.this.fireConnectionClosed("Disconnect received.");
                     } else {
-                        ArrayList<PacketListener> listeners = new ArrayList<>(Comms.this.packetListeners);
-                        for (PacketListener l : listeners) {
-                            l.packetReceived(packet);
-                        }
+                        Comms.this.firePacketReceived(packet);
                     }
                 } catch (SocketException e) {
                     log.info("Socket was closed.");
@@ -203,12 +239,6 @@ public class Comms {
                     log.debug(e);
                 }
             }
-        }
-    }
-
-    private void fireConnectionClosed(String reason){
-        for(ConnectionListener l : this.connectionListeners){
-            l.connectionClosed(reason);
         }
     }
 }
