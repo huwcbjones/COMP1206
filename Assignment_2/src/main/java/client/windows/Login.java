@@ -6,13 +6,17 @@ import client.events.LoginListener;
 import client.utils.ImagePanel;
 import client.utils.Server;
 import client.utils.SpringUtilities;
+import client.utils.WindowTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 /**
  * Login window
@@ -20,11 +24,9 @@ import java.awt.event.*;
  * @author Huw Jones
  * @since 27/03/2016
  */
-public final class Login extends JFrame {
+public final class Login extends WindowTemplate {
 
     private static final Logger log = LogManager.getLogger(Login.class);
-
-    private final Config config;
 
     private ImagePanel panel_banner;
 
@@ -55,8 +57,7 @@ public final class Login extends JFrame {
     private final LoginListener loginListener;
 
     public Login () {
-        super("Login | AuctionSys");
-        this.config = Client.getConfig();
+        super("Login");
 
         // Set frame properties
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -64,16 +65,6 @@ public final class Login extends JFrame {
         this.setMaximumSize(new Dimension(280, 218));
         this.setLocationRelativeTo(null);
         this.setResizable(false);
-
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            log.debug("Failed to set System Look and Feel. {}", ex.getMessage());
-            log.trace(ex);
-        }
-        // Initialise components
-        initMainMenu();
-        initComponents();
 
         //region Set Enter/Escape key press actions
         this.getRootPane().setDefaultButton(this.btn_login);
@@ -136,13 +127,21 @@ public final class Login extends JFrame {
         this.setJMenuBar(this.menuBar);
     }
 
-    private void initComponents () {
+    @Override
+    protected void initComponents () {
+        this.initMainMenu();
         GridBagConstraints c;
 
         Container container = this.getContentPane();
         container.setLayout(new GridBagLayout());
 
         this.panel_banner = new ImagePanel();
+        try {
+            BufferedImage banner = ImageIO.read(Login.class.getResource("/img/biddr_banner_login.png"));
+            this.panel_banner.setImage(banner, true);
+        } catch (IOException e) {
+            log.error("Could not load banner image.");
+        }
         c = new GridBagConstraints();
         c.weightx = 1;
         c.weighty = 1;
