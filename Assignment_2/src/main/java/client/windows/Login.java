@@ -115,14 +115,14 @@ public final class Login extends JFrame {
         this.menu_file = new JMenu("File");
         this.menu_file.setMnemonic('f');
         this.menu_file_register = new JMenuItem("Register");
-        this.menu_file_register.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.CTRL_MASK));
+        this.menu_file_register.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_MASK));
         this.menu_file_register.getAccessibleContext().setAccessibleDescription("Register for an account.");
         this.menu_file.add(this.menu_file_register);
 
         this.menu_file.addSeparator();
 
         this.menu_file_exit = new JMenuItem("Exit");
-        this.menu_file_exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, ActionEvent.ALT_MASK));
+        this.menu_file_exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_MASK));
         this.menu_file.add(this.menu_file_exit);
 
         this.menuBar.add(this.menu_file);
@@ -130,6 +130,9 @@ public final class Login extends JFrame {
         this.menu_options.setMnemonic('o');
         this.menuBar.add(this.menu_options);
 
+        this.menu_options_servers = new JMenuItem("Servers");
+        this.menu_options_servers.setMnemonic('s');
+        this.menu_options.add(this.menu_options_servers);
         this.setJMenuBar(this.menuBar);
     }
 

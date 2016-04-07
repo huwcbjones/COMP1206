@@ -22,6 +22,7 @@ import shared.utils.ReplyWaiter;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -41,6 +42,8 @@ public final class Client implements ConnectionListener {
     private static final Config config = new Config();
     private static User user;
     private static boolean isConnected = false;
+
+    private static final EventListenerList listenerList = new EventListenerList();
 
     private static final ArrayList<LoginListener> loginListeners = new ArrayList<>();
     private static final ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
@@ -232,11 +235,11 @@ public final class Client implements ConnectionListener {
      * @param user User details of user that logged in
      */
     private static void fireLoginSuccessHandler(User user) {
-        // This gets around concurrent modification exceptions if the listener removes itself when being called
-        ArrayList<LoginListener> listeners = new ArrayList<>();
-        listeners.addAll(Client.loginListeners);
-        for (LoginListener l : listeners) {
-            l.loginSuccess(user);
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == LoginListener.class) {
+                ((LoginListener) listeners[i + 1]).loginSuccess(user);
+            }
         }
     }
 
@@ -246,11 +249,23 @@ public final class Client implements ConnectionListener {
      * @param message Reason why login failed
      */
     private static void fireLoginFailHandler(String message) {
-        // This gets around concurrent modification exceptions if the listener removes itself when being called
-        ArrayList<LoginListener> listeners = new ArrayList<>();
-        listeners.addAll(Client.loginListeners);
-        for (LoginListener l : listeners) {
-            l.loginError(message);
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == LoginListener.class) {
+                ((LoginListener) listeners[i + 1]).loginError(message);
+            }
+        }
+    }
+
+    /**
+     * Fires ConnectionSucceeded Event
+     */
+    private static void fireConnectionSucceeded() {
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ConnectionListener.class) {
+                ((ConnectionListener) listeners[i + 1]).connectionSucceeded();
+            }
         }
     }
 
@@ -260,10 +275,11 @@ public final class Client implements ConnectionListener {
      * @param reason Reason why connection failed
      */
     private static void fireConnectionFailed(String reason) {
-        ArrayList<ConnectionListener> listeners = new ArrayList<>();
-        listeners.addAll(Client.connectionListeners);
-        for (ConnectionListener l : listeners) {
-            l.connectionFailed(reason);
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ConnectionListener.class) {
+                ((ConnectionListener) listeners[i + 1]).connectionFailed(reason);
+            }
         }
     }
 
@@ -273,10 +289,11 @@ public final class Client implements ConnectionListener {
      * @param reason Reason why connection was closed
      */
     private static void fireConnectionClosed(String reason) {
-        ArrayList<ConnectionListener> listeners = new ArrayList<>();
-        listeners.addAll(Client.connectionListeners);
-        for (ConnectionListener l : listeners) {
-            l.connectionClosed(reason);
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ConnectionListener.class) {
+                ((ConnectionListener) listeners[i + 1]).connectionClosed(reason);
+            }
         }
     }
 
@@ -286,15 +303,6 @@ public final class Client implements ConnectionListener {
     @Override
     public void connectionSucceeded() {
         fireConnectionSucceeded();
-    }
-
-    /**
-     * Fires ConnectionSucceeded Event
-     */
-    private static void fireConnectionSucceeded() {
-        ArrayList<ConnectionListener> listeners = new ArrayList<>();
-        listeners.addAll(Client.connectionListeners);
-        listeners.forEach(ConnectionListener::connectionSucceeded);
     }
 
     /**
@@ -346,7 +354,7 @@ public final class Client implements ConnectionListener {
      * @param listener Listener to add
      */
     public static void addLoginListener(LoginListener listener) {
-        Client.loginListeners.add(listener);
+        Client.listenerList.add(LoginListener.class, listener);
     }
 
     /**
@@ -355,7 +363,7 @@ public final class Client implements ConnectionListener {
      * @param listener Listener to remove
      */
     public static void removeLoginListener(LoginListener listener) {
-        Client.loginListeners.remove(listener);
+        Client.listenerList.remove(LoginListener.class, listener);
     }
 
     /**
@@ -364,7 +372,7 @@ public final class Client implements ConnectionListener {
      * @param listener Listener to add
      */
     public static void addConnectionListener(ConnectionListener listener) {
-        Client.connectionListeners.add(listener);
+        Client.listenerList.add(ConnectionListener.class, listener);
     }
 
     /**
@@ -373,7 +381,7 @@ public final class Client implements ConnectionListener {
      * @param listener Listener to remove
      */
     public static void removeConnectionListener(ConnectionListener listener) {
-        Client.connectionListeners.remove(listener);
+        Client.listenerList.remove(ConnectionListener.class, listener);
     }
     //endregion
 }

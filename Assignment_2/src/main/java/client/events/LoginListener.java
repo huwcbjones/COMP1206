@@ -2,13 +2,15 @@ package client.events;
 
 import shared.User;
 
+import java.util.EventListener;
+
 /**
  * Handles Login Events
  *
  * @author Huw Jones
  * @since 28/03/2016
  */
-public interface LoginListener {
+public interface LoginListener extends EventListener {
 
     /**
      * Fired when a successful login occurs

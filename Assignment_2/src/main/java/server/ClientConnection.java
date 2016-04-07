@@ -10,6 +10,7 @@ import shared.events.ConnectionAdapter;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
 
+import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,6 +27,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
 
     private static final Logger log = LogManager.getLogger(ClientConnection.class);
 
+    private final EventListenerList listenerList = new EventListenerList();
     private final ArrayList<ServerPacketListener> serverPacketListeners;
 
     private final long clientID;
@@ -109,9 +111,11 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      */
     @Override
     public void packetReceived (Packet packet) {
-        ArrayList<ServerPacketListener> serverPacketListeners = new ArrayList<>(this.serverPacketListeners);
-        for (ServerPacketListener l : serverPacketListeners) {
-            l.packetReceived(this, packet);
+        Object[] listeners = this.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i]==ServerPacketListener.class) {
+                ((ServerPacketListener)listeners[i+1]).packetReceived(this, packet);
+            }
         }
     }
 
@@ -139,7 +143,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      * @param listener Listener to add
      */
     public void addServerPacketListener(ServerPacketListener listener) {
-        this.serverPacketListeners.add(listener);
+        this.listenerList.add(ServerPacketListener.class, listener);
     }
 
     /**
@@ -148,7 +152,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      * @param listener Listener to remove
      */
     public void removeServerPacketListener(ServerPacketListener listener) {
-        this.serverPacketListeners.remove(listener);
+        this.listenerList.add(ServerPacketListener.class, listener);
     }
 
     /**
