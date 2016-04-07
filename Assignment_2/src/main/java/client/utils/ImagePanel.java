@@ -1,9 +1,7 @@
 package client.utils;
 
 import javax.swing.*;
-import javax.swing.border.StrokeBorder;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 /**
@@ -33,6 +31,6 @@ public class ImagePanel extends JPanel {
     protected void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D)g;
-        g.drawImage(this.image, 0, 0, null);
+        g2d.drawImage(this.image, 0, 0, null);
     }
 }

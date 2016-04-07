@@ -14,8 +14,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Auction Server Daemon
@@ -27,8 +25,6 @@ public final class Server {
 
     private static final Logger log = LogManager.getLogger(Server.class);
 
-    private boolean shouldQuit = false;
-
     private long clientConnectionCounter = 0;
 
     private ServerListenThread plainSocket;
@@ -38,7 +34,7 @@ public final class Server {
 
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
 
-    private HashMap<Long, ClientConnection> clients;
+    private final HashMap<Long, ClientConnection> clients;
     private WorkerPool workPool;
 
     public Server () {
@@ -63,7 +59,7 @@ public final class Server {
             config.loadConfig();
         } catch (ConfigLoadException e) {
             System.err.println("Failed to load config.");
-            System.err.println(e);
+            System.err.println(e.getMessage());
         }
         System.out.print(config.getConfig());
     }

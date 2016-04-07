@@ -7,7 +7,6 @@ import shared.exceptions.UnsupportedSecurityException;
 import shared.utils.StringUtils;
 import shared.utils.ValidationUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -22,8 +21,8 @@ import java.util.Random;
  * @since 26/03/2016
  */
 final class User extends shared.User {
-    private byte[] passwordHash;
-    private byte[] salt;
+    private final byte[] passwordHash;
+    private final byte[] salt;
     private boolean isLoggedIn = false;
 
     public User (String firstName, String lastName, byte[] passwordHash, byte[] salt) {
@@ -57,11 +56,7 @@ final class User extends shared.User {
             throw new PasswordsDoNotMatchException();
         }
 
-        if (!ValidationUtils.validatePassword(newPassword)) {
-            // An exception should be triggered here anyway
-            return false;
-        }
-
+        ValidationUtils.validatePassword(newPassword);
 
         return false;
     }

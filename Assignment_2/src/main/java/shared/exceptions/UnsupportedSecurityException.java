@@ -20,7 +20,6 @@ public class UnsupportedSecurityException extends Exception {
     }
 
     public static UnsupportedSecurityException FromException(Exception ex){
-        UnsupportedSecurityException exception = new UnsupportedSecurityException(ex.getMessage(), ex.getCause());
-        return exception;
+        return new UnsupportedSecurityException(ex.getMessage(), ex.getCause());
     }
 }

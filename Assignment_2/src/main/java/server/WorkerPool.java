@@ -18,7 +18,7 @@ public class WorkerPool {
 
     private static final Logger log = LogManager.getLogger(WorkerPool.class);
 
-    private ScheduledExecutorService workerPool;
+    private final ScheduledExecutorService workerPool;
 
     public WorkerPool(int workers) {
         this.workerPool = Executors.newScheduledThreadPool(workers);
@@ -69,8 +69,7 @@ public class WorkerPool {
         try {
             log.info("Waiting for tasks to complete...");
             this.workerPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch(InterruptedException e){
-
+        } catch(InterruptedException ignored){
         }
         log.info("Worker pool shutdown!");
     }

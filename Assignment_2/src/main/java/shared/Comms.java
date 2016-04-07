@@ -26,12 +26,12 @@ public class Comms {
 
     private static final Logger log = LogManager.getLogger(Comms.class);
 
-    private ArrayList<PacketListener> packetListeners;
-    private ArrayList<ConnectionListener> connectionListeners;
+    private final ArrayList<PacketListener> packetListeners;
+    private final ArrayList<ConnectionListener> connectionListeners;
 
     protected final CommsReadThread readThread;
     protected final CommsWriteThread writeThread;
-    private Queue<Packet> packetQueue;
+    private final Queue<Packet> packetQueue;
 
     private final Socket socket;
 
@@ -158,7 +158,7 @@ public class Comms {
                 synchronized (this) {
                     try {
                         this.wait();
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException ignored) {
                     }
                 }
             }

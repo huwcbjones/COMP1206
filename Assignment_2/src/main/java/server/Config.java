@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * Server COnfig Manager
+ * Server Config Manager
  *
  * @author Huw Jones
  * @since 26/03/2016
@@ -21,7 +21,7 @@ public final class Config {
 
     public static final int VERSION = 1;
 
-    private static Logger log = LogManager.getLogger(Config.class);
+    private static final Logger log = LogManager.getLogger(Config.class);
 
     private boolean configFileLocationWasSet = false;
     private File configFileLocation;

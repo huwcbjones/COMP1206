@@ -26,7 +26,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
 
     private static final Logger log = LogManager.getLogger(ClientConnection.class);
 
-    private ArrayList<ServerPacketListener> serverPacketListeners;
+    private final ArrayList<ServerPacketListener> serverPacketListeners;
 
     private final long clientID;
     private final Socket socket;
@@ -68,6 +68,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         ConnectHandler connectHandler = new ConnectHandler(this);
         connectHandler.connect();
         log.info("Client #{} successfully connected!", this.clientID);
+        this.isConnected = true;
         this.comms.addMessageListener(this);
     }
 

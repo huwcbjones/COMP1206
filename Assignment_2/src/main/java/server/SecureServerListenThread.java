@@ -2,15 +2,11 @@ package server;
 
 import shared.exceptions.ConnectionFailedException;
 
-import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 
 /**
  * Secure implementation of ServerListenThread

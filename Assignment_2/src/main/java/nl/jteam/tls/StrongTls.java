@@ -97,7 +97,7 @@ public class StrongTls {
      * @return the intersection of strings in stringSetA and stringSetB
      */
     public static String[] intersection(String[] stringSetA, String[] stringSetB) {
-        Set<String> intersection = new HashSet<String>(Arrays.asList(stringSetA));
+        Set<String> intersection = new HashSet<>(Arrays.asList(stringSetA));
         intersection.retainAll(Arrays.asList(stringSetB));
         return intersection.toArray(new String[intersection.size()]);
     }

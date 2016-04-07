@@ -11,7 +11,7 @@ public final class Server {
     private final String name;
     private final String address;
     private final int port;
-    private int securePort;
+    private final int securePort;
 
 
     public Server (String address, int port) {

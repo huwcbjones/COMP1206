@@ -18,10 +18,10 @@ import shared.utils.ReplyWaiter;
  * @since 05/04/2016
  */
 public class ConnectHandler {
-    private static Logger log = LogManager.getLogger(ConnectHandler.class);
+    private static final Logger log = LogManager.getLogger(ConnectHandler.class);
 
     private NotificationWaiter waiter;
-    private ClientConnection client;
+    private final ClientConnection client;
 
     public ConnectHandler(ClientConnection client) {
         this.client = client;

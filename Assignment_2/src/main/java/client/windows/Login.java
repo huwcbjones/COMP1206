@@ -9,7 +9,6 @@ import client.utils.SpringUtilities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
-import shared.events.ConnectionListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,10 +22,9 @@ import java.awt.event.*;
  */
 public final class Login extends JFrame {
 
-    private static Logger log = LogManager.getLogger(Login.class);
+    private static final Logger log = LogManager.getLogger(Login.class);
 
-    private Config config;
-    private boolean isLoggingIn = false;
+    private final Config config;
 
     private ImagePanel panel_banner;
 
@@ -54,7 +52,7 @@ public final class Login extends JFrame {
     private JButton btn_cancel;
     private JButton btn_login;
 
-    private LoginListener loginListener;
+    private final LoginListener loginListener;
 
     public Login () {
         super("Login | AuctionSys");
@@ -74,6 +72,7 @@ public final class Login extends JFrame {
             log.trace(ex);
         }
         // Initialise components
+        initMainMenu();
         initComponents();
 
         //region Set Enter/Escape key press actions
@@ -111,7 +110,7 @@ public final class Login extends JFrame {
         //endregion
     }
 
-    private void initComponents () {
+    private void initMainMenu(){
         this.menuBar = new JMenuBar();
         this.menu_file = new JMenu("File");
         this.menu_file.setMnemonic('f');
@@ -132,7 +131,9 @@ public final class Login extends JFrame {
         this.menuBar.add(this.menu_options);
 
         this.setJMenuBar(this.menuBar);
+    }
 
+    private void initComponents () {
         GridBagConstraints c;
 
         Container container = this.getContentPane();
@@ -229,7 +230,6 @@ public final class Login extends JFrame {
         public void actionPerformed (ActionEvent e) {
             // Disable form so only one login can occur at a time
             Login.this.setFormEnabledState(false);
-            Login.this.isLoggingIn = true;
 
             Client.addLoginListener(Login.this.loginListener);
             Client.login(Login.this.text_username.getText(), Login.this.text_password.getPassword());
@@ -262,7 +262,6 @@ public final class Login extends JFrame {
         @Override
         public void loginSuccess (User user) {
             Client.removeLoginListener(Login.this.loginListener);
-            Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
         }
 
@@ -274,7 +273,6 @@ public final class Login extends JFrame {
         @Override
         public void loginError (String message) {
             Client.removeLoginListener(Login.this.loginListener);
-            Login.this.isLoggingIn = false;
             Login.this.setFormEnabledState(true);
             Login.this.clearFields();
             JOptionPane.showMessageDialog(

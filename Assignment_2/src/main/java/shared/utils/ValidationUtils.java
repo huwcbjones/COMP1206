@@ -12,13 +12,13 @@ import java.util.Arrays;
  */
 public class ValidationUtils {
 
-    public static boolean validatePassword (char[] password) throws PasswordNotStrongEnoughException {
+    public static void validatePassword (char[] password) throws PasswordNotStrongEnoughException {
         boolean lower = false,
                 upper = false,
                 number = false;
         int length = password.length;
 
-        if (length >= 32) return true;
+        if (length >= 32) return;
 
         for (char c : password) {
             lower |= Character.isLowerCase(c);
@@ -27,14 +27,14 @@ public class ValidationUtils {
 
             if (lower & upper & number) {
                 Arrays.fill(password, '\u0000');
-                return true;
+                return;
             }
         }
 
         Arrays.fill(password, '\u0000');
 
-        if (lower & upper & number) {
-            return true;
+        if (lower && upper && number) {
+            return;
         }
         throw new PasswordNotStrongEnoughException();
     }

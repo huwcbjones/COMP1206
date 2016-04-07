@@ -9,7 +9,7 @@ import shared.events.PacketListener;
  * @since 04/04/2016
  */
 public abstract class ReplyWaiter implements PacketListener {
-    protected NotificationWaiter waiter;
+    protected final NotificationWaiter waiter;
 
     public ReplyWaiter(NotificationWaiter waiter){
         this.waiter = waiter;

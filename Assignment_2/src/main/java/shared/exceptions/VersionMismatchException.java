@@ -20,7 +20,6 @@ public class VersionMismatchException extends Exception {
     }
 
     public static VersionMismatchException FromException(Exception ex){
-        VersionMismatchException exception = new VersionMismatchException(ex.getMessage(), ex.getCause());
-        return exception;
+        return new VersionMismatchException(ex.getMessage(), ex.getCause());
     }
 }

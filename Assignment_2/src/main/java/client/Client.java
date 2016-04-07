@@ -37,15 +37,13 @@ import java.util.Arrays;
  */
 public final class Client implements ConnectionListener {
 
-    private static Logger log = LogManager.getLogger(Client.class);
+    private static final Logger log = LogManager.getLogger(Client.class);
     private static final Config config = new Config();
     private static User user;
     private static boolean isConnected = false;
-    private static boolean isLoggingIn = false;
-    private static boolean cancelLogin = false;
 
-    private static ArrayList<LoginListener> loginListeners = new ArrayList<>();
-    private static ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
+    private static final ArrayList<LoginListener> loginListeners = new ArrayList<>();
+    private static final ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
 
     private static Comms comms;
     private static Client client;

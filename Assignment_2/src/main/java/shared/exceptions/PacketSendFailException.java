@@ -21,7 +21,6 @@ public class PacketSendFailException extends Exception {
     }
 
     public static PacketSendFailException FromException(Exception ex){
-        PacketSendFailException exception = new PacketSendFailException(ex.getMessage(), ex.getCause());
-        return exception;
+        return new PacketSendFailException(ex.getMessage(), ex.getCause());
     }
 }

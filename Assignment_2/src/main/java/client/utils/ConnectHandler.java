@@ -19,7 +19,7 @@ import shared.utils.ReplyWaiter;
  */
 public class ConnectHandler {
 
-    private static Logger log = LogManager.getLogger(ConnectHandler.class);
+    private static final Logger log = LogManager.getLogger(ConnectHandler.class);
 
     private NotificationWaiter waiter = new NotificationWaiter();
 
@@ -78,7 +78,7 @@ public class ConnectHandler {
             }
         };
         Client.addPacketListener(replyHandler);
-        Client.sendPacket(new Packet<>(PacketType.HELLO, "hello"));
+        Client.sendPacket(Packet.Hello());
 
         // Wait for reply
         waiter.waitForReply();

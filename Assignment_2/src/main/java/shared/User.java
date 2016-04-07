@@ -1,12 +1,7 @@
 package shared;
 
-import shared.exceptions.UnsupportedSecurityException;
 import shared.utils.StringUtils;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -17,8 +12,8 @@ import java.util.UUID;
  */
 public class User {
     private UUID userID;
-    private String firstName;
-    private String lastName;
+    private final String firstName;
+    private final String lastName;
 
     public User(String firstName, String lastName){
         this.firstName = StringUtils.CapitaliseString(firstName);
