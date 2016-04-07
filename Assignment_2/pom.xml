@@ -45,11 +45,28 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <id>AuctionServer</id>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>AuctionServer</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <finalName>AuctionServer</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
                         <id>auctiond</id>
                         <configuration>
-
                             <archive>
-
                                 <manifest>
                                     <mainClass>auctiond</mainClass>
                                 </manifest>
@@ -66,19 +83,18 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
-                        <id>auction</id>
+                        <id>AuctionClient</id>
                         <configuration>
-
                             <archive>
                                 <manifest>
-                                    <mainClass>auction</mainClass>
+                                    <mainClass>AuctionClient</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
                             <appendAssemblyId>false</appendAssemblyId>
-                            <finalName>auction</finalName>
+                            <finalName>AuctionClient</finalName>
                         </configuration>
                     </execution>
                 </executions>
