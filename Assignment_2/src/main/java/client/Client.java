@@ -8,7 +8,7 @@ import client.windows.Login;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import server.exceptions.ConfigLoadException;
+import shared.exceptions.ConfigLoadException;
 import shared.Comms;
 import shared.Packet;
 import shared.PacketType;

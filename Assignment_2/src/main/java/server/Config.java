@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import server.exceptions.ConfigLoadException;
+import shared.exceptions.ConfigLoadException;
 
 import java.io.*;
 import java.util.ArrayList;

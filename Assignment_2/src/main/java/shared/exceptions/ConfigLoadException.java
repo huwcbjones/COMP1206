@@ -1,4 +1,4 @@
-package server.exceptions;
+package shared.exceptions;
 
 /**
  * Thrown if there was an error whilst loading the config

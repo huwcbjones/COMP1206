@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import server.tasks.PacketHandler;
 import server.events.ServerPacketListener;
-import server.exceptions.ConfigLoadException;
+import shared.exceptions.ConfigLoadException;
 import shared.Packet;
 
 import javax.net.ssl.SSLServerSocket;
