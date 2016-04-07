@@ -27,7 +27,12 @@ import java.util.Queue;
  */
 public class Comms implements PacketListener {
 
-    private static final Logger log = LogManager.getLogger(Comms.class);
+    /**
+     * Amount of time (in milliseconds) before a ping can timeout
+     */
+    public static final int PING_TIMEOUT = 60 * 1000;
+
+    protected static final Logger log = LogManager.getLogger(Comms.class);
 
     protected final EventListenerList listenerList = new EventListenerList();
 
@@ -52,13 +57,14 @@ public class Comms implements PacketListener {
 
         readThread = new CommsReadThread();
         writeThread = new CommsWriteThread();
-        this.lastPingTimer = new Timer((int)(Client.getConfig().getTimeout() * 1.05), e ->{
+        this.lastPingTimer = new Timer(Comms.PING_TIMEOUT, e ->{
+            log.info("Ping not received in timeout period.");
             this.shutdown();
             fireConnectionClosed("Lost connection to server");});
         this.lastPingTimer.setRepeats(false);
     }
 
-    public void start() {
+    public final void start() {
         log.debug("Starting comms read thread...");
         readThread.start();
         log.debug("Starting comms write thread...");
@@ -71,7 +77,7 @@ public class Comms implements PacketListener {
      *
      * @param listener the <code>ConnectionListener</code> to add
      */
-    public void addConnectionListener (ConnectionListener listener) {
+    public final void addConnectionListener (ConnectionListener listener) {
         this.listenerList.add(ConnectionListener.class, listener);
     }
 
@@ -80,7 +86,7 @@ public class Comms implements PacketListener {
      *
      * @param listener the <code>ConnectionListener</code> to remove
      */
-    public void removeConnectionListener (ConnectionListener listener) {
+    public final void removeConnectionListener (ConnectionListener listener) {
         this.listenerList.remove(ConnectionListener.class, listener);
     }
 
@@ -89,7 +95,7 @@ public class Comms implements PacketListener {
      *
      * @param listener the <code>PacketListener</code> to add
      */
-    public void addMessageListener (PacketListener listener) {
+    public final void addMessageListener (PacketListener listener) {
         this.listenerList.add(PacketListener.class, listener);
     }
 
@@ -98,11 +104,11 @@ public class Comms implements PacketListener {
      *
      * @param listener the <code>PacketListener</code> to remove
      */
-    public void removeMessageListener (PacketListener listener) {
+    public final void removeMessageListener (PacketListener listener) {
         this.listenerList.remove(PacketListener.class, listener);
     }
 
-    private void fireConnectionClosed(String reason){
+    protected final void fireConnectionClosed(String reason){
         Object[] listeners = this.listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==ConnectionListener.class) {
@@ -127,7 +133,7 @@ public class Comms implements PacketListener {
      *
      * @param packet Packet to send
      */
-    public void sendMessage (Packet packet) {
+    public final void sendMessage (Packet packet) {
         this.packetQueue.add(packet);
         synchronized (this.writeThread) {
             this.writeThread.notify();
@@ -137,7 +143,7 @@ public class Comms implements PacketListener {
     /**
      * Receives a message
      */
-    public Packet receiveMessage () throws VersionMismatchException, IOException {
+    public final Packet receiveMessage () throws VersionMismatchException, IOException {
         try {
             return (Packet) input.readObject();
         } catch (ClassNotFoundException | ClassCastException e) {

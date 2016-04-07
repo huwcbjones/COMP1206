@@ -128,6 +128,7 @@ public final class Client implements ConnectionListener {
             }
             Client.isConnected = true;
             Client.comms.addConnectionListener(Client.client);
+            Client.comms.addMessageListener(Client.comms);
             Client.fireConnectionSucceeded();
             log.info("Connection successfully established!");
 
