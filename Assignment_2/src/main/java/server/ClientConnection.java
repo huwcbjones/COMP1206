@@ -72,6 +72,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         log.info("Client #{} successfully connected!", this.clientID);
         this.isConnected = true;
         this.comms.addMessageListener(this);
+        this.comms.sendMessage(Packet.Ping());
     }
 
     public void closeConnection () {
@@ -100,6 +101,13 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     public boolean isSecureConnection() {
         return this.isSecureConnection;
     }
+
+    /**
+     * Returns whether or not this client is connected
+     *
+     * @return True if client is connected
+     */
+    public boolean isConnected() { return this.isConnected; }
 
     //region Event Handling
     /**
@@ -172,6 +180,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     @Override
     public void connectionClosed(String reason) {
         log.info("Client #{}, connection closed: {}", this.clientID, reason);
+        this.isConnected = false;
         Server.getServer().removeClient(this);
         this.closeConnection();
     }
