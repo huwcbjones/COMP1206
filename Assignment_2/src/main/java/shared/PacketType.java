@@ -50,13 +50,8 @@ public enum PacketType {
     //region Connection Maintenance
     // Let's create a game of ping pong to maintain connection
     /**
-     * Server sends a ping to client to check client is alive
+     * Server sends a ping to client to check client is alive, if client is alive, a ping is sent back
      */
     PING,
-
-    /**
-     * Client sends a pong to the server to say it is still alive
-     */
-    PONG
     //endregion
 }

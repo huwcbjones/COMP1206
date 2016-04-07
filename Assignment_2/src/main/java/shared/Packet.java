@@ -66,4 +66,13 @@ public final class Packet<T extends Serializable> implements Serializable {
     public static Packet<Serializable> wasOK(boolean wasOK) {
         return new Packet<>(wasOK ? PacketType.OK : PacketType.NOK, null);
     }
+
+    /**
+     * Returns a PING packet
+     *
+     * @return PING packet
+     */
+    public static Packet<Serializable> Ping() {
+        return new Packet<>(PacketType.PING, null);
+    }
 }
