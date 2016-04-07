@@ -31,6 +31,7 @@ public class WorkerPool {
      * @param task Task to run
      */
     public void queueTask (Runnable task) {
+        log.debug("Queuing task ({}) to run now", task.toString());
         this.workerPool.submit(task);
     }
 
@@ -40,6 +41,7 @@ public class WorkerPool {
      * @param task Task to run
      */
     public void queueTask(Callable task) {
+        log.debug("Queuing task ({}) to run now", task.toString());
         this.workerPool.submit(task);
     }
 
@@ -50,6 +52,7 @@ public class WorkerPool {
      * @param timeDelay Time to delay task (in milliseconds);
      */
     public void scheduleTask(Runnable task, long timeDelay) {
+        log.debug("Scheduling task ({}) to run in {}ms", task.toString(), timeDelay);
         this.workerPool.schedule(task, timeDelay, TimeUnit.MILLISECONDS);
     }
 
@@ -60,6 +63,7 @@ public class WorkerPool {
      * @param timeDelay Time to delay task (in milliseconds);
      */
     public void scheduleTask(Callable task, long timeDelay) {
+        log.debug("Scheduling task ({}) to run in {}ms", task.toString(), timeDelay);
         this.workerPool.schedule(task, timeDelay, TimeUnit.MILLISECONDS);
     }
 
