@@ -5,6 +5,7 @@
     "port": 473,
     "secure": {
       "enable": true,
+      "key-store" : "keys/auction",
       "port": 474
     }
   }

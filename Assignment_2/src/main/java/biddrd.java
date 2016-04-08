@@ -10,16 +10,16 @@ import java.util.Arrays;
  * @author Huw Jones
  * @since 24/03/2016
  */
-public class auctiond {
+public class biddrd {
 
     public static void main (String[] args) {
         ArrayList<String> argList = new ArrayList<>(Arrays.asList(args));
 
         if (argList.contains("-h") || argList.contains("--help")) {
-            auctiond.help();
+            biddrd.help();
             return;
         } else if (argList.contains("-v") || argList.contains("--version")) {
-            auctiond.version();
+            biddrd.version();
             return;
         }
 
@@ -27,7 +27,7 @@ public class auctiond {
 
         if (argList.contains("-c") || argList.contains("--config-file")) {
             try {
-                server.setConfigFile(auctiond.getConfigFileOption(argList));
+                server.setConfigFile(biddrd.getConfigFileOption(argList));
             } catch (ArgumentNotFoundException e) {
                 System.err.println(e.getMessage());
             }
@@ -35,37 +35,37 @@ public class auctiond {
 
         if (argList.contains("-d") || argList.contains("--data.dir")) {
             try {
-                server.setDataDirectory(auctiond.getDataStoreOption(argList));
+                server.setDataDirectory(biddrd.getDataStoreOption(argList));
             } catch (ArgumentNotFoundException e) {
                 System.err.println(e.getMessage());
             }
         }
 
         if (argList.contains("-t") || argList.contains("--test-config")) {
-            auctiond.header();
+            biddrd.header();
             server.testConfig();
             return;
         }
 
-        server.run(auctiond.getDataStoreCreate(argList));
+        server.run(biddrd.getDataStoreCreate(argList));
     }
 
     /**
      * Prints out programme header info
      */
     private static void header () {
-        System.out.println("Usage: auctiond [OPTION]...");
+        System.out.println("Usage: biddrd [OPTION]...");
         System.out.println("COMP1206 Auction System Server.");
     }
 
     /**
-     * Prints out auctiond help
+     * Prints out biddrd help
      */
     private static void help () {
-        auctiond.header();
+        biddrd.header();
         System.out.println("Arguments:");
-        System.out.println("  -c, --config-file\tSpecifies config file (defaults to execdir/auctiond.json.");
-        System.out.println("  -d, --data-store\tSpecifies the data store. If unspecified, loads from auctiond.json");
+        System.out.println("  -c, --config-file\tSpecifies config file (defaults to execdir/biddrd.json.");
+        System.out.println("  -d, --data-store\tSpecifies the data store. If unspecified, loads from biddrd.json");
         System.out.println("  -h, --help\t\tPrints this help message.");
         System.out.println("  -m, --make-store\tMakes the data store file if it doesn't exist. (Use for first time run).");
         System.out.println("  -t, --test-config\tDon't run, just test config file. Will print out server config.");
@@ -73,7 +73,7 @@ public class auctiond {
     }
 
     private static void version () {
-        System.out.println("auctiond 0.1s");
+        System.out.println("biddrd 0.1s");
         System.out.println("Written by Huw Jones for COMP1206 Coursework 2");
     }
 
