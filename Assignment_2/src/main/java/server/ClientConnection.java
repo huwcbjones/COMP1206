@@ -78,6 +78,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     public void closeConnection () {
         log.info("Closing client connection...");
         try {
+            this.comms.sendMessage(Packet.Disconnect("Server shutting down."));
             socket.close();
         } catch (IOException e) {
             log.debug(e);
