@@ -64,8 +64,11 @@ COMPILATION INSTRUCTIONS:
     Also implemented is a ConnectionListener which listens to the server/client connection and allows for listening to ConnectionSucceeded, ConnectionFailed, and ConnectionClosed.
  5) Server/client ping-pong keep alive. A ping message is sent between server/client to ensure the connection is maintained. If a packet is not received in x time,
     the connection is declared to have been closed and the ConnectionClosed event is raised.
+ 6) Uses an SQLite database instead of a custom storage format. This means the data file is standardised and the DataPersistence class could be ported to run on any database implementation easily.
+    All the developer has to do is change the JDBC driver.
 
  
  
  THIRD PARTY LIBRARIES:
  json-simple: https://code.google.com/archive/p/json-simple/
+ sqlite-jdbc: https://bitbucket.org/xerial/sqlite-jdbc
