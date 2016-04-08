@@ -1,10 +1,13 @@
 package client.windows;
 
+import client.Client;
+import client.events.RegisterListener;
 import client.utils.HintTextFieldUI;
 import client.utils.SpringUtilities;
 import client.utils.WindowTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import shared.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,6 +44,9 @@ public final class Register extends WindowTemplate {
 
     private JLabel label_passwordConfirm;
     private JPasswordField text_passwordConfirm;
+
+    private RegisterListener registerListener;
+    private boolean isRegistering = false;
 
 
     public Register() {
@@ -82,6 +88,8 @@ public final class Register extends WindowTemplate {
         this.btn_cancel.addActionListener(new cancelBtnClickHandler());
         this.btn_register.addActionListener(new registerBtnClickHandler());
 
+        this.registerListener = new registerListener();
+
         // Adds window closing listener
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -108,7 +116,7 @@ public final class Register extends WindowTemplate {
                     }
                 }
                 Register.this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                //Client.removeLoginListener(Login.this.loginListener);
+                Client.removeRegisterListener(Register.this.registerListener);
             }
         });
     }
@@ -197,6 +205,21 @@ public final class Register extends WindowTemplate {
         c.fill = GridBagConstraints.BOTH;
         container.add(this.btn_register, c);
     }
+    //region Utility Methods
+    private void setFormEnabledState(boolean state) {
+        this.text_username.setEnabled(state);
+        this.text_firstName.setEnabled(state);
+        this.text_lastName.setEnabled(state);
+        this.text_password.setEnabled(state);
+        this.text_passwordConfirm.setEnabled(state);
+        this.btn_register.setEnabled(state);
+    }
+
+    private void clearFields() {
+        this.text_username.setText("");
+        this.text_password.setText("");
+    }
+    //endregion
 
     /**
      * Closes window when cancel button pressed
@@ -213,7 +236,65 @@ public final class Register extends WindowTemplate {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            Register.this.isRegistering = true;
+            Register.this.setFormEnabledState(false);
+            Client.addRegisterListener(Register.this.registerListener);
+            Client.register(new User(
+                    Register.this.text_username.getText(),
+                    Register.this.text_firstName.getText(),
+                    Register.this.text_lastName.getText()
+                ),
+                Register.this.text_password.getPassword(),
+                Register.this.text_passwordConfirm.getPassword()
+            );
         }
     }
+
+    private class registerListener implements RegisterListener {
+
+
+        /**
+         * Fired when a user successfully registers
+         *
+         * @param user Registered user
+         */
+        @Override
+        public void registerSuccess(User user) {
+            Register.this.isRegistering = false;
+            Client.removeRegisterListener(Register.this.registerListener);
+            Register.this.setFormEnabledState(true);
+            Register.this.clearFields();
+            JOptionPane.showMessageDialog(
+                Register.this,
+                "Hi " + user.getFullName() + ",\n" +
+                "You've successfully registered for Biddr on " + Register.this.config.getSelectedServer().getName() + ".\n" +
+                "Click OK to continue to login to Biddr.\n\n" +
+                "Just to confirm, your login details are as follows:\n" +
+                "\t- Username: " + user.getUsername() + "\n" +
+                "\t- Password: As Provided",
+                "Registration Succeeded!",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+            Register.this.dispatchEvent(new WindowEvent(Register.this, WindowEvent.WINDOW_CLOSING));
+        }
+
+        /**
+         * Fired when a user fails to register
+         *
+         * @param reason Reason why registration failed
+         */
+        @Override
+        public void registerFail(String reason) {
+            Register.this.isRegistering = false;
+            Client.removeRegisterListener(Register.this.registerListener);
+            Register.this.setFormEnabledState(true);
+            JOptionPane.showMessageDialog(
+                Register.this,
+                "We're sorry, but we failed to register your account.\nReason: " + reason,
+                "Registration Failed",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
 }

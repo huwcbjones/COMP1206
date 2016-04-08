@@ -1,18 +1,17 @@
 package client;
 
 import client.events.LoginListener;
+import client.events.RegisterListener;
 import client.utils.ConnectHandler;
 import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Login;
+import client.windows.Register;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import shared.*;
 import shared.exceptions.ConfigLoadException;
-import shared.Comms;
-import shared.Packet;
-import shared.PacketType;
-import shared.User;
 import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
@@ -157,7 +156,7 @@ public final class Client implements ConnectionListener {
                 @Override
                 public void connectionFailed(String reason) {
                     Client.removeConnectionListener(this);
-                    fireLoginFailHandler(reason);
+                    Client.fireLoginFailHandler(reason);
                 }
             };
             Client.addConnectionListener(listener);
@@ -188,6 +187,8 @@ public final class Client implements ConnectionListener {
                     case NOK:
                         Client.fireLoginFailHandler("Server failed to process request.");
                         break;
+                    default:
+                        return;
                 }
                 waiter.replyReceived();
             }
@@ -201,6 +202,64 @@ public final class Client implements ConnectionListener {
         if (waiter.isReplyTimedOut()) {
             // Need to handle timeouts because the fail event only fires if we get a LOGIN_FAIL from the server
             fireLoginFailHandler("Request timed out.");
+        }
+    }
+
+    public static void register(User user, char[] password, char[] passwordConfirm){
+        if (!Client.isConnected) {
+            ConnectionListener listener = new ConnectionAdapter() {
+                @Override
+                public void connectionSucceeded() {
+                    Client.removeConnectionListener(this);
+                    Client.register(user, password, passwordConfirm);
+                }
+
+                @Override
+                public void connectionFailed(String reason) {
+                    Client.removeConnectionListener(this);
+                    Client.fireRegisterFailHandler(reason);
+                }
+            };
+            Client.addConnectionListener(listener);
+            Client.connect();
+        } else {
+            new Thread(() -> {
+                Client.doRegister(user, password, passwordConfirm);
+            }, "RegisterThread").start();
+        }
+    }
+
+    private static void doRegister(User user, char[] password, char[] passwordConfirm){
+        NotificationWaiter waiter = new NotificationWaiter();
+
+        ReplyWaiter handler=  new ReplyWaiter(waiter) {
+            @Override
+            public void packetReceived(Packet packet) {
+                switch (packet.getType()){
+                    case REGISTER_SUCCESS:
+                        Client.fireRegisterSuccessHandler((User) packet.getPayload());
+                        break;
+                    case REGISTER_FAIL:
+                        Client.fireRegisterFailHandler((String)packet.getPayload());
+                        break;
+                    case NOK:
+                        Client.fireRegisterFailHandler("Server failed to process request.");
+                        break;
+                    default:
+                        return;
+                }
+                waiter.replyReceived();
+            }
+        };
+
+        Client.comms.addMessageListener(handler);
+        Client.comms.sendMessage(new Packet<>(PacketType.REGISTER, new RegisterUser(user, password, passwordConfirm)));
+        Arrays.fill(password, '\u0000');
+        Arrays.fill(passwordConfirm, '\u0000');
+
+        waiter.waitForReply();
+        if(waiter.isReplyTimedOut()){
+
         }
     }
 
@@ -229,6 +288,33 @@ public final class Client implements ConnectionListener {
     //endregion
 
     //region Event Trigger Methods
+    /**
+     * Fires RegisterSuccess Event
+     *
+     * @param user User that has registered
+     */
+    private static void fireRegisterSuccessHandler(User user) {
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == RegisterListener.class) {
+                ((RegisterListener) listeners[i + 1]).registerSuccess(user);
+            }
+        }
+    }
+
+    /**
+     * Fires RegisterFailed Event
+     *
+     * @param message Reason why register failed
+     */
+    private static void fireRegisterFailHandler(String message) {
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == RegisterListener.class) {
+                ((RegisterListener) listeners[i + 1]).registerFail(message);
+            }
+        }
+    }
 
     /**
      * Fires LoginSuccess Event
@@ -253,7 +339,7 @@ public final class Client implements ConnectionListener {
         Object[] listeners = Client.listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i] == LoginListener.class) {
-                ((LoginListener) listeners[i + 1]).loginError(message);
+                ((LoginListener) listeners[i + 1]).loginFail(message);
             }
         }
     }
@@ -347,6 +433,23 @@ public final class Client implements ConnectionListener {
      */
     public static void removePacketListener(PacketListener listener) {
         Client.comms.removeMessageListener(listener);
+    }
+    /**
+     * Adds a Register listener to the Client
+     *
+     * @param listener Listener to add
+     */
+    public static void addRegisterListener(RegisterListener listener) {
+        Client.listenerList.add(RegisterListener.class, listener);
+    }
+
+    /**
+     * Removes a Register listener to the Client
+     *
+     * @param listener Listener to remove
+     */
+    public static void removeRegisterListener(RegisterListener listener) {
+        Client.listenerList.remove(RegisterListener.class, listener);
     }
 
     /**

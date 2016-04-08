@@ -25,8 +25,8 @@ final class User extends shared.User {
     private final byte[] salt;
     private boolean isLoggedIn = false;
 
-    public User (String firstName, String lastName, byte[] passwordHash, byte[] salt) {
-        super(firstName, lastName);
+    public User (String username, String firstName, String lastName, byte[] passwordHash, byte[] salt) {
+        super(username, firstName, lastName);
         this.passwordHash = passwordHash;
         this.salt = salt;
     }
