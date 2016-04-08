@@ -33,8 +33,8 @@ COMPILATION INSTRUCTIONS:
 	Alternatively, if you have maven, run "mvn package" in the base directory of my submission. This will create a jar with all the dependencies compiled in.
 	This allows you to start the:
 	- server daemon with "java -jar auctiond.jar";
-	- server gui with "java -jar AuctionServer.jar";
-	- Client with "java -jar AuctionClient.jar";
+	- server gui with "java -jar BiddrServer.jar";
+	- Client with "java -jar BiddrClient.jar";
 	It also means you don't have to copy the OpenCL files into the right directory structure.
 
   ______      _                 _
@@ -47,7 +47,7 @@ COMPILATION INSTRUCTIONS:
  1) Use of sockets. This (in my opinion) is far superior to a "file based" system and allows for point (4).
  2) Use of SSL (well, it's deprecated, so TLS) sockets if server has secure sockets enabled in its config.
     Connections to a server that supports secure connections will automatically be upgraded.
-    After consulting advice on advice about SSL/TLS and securing connections (namely: https://www.ssllabs.com/downloads/SSL_TLS_Deployment_Best_Practices.pdf), the server only uses:
+    After consulting advice about SSL/TLS and securing connections (namely: https://www.ssllabs.com/downloads/SSL_TLS_Deployment_Best_Practices.pdf), the server only uses:
     TLS 1/1.1/1.2, and secure cipher suites.
     The client is set to use all available protocols/cipher suites, so has no problem connecting to the server on a secure connection.
  3) Extensive use of multithreading.

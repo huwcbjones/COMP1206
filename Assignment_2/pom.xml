@@ -45,18 +45,18 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
-                        <id>AuctionServer</id>
+                        <id>BiddrServer</id>
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>AuctionServer</mainClass>
+                                    <mainClass>BiddrServer</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
                             <appendAssemblyId>false</appendAssemblyId>
-                            <finalName>AuctionServer</finalName>
+                            <finalName>BiddrServer</finalName>
                         </configuration>
                     </execution>
                     <execution>
@@ -83,18 +83,18 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
-                        <id>AuctionClient</id>
+                        <id>BiddrClient</id>
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>AuctionClient</mainClass>
+                                    <mainClass>BiddrClient</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
                             <appendAssemblyId>false</appendAssemblyId>
-                            <finalName>AuctionClient</finalName>
+                            <finalName>BiddrClient</finalName>
                         </configuration>
                     </execution>
                 </executions>
