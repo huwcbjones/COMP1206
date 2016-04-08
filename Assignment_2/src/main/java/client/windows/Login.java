@@ -228,7 +228,6 @@ public final class Login extends WindowTemplate {
         this.menu_options.add(this.menu_options_servers);
         this.setJMenuBar(this.menuBar);
     }
-    //region Event Listeners
 
     //region Utility Methods
     private void setFormEnabledState(boolean state) {
@@ -242,7 +241,9 @@ public final class Login extends WindowTemplate {
         this.text_username.setText("");
         this.text_password.setText("");
     }
+    //endregion
 
+    // region Event Listeners
     /**
      * Cancels the Login/exits the application
      */
@@ -293,7 +294,7 @@ public final class Login extends WindowTemplate {
             Login.this.config.setSelectedServer(selectedServer);
         }
     }
-    //endregion
+
 
     /**
      * Handles LoginEvents
@@ -318,7 +319,7 @@ public final class Login extends WindowTemplate {
          * @param message Reason why login failed
          */
         @Override
-        public void loginError(String message) {
+        public void loginFail(String message) {
             Login.this.isLoggingIn = false;
             Client.removeLoginListener(Login.this.loginListener);
             Login.this.setFormEnabledState(true);

@@ -24,5 +24,5 @@ public interface LoginListener extends EventListener {
      *
      * @param message Reason why login failed
      */
-    void loginError (String message);
+    void loginFail(String message);
 }
