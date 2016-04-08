@@ -35,7 +35,7 @@ public class auctiond {
 
         if (argList.contains("-d") || argList.contains("--data.dir")) {
             try {
-                server.setDataDirectory(auctiond.getDataDirectoryOption(argList));
+                server.setDataDirectory(auctiond.getDataStoreOption(argList));
             } catch (ArgumentNotFoundException e) {
                 System.err.println(e.getMessage());
             }
@@ -47,7 +47,7 @@ public class auctiond {
             return;
         }
 
-        server.run();
+        server.run(auctiond.getDataStoreCreate(argList));
     }
 
     /**
@@ -64,9 +64,10 @@ public class auctiond {
     private static void help () {
         auctiond.header();
         System.out.println("Arguments:");
-        System.out.println("  -c, --config-file\tSpecifies config file (defaults to execdir/auctiond_config.json.");
-        System.out.println("  -d, --data-dir\tSpecifies the data storage directory. If unspecified, loads from auctiond_config.json");
+        System.out.println("  -c, --config-file\tSpecifies config file (defaults to execdir/auctiond.json.");
+        System.out.println("  -d, --data-store\tSpecifies the data store. If unspecified, loads from auctiond.json");
         System.out.println("  -h, --help\t\tPrints this help message.");
+        System.out.println("  -m, --make-store\tMakes the data store file if it doesn't exist. (Use for first time run).");
         System.out.println("  -t, --test-config\tDon't run, just test config file. Will print out server config.");
         System.out.println("  -v, --version\t\tPrints version.");
     }
@@ -86,13 +87,17 @@ public class auctiond {
         return argList.get(index + 1);
     }
 
-    private static String getDataDirectoryOption (ArrayList<String> argList) throws ArgumentNotFoundException {
+    private static String getDataStoreOption(ArrayList<String> argList) throws ArgumentNotFoundException {
         // Can use ternary operator here as we know either -d, or --data-dir exist
         // therefore we know if it's not -d, then it must be --data-dir
-        int index = ( argList.contains("-d") ) ? argList.indexOf("-d") : argList.indexOf("--data-dir");
+        int index = ( argList.contains("-d") ) ? argList.indexOf("-d") : argList.indexOf("--data-store");
         if (index + 1 >= argList.size()) {
             throw new ArgumentNotFoundException("No argument was specified for option " + argList.get(index) + ".");
         }
         return argList.get(index + 1);
+    }
+
+    private static boolean getDataStoreCreate (ArrayList<String> argList) {
+        return argList.contains("-m") || argList.contains("--make-store");
     }
 }

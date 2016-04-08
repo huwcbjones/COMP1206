@@ -3,10 +3,11 @@ package server;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import server.tasks.PacketHandler;
 import server.events.ServerPacketListener;
-import shared.exceptions.ConfigLoadException;
+import server.exceptions.OperationFailureException;
+import server.tasks.PacketHandler;
 import shared.Packet;
+import shared.exceptions.ConfigLoadException;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -24,32 +25,30 @@ import java.util.HashMap;
 public final class Server {
 
     private static final Logger log = LogManager.getLogger(Server.class);
-
-    private long clientConnectionCounter = 0;
-
-    private ServerListenThread plainSocket;
-    private ServerListenThread secureSocket;
     private static final Config config = new Config();
+    private static final DataPersistence data = new DataPersistence();
     private static Server server;
     private static WorkerPool workPool;
-
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
     private final HashMap<Long, ClientConnection> clients;
+    private long clientConnectionCounter = 0;
+    private ServerListenThread plainSocket;
+    private ServerListenThread secureSocket;
 
-    public Server () {
+    public Server() {
         clients = new HashMap<>();
         Server.server = this;
     }
 
-    public void setConfigFile (String file) {
+    public void setConfigFile(String file) {
         config.setConfigFile(file);
     }
 
-    public void setDataDirectory (String dir) {
-        config.setDataDirectory(dir);
+    public void setDataDirectory(String dir) {
+        config.setDataStore(dir);
     }
 
-    public void testConfig () {
+    public void testConfig() {
         try {
             config.loadConfig();
         } catch (ConfigLoadException e) {
@@ -59,23 +58,21 @@ public final class Server {
         System.out.print(config.getConfig());
     }
 
-    private void loadConfig () {
-        log.info("Loading config...");
-
-        try {
-            config.loadConfig();
-        } catch (ConfigLoadException e) {
-            log.error("Failed to load config. Quitting!");
-            System.exit(1);
-        }
+    public void run(){
+        this.run(false);
     }
 
-    public void run () {
+    public void run(boolean createDatabase) {
         Runtime.getRuntime().addShutdownHook(new shutdownThread());
 
         log.info("Starting server...");
         this.loadConfig();
-        this.loadData();
+        try {
+            this.loadData(createDatabase);
+        } catch (OperationFailureException e) {
+            log.fatal(e.getMessage());
+            return;
+        }
         this.startWorkers();
 
         try {
@@ -91,52 +88,27 @@ public final class Server {
         }
     }
 
-    private void loadData () {
-        log.info("Loading data...");
+    private void loadConfig() {
+        log.info("Loading config...");
+
+        try {
+            config.loadConfig();
+        } catch (ConfigLoadException e) {
+            log.error("Failed to load config. Quitting!");
+            System.exit(1);
+        }
     }
 
-    private void startWorkers () {
+    private void loadData(boolean createDatabase) throws OperationFailureException {
+        Server.data.loadData(createDatabase);
+    }
+
+    private void startWorkers() {
         log.info("Starting workers...");
         Server.workPool = new WorkerPool(Server.config.getWorkers());
     }
 
-    private void shutdownServer () {
-        log.info("Server shutting down...");
-
-        if (this.plainSocket != null || this.secureSocket != null) {
-            log.info("Closing sockets...");
-            this.plainSocket.shutdown();
-
-            // Only shutdown secureSocket if it is enabled
-            if (config.isSecureConnectionEnabled() && this.secureSocket != null) {
-                this.secureSocket.shutdown();
-            }
-
-            // Only send disconnects if there are clients connected
-            if (this.clients.size() != 0) {
-                log.info("Sending disconnect to clients...");
-                ArrayList<ClientConnection> clients = new ArrayList<>(this.clients.values());
-                clients.forEach(ClientConnection::closeConnection);
-            }
-        }
-
-        Server.workPool.shutdown();
-
-        log.info("Saving data...");
-        this.saveState();
-
-        log.info("Server safely shut down!");
-    }
-
-    public void saveState () {
-
-    }
-
-    protected long getNextClientID () {
-        return this.clientConnectionCounter++;
-    }
-
-    private void createSockets () throws IOException {
+    private void createSockets() throws IOException {
         log.info("Starting plain socket...");
         ServerSocket plainSocket = new ServerSocket(Server.config.getPlainPort());
         this.plainSocket = new ServerListenThread(this, plainSocket);
@@ -166,6 +138,54 @@ public final class Server {
         log.info("Secure socket started successfully!");
     }
 
+    public void shutdownServer() {
+        log.info("Server shutting down...");
+
+        if (this.plainSocket != null || this.secureSocket != null) {
+            log.info("Closing sockets...");
+            this.plainSocket.shutdown();
+
+            // Only shutdown secureSocket if it is enabled
+            if (config.isSecureConnectionEnabled() && this.secureSocket != null) {
+                this.secureSocket.shutdown();
+            }
+
+            // Only send disconnects if there are clients connected
+            if (this.clients.size() != 0) {
+                log.info("Sending disconnect to clients...");
+                ArrayList<ClientConnection> clients = new ArrayList<>(this.clients.values());
+                clients.forEach(ClientConnection::closeConnection);
+            }
+        }
+
+        if(Server.workPool != null) {
+            Server.workPool.shutdown();
+        }
+
+        log.info("Saving data...");
+        this.saveState();
+
+        log.info("Server safely shut down!");
+    }
+
+    public void saveState() {
+
+    }
+
+    protected long getNextClientID() {
+        return this.clientConnectionCounter++;
+    }
+
+    void addClient(ClientConnection clientConnection) {
+        this.clients.put(clientConnection.getClientID(), clientConnection);
+        clientConnection.addServerPacketListener(this.packetTaskHandler);
+    }
+
+    void removeClient(ClientConnection clientConnection) {
+        this.clients.remove(clientConnection.getClientID());
+        clientConnection.removeServerPacketListener(this.packetTaskHandler);
+    }
+
     /**
      * Gets the Server instance from a static context
      *
@@ -185,33 +205,35 @@ public final class Server {
     }
 
     /**
+     * Gets the DataPersistence instance from a static context
+     *
+     * @return DataPersistence instance
+     */
+    public static DataPersistence getData() {
+        return Server.data;
+    }
+
+    /**
      * Gets the WorkerPool instance from a static context
+     *
      * @return WorkerPoll instance
      */
-    public static WorkerPool getWorkerPool() { return Server.workPool; }
-
-    void addClient(ClientConnection clientConnection) {
-        this.clients.put(clientConnection.getClientID(), clientConnection);
-        clientConnection.addServerPacketListener(this.packetTaskHandler);
+    public static WorkerPool getWorkerPool() {
+        return Server.workPool;
     }
 
     /**
      * Runs the server shutdown in its own thread
      */
     private class shutdownThread extends Thread {
-        public shutdownThread () {
+        public shutdownThread() {
             super("ServerShutdown");
         }
 
         @Override
-        public void run () {
+        public void run() {
             shutdownServer();
         }
-    }
-
-    void removeClient(ClientConnection clientConnection) {
-        this.clients.remove(clientConnection.getClientID());
-        clientConnection.removeServerPacketListener(this.packetTaskHandler);
     }
 
     private class PacketTaskHandler implements ServerPacketListener {
