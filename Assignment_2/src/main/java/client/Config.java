@@ -25,7 +25,7 @@ public final class Config {
 
     private static final Logger log = LogManager.getLogger(Config.class);
 
-    File configFileLocation = new File("auction_config.json");
+    File configFileLocation = new File("config/auction.json");
 
     private ArrayList<Server> servers;
     private Server selectedServer;

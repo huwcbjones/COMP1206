@@ -25,7 +25,7 @@ public final class Config {
 
     private boolean configFileLocationWasSet = false;
     private File configFileLocation;
-    private File dataDirectory;
+    private File dataStore;
 
     private ArrayList<String> hellos = new ArrayList<>();
     private int plainPort = 473;
@@ -35,19 +35,15 @@ public final class Config {
 
     private int workers = Runtime.getRuntime().availableProcessors();
 
-    public Config () {
-        this.configFileLocation = new File("auctiond_config.json").getAbsoluteFile();
-        this.dataDirectory = configFileLocation.getParentFile();
+    public Config() {
+        this.configFileLocation = new File("config/auctiond.json").getAbsoluteFile();
+        this.dataStore = configFileLocation.getParentFile();
     }
 
-    public void setConfigFile (String fileLocation) {
+    public void setConfigFile(String fileLocation) {
         this.configFileLocationWasSet = true;
         this.configFileLocation = new File(fileLocation).getAbsoluteFile();
-        this.dataDirectory = configFileLocation.getParentFile();
-    }
-
-    public void setDataDirectory (String directory) {
-        dataDirectory = new File(directory);
+        this.dataStore = configFileLocation.getParentFile();
     }
 
     /**
@@ -55,7 +51,7 @@ public final class Config {
      *
      * @throws ConfigLoadException
      */
-    public void loadConfig () throws ConfigLoadException {
+    public void loadConfig() throws ConfigLoadException {
         if (!configFileLocation.exists()) {
             throw new ConfigLoadException("Config file was not found!");
         }
@@ -78,7 +74,7 @@ public final class Config {
                     throw new ConfigLoadException("Failed to find root element.");
                 }
 
-                this.loadDataDir(serverRoot);
+                this.loadDataStore(serverRoot);
                 this.loadServerListening(serverRoot);
                 this.loadWorkerPoolSize(serverRoot);
                 this.loadHellos(serverRoot);
@@ -90,19 +86,19 @@ public final class Config {
         }
     }
 
-    private void loadDataDir (JSONObject serverRoot) {
-        String dataDir = (String) serverRoot.get("data-dir");
-        if (dataDir != null && !dataDir.equals("")) {
-            if (dataDir.substring(0, 1).equals(File.separator)) {
-                this.dataDirectory = new File(dataDir);
+    private void loadDataStore(JSONObject serverRoot) {
+        String dataStore = (String) serverRoot.get("data-store");
+        if (dataStore != null && !dataStore.equals("")) {
+            if (dataStore.substring(0, 1).equals(File.separator)) {
+                this.dataStore = new File(dataStore);
             } else {
                 File parentDir = this.configFileLocation.getParentFile();
-                this.dataDirectory = new File(parentDir.getAbsolutePath() + File.separator + dataDir);
+                this.dataStore = new File(parentDir.getAbsolutePath() + File.separator + dataStore);
             }
         }
     }
 
-    private void loadServerListening (JSONObject serverRoot) throws ConfigLoadException {
+    private void loadServerListening(JSONObject serverRoot) throws ConfigLoadException {
         try {
             Number plainPort = (Number) serverRoot.get("port");
             this.plainPort = plainPort.intValue();
@@ -120,7 +116,7 @@ public final class Config {
         }
     }
 
-    private void loadWorkerPoolSize (JSONObject serverRoot) throws ConfigLoadException {
+    private void loadWorkerPoolSize(JSONObject serverRoot) throws ConfigLoadException {
         try {
             Number workerPoolSize = (Number) serverRoot.get("workers");
             if (workerPoolSize == null) {
@@ -137,10 +133,12 @@ public final class Config {
     }
 
     private void loadHellos(JSONObject serverRoot) {
-        File hellosFile = new File((String) serverRoot.get("hellos"));
-        if (hellosFile == null) {
+        Object hellos = serverRoot.get("hellos");
+        if (hellos == null) {
             return;
         }
+        File hellosFile = new File((String) hellos);
+
         if (!hellosFile.canRead()) {
             this.hellos.add("Hello");
             return;
@@ -166,17 +164,8 @@ public final class Config {
      *
      * @return Port number to listen on
      */
-    public int getPlainPort () {
+    public int getPlainPort() {
         return this.plainPort;
-    }
-
-    /**
-     * Returns true if a secure is going to be used to protect communication between server and client
-     *
-     * @return True if the server should listen on a secure socket
-     */
-    public boolean isSecureConnectionEnabled () {
-        return this.secureConnectionEnabled;
     }
 
     /**
@@ -184,7 +173,7 @@ public final class Config {
      *
      * @return Secure port
      */
-    public int getSecurePort () {
+    public int getSecurePort() {
         return this.securePort;
     }
 
@@ -193,7 +182,9 @@ public final class Config {
      *
      * @return Number of workers
      */
-    public int getWorkers () { return this.workers; }
+    public int getWorkers() {
+        return this.workers;
+    }
 
     public String getRandomHello() {
         return this.hellos.get(new Random().nextInt(this.hellos.size()));
@@ -204,13 +195,28 @@ public final class Config {
      *
      * @return timeout
      */
-    public int getTimeout() { return this.timeoutTime; }
+    public int getTimeout() {
+        return this.timeoutTime;
+    }
 
-    public String getConfig () {
+    /**
+     * Gets the location where the data is stored
+     *
+     * @return File, location of data store
+     */
+    public File getDataStore() {
+        return this.dataStore;
+    }
+
+    public void setDataStore(String dataStore) {
+        this.dataStore = new File(dataStore);
+    }
+
+    public String getConfig() {
         String config = "";
 
         config += "config-file: " + this.configFileLocation.getAbsolutePath() + "\n";
-        config += "data-dir: " + this.dataDirectory.getAbsolutePath() + "\n";
+        config += "data-store: " + this.dataStore.getAbsolutePath() + "\n";
         config += "workers: " + this.workers + "\n";
         config += "port: " + this.plainPort + "\n";
         if (this.isSecureConnectionEnabled()) {
@@ -218,5 +224,14 @@ public final class Config {
             config += "secure-port: " + this.securePort + "\n";
         }
         return config;
+    }
+
+    /**
+     * Returns true if a secure is going to be used to protect communication between server and client
+     *
+     * @return True if the server should listen on a secure socket
+     */
+    public boolean isSecureConnectionEnabled() {
+        return this.secureConnectionEnabled;
     }
 }

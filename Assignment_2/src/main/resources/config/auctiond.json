@@ -1,6 +1,6 @@
 {
   "server": {
-    "data-dir": "data",
+    "data-store": "biddr.db",
     "hellos": "hellos.txt",
     "port": 473,
     "secure": {
