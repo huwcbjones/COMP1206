@@ -11,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Server side user
@@ -24,6 +25,12 @@ final class User extends shared.User {
     private final byte[] passwordHash;
     private final byte[] salt;
     private boolean isLoggedIn = false;
+
+    public User (UUID uniqueID, String username, String firstName, String lastName, byte[] passwordHash, byte[] salt){
+        super(uniqueID, username, firstName, lastName);
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+    }
 
     public User (String username, String firstName, String lastName, byte[] passwordHash, byte[] salt) {
         super(username, firstName, lastName);
