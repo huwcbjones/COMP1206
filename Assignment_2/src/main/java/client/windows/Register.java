@@ -8,10 +8,14 @@ import client.utils.WindowTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
+import shared.exceptions.ValidationFailedException;
+import shared.utils.ValidationUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Register Window
@@ -29,21 +33,27 @@ public final class Register extends WindowTemplate {
 
     private JLabel label_server;
     private JTextField text_server;
+    private JLabel label_validation_server;
 
     private JLabel label_username;
     private JTextField text_username;
+    private JLabel label_validation_username;
 
     private JLabel label_firstName;
     private JTextField text_firstName;
+    private JLabel label_validation_firstName;
 
     private JLabel label_lastName;
     private JTextField text_lastName;
+    private JLabel label_validation_lastName;
 
     private JLabel label_password;
     private JPasswordField text_password;
+    private JLabel label_validation_password;
 
     private JLabel label_passwordConfirm;
     private JPasswordField text_passwordConfirm;
+    private JLabel label_validation_passwordConfirm;
 
     private RegisterListener registerListener;
     private boolean isRegistering = false;
@@ -119,6 +129,12 @@ public final class Register extends WindowTemplate {
                 Client.removeRegisterListener(Register.this.registerListener);
             }
         });
+
+        this.text_username.addFocusListener(new focusChangeListener());
+        this.text_firstName.addFocusListener(new focusChangeListener());
+        this.text_lastName.addFocusListener(new focusChangeListener());
+        this.text_password.addFocusListener(new focusChangeListener());
+        this.text_passwordConfirm.addFocusListener(new focusChangeListener());
     }
 
     @Override
@@ -136,47 +152,70 @@ public final class Register extends WindowTemplate {
         this.text_server = new JTextField(this.config.getSelectedServer().getName());
         this.text_server.setEnabled(false);
         this.panel_form.add(this.text_server);
+
+        this.label_validation_server = ValidationUtils.createValidationLabel();
+        this.panel_form.add(this.label_validation_server);
         row++;
 
         this.label_username = new JLabel("Username", JLabel.LEADING);
         this.panel_form.add(this.label_username);
 
         this.text_username = new JTextField();
+        this.text_username.setName("Username");
         this.text_username.setUI(new HintTextFieldUI("Username", true));
         this.panel_form.add(this.text_username);
+
+        this.label_validation_username = ValidationUtils.createValidationLabel();
+        this.panel_form.add(this.label_validation_username);
         row++;
 
         this.label_firstName = new JLabel("First Name", JLabel.LEADING);
         this.panel_form.add(this.label_firstName);
 
         this.text_firstName = new JTextField();
+        this.text_firstName.setName("First Name");
         this.text_firstName.setUI(new HintTextFieldUI("John", true));
         this.panel_form.add(this.text_firstName);
+
+        this.label_validation_firstName = ValidationUtils.createValidationLabel();
+        this.panel_form.add(this.label_validation_firstName);
         row++;
 
         this.label_lastName = new JLabel("Last Name", JLabel.LEADING);
         this.panel_form.add(this.label_lastName);
 
         this.text_lastName = new JTextField();
+        this.text_lastName.setName("Last Name");
         this.text_lastName.setUI(new HintTextFieldUI("Smith", true));
         this.panel_form.add(this.text_lastName);
+
+        this.label_validation_lastName = ValidationUtils.createValidationLabel();
+        this.panel_form.add(this.label_validation_lastName);
         row++;
 
         this.label_password = new JLabel("Password", JLabel.LEADING);
         this.panel_form.add(this.label_password);
 
         this.text_password = new JPasswordField();
+        this.text_password.setName("Password");
         this.panel_form.add(this.text_password);
+
+        this.label_validation_password = ValidationUtils.createValidationLabel();
+        this.panel_form.add(this.label_validation_password);
         row++;
 
         this.label_passwordConfirm = new JLabel("Confirm Password", JLabel.LEADING);
         this.panel_form.add(this.label_passwordConfirm);
 
         this.text_passwordConfirm = new JPasswordField();
+        this.text_passwordConfirm.setName("Password Confirmation");
         this.panel_form.add(this.text_passwordConfirm);
+
+        this.label_validation_passwordConfirm = ValidationUtils.createValidationLabel();
+        this.panel_form.add(this.label_validation_passwordConfirm);
         row++;
 
-        SpringUtilities.makeCompactGrid(this.panel_form, row, 2, 0, 6, 6, 3);
+        SpringUtilities.makeCompactGrid(this.panel_form, row, 3, 0, 6, 6, 3);
 
         c = new GridBagConstraints();
         c.weightx = 1;
@@ -205,6 +244,7 @@ public final class Register extends WindowTemplate {
         c.fill = GridBagConstraints.BOTH;
         container.add(this.btn_register, c);
     }
+
     //region Utility Methods
     private void setFormEnabledState(boolean state) {
         this.text_username.setEnabled(state);
@@ -217,9 +257,76 @@ public final class Register extends WindowTemplate {
 
     private void clearFields() {
         this.text_username.setText("");
+        this.text_firstName.setText("");
+        this.text_lastName.setText("");
         this.text_password.setText("");
+        this.text_passwordConfirm.setText("");
     }
     //endregion
+
+    private ArrayList<String> validateForm() {
+        return validateForm(false);
+    }
+
+    private ArrayList<String> validateForm(boolean isFocusChangeValidation) {
+        ArrayList<String> errors = new ArrayList<>();
+        Component firstWrongField = null;
+
+        // Validate username
+        try {
+            ValidationUtils.validateUsername(this.text_username.getText());
+            ValidationUtils.setValidation(this.label_validation_username, null);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_username;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.label_validation_username, e.getMessage());
+        }
+
+        // Validate First Name
+        try {
+            ValidationUtils.validateName(this.text_firstName.getText());
+            ValidationUtils.setValidation(this.label_validation_firstName, null);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_firstName;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.label_validation_firstName, e.getMessage());
+        }
+
+        // Validate Last Name
+        try {
+            ValidationUtils.validateName(this.text_lastName.getText());
+            ValidationUtils.setValidation(this.label_validation_lastName, null);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_lastName;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.label_validation_lastName, e.getMessage());
+        }
+
+        // Validate Password
+        try {
+            ValidationUtils.validatePassword(this.text_password.getPassword());
+            ValidationUtils.setValidation(this.label_validation_password, null);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_password;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.label_validation_password, e.getMessage());
+        }
+
+        // Validate Password
+        if (Arrays.equals(this.text_password.getPassword(), this.text_passwordConfirm.getPassword())) {
+            ValidationUtils.setValidation(this.label_validation_passwordConfirm, true);
+        } else {
+            if (firstWrongField == null) firstWrongField = this.text_passwordConfirm;
+            errors.add("Passwords do not match.");
+            ValidationUtils.setValidation(this.label_validation_passwordConfirm, false);
+        }
+
+        if (firstWrongField != null && !isFocusChangeValidation) {
+            firstWrongField.requestFocus();
+        }
+
+        return errors;
+    }
 
     /**
      * Closes window when cancel button pressed
@@ -236,6 +343,11 @@ public final class Register extends WindowTemplate {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            ArrayList<String> errors = Register.this.validateForm();
+            if (errors.size() != 0) {
+                ValidationUtils.showValidationMessage(Register.this, errors);
+                return;
+            }
             Register.this.isRegistering = true;
             Register.this.setFormEnabledState(false);
             Client.addRegisterListener(Register.this.registerListener);
@@ -252,7 +364,6 @@ public final class Register extends WindowTemplate {
 
     private class registerListener implements RegisterListener {
 
-
         /**
          * Fired when a user successfully registers
          *
@@ -267,11 +378,11 @@ public final class Register extends WindowTemplate {
             JOptionPane.showMessageDialog(
                 Register.this,
                 "Hi " + user.getFullName() + ",\n" +
-                "You've successfully registered for Biddr on " + Register.this.config.getSelectedServer().getName() + ".\n" +
-                "Click OK to continue to login to Biddr.\n\n" +
-                "Just to confirm, your login details are as follows:\n" +
-                "\t- Username: " + user.getUsername() + "\n" +
-                "\t- Password: As Provided",
+                    "You've successfully registered for Biddr on " + Register.this.config.getSelectedServer().getName() + ".\n" +
+                    "Click OK to continue to login to Biddr.\n\n" +
+                    "Just to confirm, your login details are as follows:\n" +
+                    "\t- Username: " + user.getUsername() + "\n" +
+                    "\t- Password: As Provided",
                 "Registration Succeeded!",
                 JOptionPane.INFORMATION_MESSAGE
             );
@@ -297,4 +408,15 @@ public final class Register extends WindowTemplate {
         }
     }
 
+    private class focusChangeListener extends FocusAdapter {
+        /**
+         * Invoked when a component loses the keyboard focus.
+         *
+         * @param e
+         */
+        @Override
+        public void focusLost(FocusEvent e) {
+            Register.this.validateForm(true);
+        }
+    }
 }
