@@ -3,10 +3,8 @@ package server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Worker Pool for Running Tasks
@@ -21,7 +19,8 @@ public class WorkerPool {
     private final ScheduledExecutorService workerPool;
 
     public WorkerPool(int workers) {
-        this.workerPool = Executors.newScheduledThreadPool(workers);
+        ThreadFactory factory = new WorkerPoolFactory();
+        this.workerPool = Executors.newScheduledThreadPool(workers, factory);
         log.debug("Started worker pool: {}", workers);
     }
 
@@ -30,7 +29,7 @@ public class WorkerPool {
      *
      * @param task Task to run
      */
-    public void queueTask (Runnable task) {
+    public void queueTask(Runnable task) {
         log.debug("Queuing task ({}) to run now", task.toString());
         this.workerPool.submit(task);
     }
@@ -67,14 +66,41 @@ public class WorkerPool {
         this.workerPool.schedule(task, timeDelay, TimeUnit.MILLISECONDS);
     }
 
-    public void shutdown(){
+    public void shutdown() {
         log.info("Shutting down worker pool...");
         workerPool.shutdown();
         try {
             log.info("Waiting for tasks to complete...");
             this.workerPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch(InterruptedException ignored){
+        } catch (InterruptedException ignored) {
         }
         log.info("Worker pool shutdown!");
+    }
+
+    /**
+     * The default thread factory
+     */
+    private static class WorkerPoolFactory implements ThreadFactory {
+        private final ThreadGroup group;
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+        private final String namePrefix;
+
+        WorkerPoolFactory() {
+            SecurityManager s = System.getSecurityManager();
+            group = new ThreadGroup("WorkerPool");
+            namePrefix = "WorkerPool-" +
+                threadNumber.getAndIncrement();
+        }
+
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r,
+                namePrefix + threadNumber.getAndIncrement(),
+                0);
+            if (t.isDaemon())
+                t.setDaemon(false);
+            if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        }
     }
 }
