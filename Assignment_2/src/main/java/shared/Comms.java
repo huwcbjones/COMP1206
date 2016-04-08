@@ -30,7 +30,7 @@ public class Comms implements PacketListener {
     /**
      * Amount of time (in milliseconds) before a ping can timeout
      */
-    public static final int PING_TIMEOUT = 60 * 1000;
+    public static final int PING_TIMEOUT = 30 * 1000;
 
     protected static final Logger log = LogManager.getLogger(Comms.class);
 
@@ -57,7 +57,7 @@ public class Comms implements PacketListener {
 
         readThread = new CommsReadThread();
         writeThread = new CommsWriteThread();
-        this.lastPingTimer = new Timer(Comms.PING_TIMEOUT, e ->{
+        this.lastPingTimer = new Timer((int) (Comms.PING_TIMEOUT * 1.05), e ->{
             log.info("Ping not received in timeout period.");
             this.shutdown();
             fireConnectionClosed("Lost connection to server");});
