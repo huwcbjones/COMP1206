@@ -1,7 +1,7 @@
 package server;
 
 import shared.exceptions.InvalidCredentialException;
-import shared.exceptions.PasswordNotStrongEnoughException;
+import shared.exceptions.ValidationFailedException;
 import shared.exceptions.PasswordsDoNotMatchException;
 import shared.exceptions.UnsupportedSecurityException;
 import shared.utils.StringUtils;
@@ -42,7 +42,7 @@ final class User extends shared.User {
     }
 
     public boolean changePassword (char[] oldPassword, char[] newPassword, char[] confirm)
-            throws UnsupportedSecurityException, InvalidCredentialException, PasswordsDoNotMatchException, PasswordNotStrongEnoughException {
+            throws UnsupportedSecurityException, InvalidCredentialException, PasswordsDoNotMatchException, ValidationFailedException {
 
         // Check old password is correct
         if (!isAuthenticated(oldPassword)) {
