@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
+import java.net.URL;
 
 /**
  * Template for Windows
@@ -33,7 +34,12 @@ public abstract class WindowTemplate extends JFrame {
     }
 
     private void setImageIcon(){
-        ImageIcon img = new ImageIcon(WindowTemplate.class.getResource("/img/biddr_logo.png"));
+        URL imgIconURL = WindowTemplate.class.getResource("/img/biddr_logo.png");
+        if(imgIconURL == null){
+            log.warn("Could not find biddr_logo.png");
+            return;
+        }
+        ImageIcon img = new ImageIcon(imgIconURL);
         this.setIconImage(img.getImage());
     }
 
