@@ -5,6 +5,7 @@ import server.Server;
 import server.utils.Comms;
 import shared.Packet;
 import shared.PacketType;
+import shared.RegisterUser;
 
 /**
  * Handles Packets
@@ -33,9 +34,17 @@ public final class PacketHandler implements Runnable {
                 // of the physical time it takes to send the TCP packet.
                 Server.getWorkerPool().scheduleTask(new PingPongTask(this.client), (int)(Comms.PING_TIMEOUT * 0.95));
                 break;
+            case REGISTER:
+                Server.getWorkerPool().queueTask(new RegisterTask(this.client, (RegisterUser)packet.getPayload()));
+                break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));
                 break;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "PacketHandler";
     }
 }

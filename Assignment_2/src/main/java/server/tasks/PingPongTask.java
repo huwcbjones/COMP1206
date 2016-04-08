@@ -9,12 +9,10 @@ import shared.Packet;
  * @author Huw Jones
  * @since 07/04/2016
  */
-public class PingPongTask implements Runnable {
-
-    private ClientConnection client;
+public class PingPongTask extends Task {
 
     public PingPongTask(ClientConnection client){
-        this.client = client;
+        super("ClientPing", client);
     }
 
     @Override
