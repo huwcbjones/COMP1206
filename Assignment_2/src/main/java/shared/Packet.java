@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 /**
  * Represents a packet of object type, T extends Serializable, sent between client and server
+ * Forcing packet payloads to implement Serializable has saved many hours of debugging and wondering why some
+ * objects failed to send.
  *
  * @author Huw Jones
  * @since 26/03/2016
