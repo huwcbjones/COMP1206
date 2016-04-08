@@ -39,12 +39,18 @@ public enum PacketType {
      */
     SECURE,
 
-    //region Login Types
+    //region LoginWindow Types
     LOGIN,
     LOGIN_FAIL,
     LOGIN_SUCCESS,
 
     LOGOUT,
+    //endregion
+
+    //region Register Types
+    REGISTER,
+    REGISTER_FAIL,
+    REGISTER_SUCCESS,
     //endregion
 
     //region Connection Maintenance
