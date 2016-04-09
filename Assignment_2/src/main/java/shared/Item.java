@@ -18,7 +18,7 @@ public class Item implements Serializable {
     private UUID userID;
     private String title;
     private String description;
-    private String keyword;
+    private ArrayList<String> keywords;
     private Calendar startTime;
     private Calendar endTime;
     private BigDecimal reservePrice;
