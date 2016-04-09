@@ -32,7 +32,7 @@ COMPILATION INSTRUCTIONS:
 		
 	Alternatively, if you have maven, run "mvn package" in the base directory of my submission. This will create a jar with all the dependencies compiled in.
 	This allows you to start the:
-	- server daemon with "java -jar auctiond.jar";
+	- server daemon with "java -jar biddrd.jar";
 	- server gui with "java -jar BiddrServer.jar";
 	- Client with "java -jar BiddrClient.jar";
 	It also means you don't have to copy the OpenCL files into the right directory structure.

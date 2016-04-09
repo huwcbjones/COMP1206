@@ -69,18 +69,18 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
-                        <id>auctiond</id>
+                        <id>biddrd</id>
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>auctiond</mainClass>
+                                    <mainClass>biddrd</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
                             <appendAssemblyId>false</appendAssemblyId>
-                            <finalName>auctiond</finalName>
+                            <finalName>biddrd</finalName>
                         </configuration>
                     </execution>
                     <execution>
