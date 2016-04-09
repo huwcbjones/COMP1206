@@ -9,6 +9,6 @@ import client.Client;
 public class BiddrClient {
 
     public static void main(String[] args) {
-       Client c = new Client();
+        Client c = new Client();
     }
 }
