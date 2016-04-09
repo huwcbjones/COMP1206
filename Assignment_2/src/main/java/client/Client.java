@@ -9,11 +9,12 @@ import client.windows.Login;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.ConfigurationFactory;
 import shared.*;
-import shared.exceptions.ConfigLoadException;
 import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
+import shared.exceptions.ConfigLoadException;
 import shared.exceptions.ConnectionFailedException;
 import shared.exceptions.ConnectionUpgradeException;
 import shared.utils.ReplyWaiter;
@@ -36,7 +37,7 @@ import java.util.Arrays;
  */
 public final class Client implements ConnectionListener {
 
-    private static final Logger log = LogManager.getLogger(Client.class);
+    private static final Logger log;
     private static final Config config = new Config();
     private static User user;
     private static boolean isConnected = false;
@@ -49,6 +50,10 @@ public final class Client implements ConnectionListener {
     private static Comms comms;
     private static Client client;
 
+    static {
+        ConfigurationFactory.setConfigurationFactory(new Log4j2ConfigurationFactory());
+        log  = LogManager.getLogger(Client.class);
+    }
     public Client () {
         Client.client = this;
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
@@ -131,7 +136,7 @@ public final class Client implements ConnectionListener {
             log.info("Connection successfully established!");
 
         } catch (ConnectionFailedException | IOException e) {
-            log.info("Connection failed. {}", e.getMessage());
+            log.error("Connection failed. {}", e.getMessage());
             log.debug(e);
             fireConnectionFailed(e.getMessage());
         }
