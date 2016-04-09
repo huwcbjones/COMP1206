@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
     <Appenders>
-        <Console name="STDOUT" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d{yyyy/MM/dd HH:mm:ss.SSS}][%-5level][%t]\t%msg%n"/>
-            <!--<PatternLayout pattern="[%d{YYYY/MM/dd 0HH:mm:ss.SSS}][%-5level]\tThread-[%t]\t%m%n"/>-->
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyy/MM/dd HH:mm:ss.SSS}][%highlight{%-5level}][%t]\t%msg%n"/>
         </Console>
+        <RollingFile name="logfile" fileName="logs/biddrd.log" filePattern="logs/biddrd-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout>
+                <pattern>[%d{yyyy/MM/dd HH:mm:ss.SSS}][%-5level][%t]\t%msg%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
     </Appenders>
     <loggers>
-        <Logger name="org.apache.log4j.xml" level="all"/>
         <root level="all">
-            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="stdout"/>
+            <appender-ref ref="logfile"/>
         </root>
     </loggers>
 </Configuration>
