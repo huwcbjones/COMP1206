@@ -11,8 +11,11 @@ import shared.exceptions.ConfigLoadException;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.SocketException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -58,7 +61,7 @@ public final class Server {
         System.out.print(config.getConfig());
     }
 
-    public void run(){
+    public void run() {
         this.run(false);
     }
 
@@ -77,7 +80,7 @@ public final class Server {
 
         try {
             this.createSockets();
-        } catch (IOException e) {
+        } catch (IOException | OperationFailureException e) {
             log.error("Failed to create socket: {}", e.getMessage());
             return;
         }
@@ -108,7 +111,7 @@ public final class Server {
         Server.workPool = new WorkerPool(Server.config.getWorkers());
     }
 
-    private void createSockets() throws IOException {
+    private void createSockets() throws IOException, OperationFailureException {
         log.info("Starting plain socket...");
         ServerSocket plainSocket = new ServerSocket(Server.config.getPlainPort());
         this.plainSocket = new ServerListenThread(this, plainSocket);
@@ -118,23 +121,33 @@ public final class Server {
         if (!Server.config.isSecureConnectionEnabled()) return;
 
         log.info("Starting secure socket...");
-        System.setProperty("javax.net.ssl.keyStore", "keys/auction");
+        File keyStore = Server.config.getKeyStore();
+        if (keyStore == null) {
+            throw new OperationFailureException("Could not find server keystore.");
+        }
+        log.debug("Using key-store: {}", keyStore.getAbsolutePath());
+        System.setProperty("javax.net.ssl.keyStore", keyStore.getAbsolutePath());
         System.setProperty("javax.net.ssl.keyStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
-        SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        SSLServerSocket sslSocket = (SSLServerSocket) sslSocketFactory.createServerSocket(Server.config.getSecurePort());
-        sslSocket.setUseClientMode(false);
-        sslSocket.setEnabledProtocols(StrongTls.intersection(sslSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
-        log.debug("Enabled Protocols: ");
-        for (String protocol : sslSocket.getEnabledProtocols()) {
-            log.debug("\t- {}", protocol);
+        try {
+            SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+            SSLServerSocket sslSocket = (SSLServerSocket) sslSocketFactory.createServerSocket(Server.config.getSecurePort());
+            sslSocket.setUseClientMode(false);
+            sslSocket.setEnabledProtocols(StrongTls.intersection(sslSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
+            log.debug("Enabled Protocols: ");
+            for (String protocol : sslSocket.getEnabledProtocols()) {
+                log.debug("\t- {}", protocol);
+            }
+            sslSocket.setEnabledCipherSuites(StrongTls.intersection(sslSocket.getSupportedCipherSuites(), StrongTls.ENABLED_CIPHER_SUITES));
+            log.debug("Enabled Cipher Suites: ");
+            for (String cipherSuite : sslSocket.getEnabledCipherSuites()) {
+                log.debug("\t- {}", cipherSuite);
+            }
+            this.secureSocket = new SecureServerListenThread(this, sslSocket);
+        } catch (SocketException e) {
+            log.debug(e);
+            throw new OperationFailureException("Possible key-store location problem?");
         }
-        sslSocket.setEnabledCipherSuites(StrongTls.intersection(sslSocket.getSupportedCipherSuites(), StrongTls.ENABLED_CIPHER_SUITES));
-        log.debug("Enabled Cipher Suites: ");
-        for (String cipherSuite : sslSocket.getEnabledCipherSuites()) {
-            log.debug("\t- {}", cipherSuite);
-        }
-        this.secureSocket = new SecureServerListenThread(this, sslSocket);
         log.info("Secure socket started successfully!");
     }
 
@@ -158,7 +171,7 @@ public final class Server {
             }
         }
 
-        if(Server.workPool != null) {
+        if (Server.workPool != null) {
             Server.workPool.shutdown();
         }
 

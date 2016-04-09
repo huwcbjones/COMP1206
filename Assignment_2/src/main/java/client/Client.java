@@ -6,7 +6,6 @@ import client.utils.ConnectHandler;
 import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Login;
-import client.windows.Register;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +57,7 @@ public final class Client implements ConnectionListener {
         } catch (ConfigLoadException e) {
             log.warn(e.getMessage());
         }
-        System.setProperty("javax.net.ssl.trustStore", "keys/auction");
+        System.setProperty("javax.net.ssl.trustStore", "config/keys/biddr.jks");
         System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
         Login loginWindow = new Login();

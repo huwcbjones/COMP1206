@@ -23,8 +23,8 @@ public final class Config {
 
     private static final Logger log = LogManager.getLogger(Config.class);
 
-    private boolean configFileLocationWasSet = false;
     private File configFileLocation;
+    private File keyStore;
     private File dataStore;
 
     private ArrayList<String> hellos = new ArrayList<>();
@@ -36,12 +36,11 @@ public final class Config {
     private int workers = Runtime.getRuntime().availableProcessors();
 
     public Config() {
-        this.configFileLocation = new File("config/auctiond.json").getAbsoluteFile();
-        this.dataStore = configFileLocation.getParentFile();
+        this.configFileLocation = new File("config/biddrd.json").getAbsoluteFile();
+        this.dataStore = new File(configFileLocation.getAbsoluteFile().getParent() + File.pathSeparator + "biddr.jks");
     }
 
     public void setConfigFile(String fileLocation) {
-        this.configFileLocationWasSet = true;
         this.configFileLocation = new File(fileLocation).getAbsoluteFile();
         this.dataStore = configFileLocation.getParentFile();
     }
@@ -92,8 +91,7 @@ public final class Config {
             if (dataStore.substring(0, 1).equals(File.separator)) {
                 this.dataStore = new File(dataStore);
             } else {
-                File parentDir = this.configFileLocation.getParentFile();
-                this.dataStore = new File(parentDir.getAbsolutePath() + File.separator + dataStore);
+                this.dataStore = new File(this.configFileLocation.getParentFile().getAbsolutePath() + File.separator + dataStore);
             }
         }
     }
@@ -107,9 +105,19 @@ public final class Config {
             if (secure != null) {
                 boolean enableSecure = (boolean) secure.get("enable");
                 Number securePort = (Number) secure.get("port");
+                String keyStore = (String)secure.get("key-store");
 
                 this.secureConnectionEnabled = enableSecure;
                 this.securePort = securePort.intValue();
+
+                if(keyStore.length() == 0){
+                    return;
+                }
+                if(keyStore.substring(0, 1).equals(File.separator)) {
+                    this.keyStore = new File(keyStore);
+                } else {
+                    this.keyStore = new File(this.configFileLocation.getParentFile().getAbsolutePath() + File.separator + keyStore);
+                }
             }
         } catch (ClassCastException e) {
             throw new ConfigLoadException("Failed to parse server config!");
@@ -159,6 +167,12 @@ public final class Config {
         }
     }
 
+    /**
+     * Gets the keystore location
+     *
+     * @return Server key store
+     */
+    public File getKeyStore() { return this.keyStore; }
     /**
      * Gets the port the server listens to (unencrypted)
      *

@@ -5,7 +5,7 @@
     "port": 473,
     "secure": {
       "enable": true,
-      "key-store" : "keys/auction",
+      "key-store" : "keys/biddr.jks",
       "port": 474
     }
   }
