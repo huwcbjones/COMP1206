@@ -103,11 +103,11 @@ public class WorkerPool {
 
             // Wait for running tasks to finish
             ThreadPoolExecutor executor = (ThreadPoolExecutor) this.workerPool;
-            long numberOfTasks = executor.getTaskCount() - executor.getCompletedTaskCount();
-            while (numberOfTasks != 0) {
-                log.info("There are {} task(s) left to complete, waiting 5 seconds and trying again...", numberOfTasks);
+            long numberOfTasks;
+            while ((numberOfTasks = executor.getActiveCount()) != 0) {
+                log.info("There are {} task(s) running, waiting 5 seconds and trying again...", numberOfTasks);
+
                 this.workerPool.awaitTermination(5 * 1000, TimeUnit.MILLISECONDS);
-                numberOfTasks = executor.getTaskCount() - executor.getCompletedTaskCount();
             }
         } catch (InterruptedException ignored) {
         }
@@ -123,10 +123,8 @@ public class WorkerPool {
         private final String namePrefix;
 
         WorkerPoolFactory() {
-            SecurityManager s = System.getSecurityManager();
             group = new ThreadGroup("WorkerPool");
-            namePrefix = "WorkerPool-" +
-                threadNumber.getAndIncrement();
+            namePrefix = "WorkerPool-W";
         }
 
         public Thread newThread(Runnable r) {
