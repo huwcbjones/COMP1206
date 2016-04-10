@@ -34,7 +34,8 @@ public final class ValidationUtils {
      */
     public static void setValidation(JLabel validationLabel, boolean state) {
         if (state) {
-            validationLabel.setText("✓");
+        	// Set field to tick mark (Unicode: 2713)
+            validationLabel.setText("\u2713");
             validationLabel.setToolTipText("All done");
             validationLabel.setForeground(Color.GREEN);
         } else {
