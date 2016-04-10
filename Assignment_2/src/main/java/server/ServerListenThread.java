@@ -46,6 +46,8 @@ class ServerListenThread extends Thread {
                     client.connect();
                     this.server.addClient(client);
                 } catch  (ConnectionFailedException e){
+                    log.debug(e);
+                    log.warn("Connection failed: {}", e.getMessage());
                     client.sendPacket(Packet.Disconnect(e.getMessage()));
                 }
             } catch (ConnectionFailedException | IOException e) {
@@ -54,6 +56,7 @@ class ServerListenThread extends Thread {
                 }
             }
         }
+        log.info("{} shut down.", this.getName());
     }
 
     protected ClientConnection connectClient (long clientID, Socket socket) throws ConnectionFailedException {

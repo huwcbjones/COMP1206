@@ -3,6 +3,7 @@ package server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,6 +17,7 @@ public class WorkerPool {
 
     private static final Logger log = LogManager.getLogger(WorkerPool.class);
 
+    private final ArrayList<ScheduledFuture> futureTasks = new ArrayList<>();
     private final ScheduledExecutorService workerPool;
 
     public WorkerPool(int workers) {
@@ -30,6 +32,10 @@ public class WorkerPool {
      * @param task Task to run
      */
     public void queueTask(Runnable task) {
+        if(this.workerPool.isShutdown()){
+            log.warn("Failed to queue task ({}). Worker Pool shutting down...", task.toString());
+            return;
+        }
         log.debug("Queuing task ({}) to run now", task.toString());
         this.workerPool.submit(task);
     }
@@ -40,6 +46,10 @@ public class WorkerPool {
      * @param task Task to run
      */
     public void queueTask(Callable task) {
+        if(this.workerPool.isShutdown()){
+            log.warn("Failed to queue task ({}). Worker Pool shutting down...", task.toString());
+            return;
+        }
         log.debug("Queuing task ({}) to run now", task.toString());
         this.workerPool.submit(task);
     }
@@ -51,8 +61,13 @@ public class WorkerPool {
      * @param timeDelay Time to delay task (in milliseconds);
      */
     public void scheduleTask(Runnable task, long timeDelay) {
+        if(this.workerPool.isShutdown()){
+            log.warn("Failed to schedule task ({}). Worker Pool shutting down...", task.toString());
+            return;
+        }
         log.debug("Scheduling task ({}) to run in {}ms", task.toString(), timeDelay);
-        this.workerPool.schedule(task, timeDelay, TimeUnit.MILLISECONDS);
+        ScheduledFuture futureTask = this.workerPool.schedule(task, timeDelay, TimeUnit.MILLISECONDS);
+        this.futureTasks.add(futureTask);
     }
 
     /**
@@ -62,16 +77,38 @@ public class WorkerPool {
      * @param timeDelay Time to delay task (in milliseconds);
      */
     public void scheduleTask(Callable task, long timeDelay) {
+        if(this.workerPool.isShutdown()){
+            log.warn("Failed to schedule task ({}). Worker Pool shutting down...", task.toString());
+            return;
+        }
         log.debug("Scheduling task ({}) to run in {}ms", task.toString(), timeDelay);
-        this.workerPool.schedule(task, timeDelay, TimeUnit.MILLISECONDS);
+        ScheduledFuture futureTask = this.workerPool.schedule(task, timeDelay, TimeUnit.MILLISECONDS);
+        this.futureTasks.add(futureTask);
     }
 
     public void shutdown() {
         log.info("Shutting down worker pool...");
         workerPool.shutdown();
         try {
-            log.info("Waiting for tasks to complete...");
-            this.workerPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            // Cancel queued tasks
+            int cancelledTasks = 0;
+            ArrayList<ScheduledFuture> tasks = new ArrayList<>(this.futureTasks);
+            for(ScheduledFuture task : tasks){
+                if(!task.isDone()){
+                    task.cancel(false);
+                    cancelledTasks++;
+                }
+            }
+            log.info("Cancelled {} task(s).", cancelledTasks);
+
+            // Wait for running tasks to finish
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) this.workerPool;
+            long numberOfTasks = executor.getTaskCount() - executor.getCompletedTaskCount();
+            while (numberOfTasks != 0) {
+                log.info("There are {} task(s) left to complete, waiting 5 seconds and trying again...", numberOfTasks);
+                this.workerPool.awaitTermination(5 * 1000, TimeUnit.MILLISECONDS);
+                numberOfTasks = executor.getTaskCount() - executor.getCompletedTaskCount();
+            }
         } catch (InterruptedException ignored) {
         }
         log.info("Worker pool shutdown!");

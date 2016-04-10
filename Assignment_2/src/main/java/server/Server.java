@@ -1,5 +1,6 @@
 package server;
 
+import com.djdch.log4j.StaticShutdownCallbackRegistry;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,9 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Auction Server Daemon
@@ -34,9 +35,13 @@ public final class Server {
     private static WorkerPool workPool;
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
     private final HashMap<Long, ClientConnection> clients;
-    private long clientConnectionCounter = 0;
+    private AtomicLong clientConnectionCounter = new AtomicLong(0);
     private ServerListenThread plainSocket;
     private ServerListenThread secureSocket;
+
+    static {
+        System.setProperty("log4j.shutdownCallbackRegistry", "com.djdch.log4j.StaticShutdownCallbackRegistry");
+    }
 
     public Server() {
         clients = new HashMap<>();
@@ -154,6 +159,15 @@ public final class Server {
     public void shutdownServer() {
         log.info("Server shutting down...");
 
+        // Only send disconnects if there are clients connected
+        if (this.clients.size() != 0) {
+            log.info("Sending disconnect to clients...");
+            ArrayList<ClientConnection> clients = new ArrayList<>(this.clients.values());
+            for(ClientConnection client : clients){
+                client.closeConnection();
+            }
+        }
+
         if (this.plainSocket != null || this.secureSocket != null) {
             log.info("Closing sockets...");
             this.plainSocket.shutdown();
@@ -163,12 +177,7 @@ public final class Server {
                 this.secureSocket.shutdown();
             }
 
-            // Only send disconnects if there are clients connected
-            if (this.clients.size() != 0) {
-                log.info("Sending disconnect to clients...");
-                ArrayList<ClientConnection> clients = new ArrayList<>(this.clients.values());
-                clients.forEach(ClientConnection::closeConnection);
-            }
+
         }
 
         if (Server.workPool != null) {
@@ -179,6 +188,7 @@ public final class Server {
         this.saveState();
 
         log.info("Server safely shut down!");
+        StaticShutdownCallbackRegistry.invoke();
     }
 
     public void saveState() {
@@ -186,7 +196,7 @@ public final class Server {
     }
 
     protected long getNextClientID() {
-        return this.clientConnectionCounter++;
+        return this.clientConnectionCounter.getAndIncrement();
     }
 
     void addClient(ClientConnection clientConnection) {

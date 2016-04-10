@@ -1,10 +1,10 @@
 package shared;
 
-import client.Client;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
+import shared.exceptions.PacketSendFailException;
 import shared.exceptions.VersionMismatchException;
 
 import javax.swing.*;
@@ -15,9 +15,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Communications Thread
@@ -34,50 +32,112 @@ public class Comms implements PacketListener {
 
     protected static final Logger log = LogManager.getLogger(Comms.class);
 
-    protected final EventListenerList listenerList = new EventListenerList();
+    private final EventListenerList listenerList = new EventListenerList();
 
     protected final CommsReadThread readThread;
     protected final CommsWriteThread writeThread;
-    private final Queue<Packet> packetQueue;
+    private final ConcurrentLinkedQueue<Packet> packetQueue;
 
     private final Socket socket;
 
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
-
-    private boolean shouldQuit = false;
-
     protected Timer lastPingTimer;
+    protected boolean shouldQuit = false;
 
-    public Comms (Socket socket, ObjectInputStream input, ObjectOutputStream output) {
-        this.packetQueue = new LinkedList<>();
+    public Comms(Socket socket, ObjectInputStream input, ObjectOutputStream output) {
+        this.packetQueue = new ConcurrentLinkedQueue<>();
         this.socket = socket;
         this.output = output;
         this.input = input;
 
         readThread = new CommsReadThread();
         writeThread = new CommsWriteThread();
-        this.lastPingTimer = new Timer((int) (Comms.PING_TIMEOUT * 1.05), e ->{
+        this.lastPingTimer = new Timer((int) (Comms.PING_TIMEOUT * 1.05), e -> {
             log.info("Ping not received in timeout period.");
             this.shutdown();
-            fireConnectionClosed("Lost connection to server");});
+            fireConnectionClosed("Lost connection to server");
+        });
         this.lastPingTimer.setRepeats(false);
     }
 
+    /**
+     * Starts the Comms threads
+     */
     public final void start() {
-        log.debug("Starting comms read thread...");
         readThread.start();
-        log.debug("Starting comms write thread...");
         writeThread.start();
     }
 
+
+    /**
+     * Shuts down this Comms class
+     */
+    public void shutdown() {
+        if(Comms.this.shouldQuit) return;
+        this.shouldQuit = true;
+
+        log.debug("Comms shutdown initiated...");
+
+        new Thread(() -> {
+            final Logger log = LogManager.getLogger(Thread.currentThread().getClass());
+            this.lastPingTimer.stop();
+
+            try {
+                this.readThread.interrupt();
+                this.writeThread.interrupt();
+
+                try {
+                    this.readThread.join();
+                    this.writeThread.join();
+                } catch (InterruptedException e) {
+                    log.trace(e);
+                }
+                this.socket.close();
+                log.trace("Closed socket.");
+
+
+            } catch (IOException e) {
+                log.debug(e);
+            }
+            log.info("Comms shutdown!");
+        }, "CommsShutdown").start();
+    }
+
     //region Event Listening
+
+    @Override
+    public void packetReceived(Packet packet) {
+        if (packet.getType() == PacketType.PING) {
+            this.lastPingTimer.restart();
+            this.sendMessage(Packet.Ping());
+        }
+    }
+
+    private void firePacketReceived(Packet packet) {
+        Object[] listeners = this.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == PacketListener.class) {
+                ((PacketListener) listeners[i + 1]).packetReceived(packet);
+            }
+        }
+    }
+
+    protected final void fireConnectionClosed(String reason) {
+        Object[] listeners = this.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ConnectionListener.class) {
+                ((ConnectionListener) listeners[i + 1]).connectionClosed(reason);
+            }
+        }
+    }
+
     /**
      * Adds a <code>ConnectionListener</code> to this Comms instance.
      *
      * @param listener the <code>ConnectionListener</code> to add
      */
-    public final void addConnectionListener (ConnectionListener listener) {
+    public final void addConnectionListener(ConnectionListener listener) {
         this.listenerList.add(ConnectionListener.class, listener);
     }
 
@@ -86,7 +146,7 @@ public class Comms implements PacketListener {
      *
      * @param listener the <code>ConnectionListener</code> to remove
      */
-    public final void removeConnectionListener (ConnectionListener listener) {
+    public final void removeConnectionListener(ConnectionListener listener) {
         this.listenerList.remove(ConnectionListener.class, listener);
     }
 
@@ -95,7 +155,7 @@ public class Comms implements PacketListener {
      *
      * @param listener the <code>PacketListener</code> to add
      */
-    public final void addMessageListener (PacketListener listener) {
+    public final void addMessageListener(PacketListener listener) {
         this.listenerList.add(PacketListener.class, listener);
     }
 
@@ -104,26 +164,8 @@ public class Comms implements PacketListener {
      *
      * @param listener the <code>PacketListener</code> to remove
      */
-    public final void removeMessageListener (PacketListener listener) {
+    public final void removeMessageListener(PacketListener listener) {
         this.listenerList.remove(PacketListener.class, listener);
-    }
-
-    protected final void fireConnectionClosed(String reason){
-        Object[] listeners = this.listenerList.getListenerList();
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i]==ConnectionListener.class) {
-                ((ConnectionListener)listeners[i+1]).connectionClosed(reason);
-            }
-        }
-    }
-
-    private void firePacketReceived(Packet packet){
-        Object[] listeners = this.listenerList.getListenerList();
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i]==PacketListener.class) {
-                ((PacketListener)listeners[i+1]).packetReceived(packet);
-            }
-        }
     }
     //endregion
 
@@ -133,7 +175,7 @@ public class Comms implements PacketListener {
      *
      * @param packet Packet to send
      */
-    public final void sendMessage (Packet packet) {
+    public final void sendMessage(Packet packet) {
         this.packetQueue.add(packet);
         synchronized (this.writeThread) {
             this.writeThread.notify();
@@ -141,9 +183,26 @@ public class Comms implements PacketListener {
     }
 
     /**
+     * External classes using the Comms API should use sendMessage
+     * Writes directly to the output stream.
+     * Internal method used to write to the output stream.
+     *
+     * @param packet
+     */
+    protected final void sendDirectMessage(Packet packet) throws PacketSendFailException {
+        try {
+            output.writeObject(packet);
+            log.trace("Sent packet. Type: {}", packet.getType().toString());
+        } catch (IOException e) {
+            log.trace(e);
+            throw new PacketSendFailException("Failed to send packet. Type: " + packet.getType().toString() + ". Reason: " + e.getMessage());
+        }
+    }
+
+    /**
      * Receives a message
      */
-    public final Packet receiveMessage () throws VersionMismatchException, IOException {
+    public final Packet receiveMessage() throws VersionMismatchException, IOException {
         try {
             return (Packet) input.readObject();
         } catch (ClassNotFoundException | ClassCastException e) {
@@ -152,85 +211,81 @@ public class Comms implements PacketListener {
     }
     //endregion
 
-    /**
-     * Shuts down this Comms class
-     */
-    public void shutdown () {
-        this.shouldQuit = true;
-        try {
-            this.output.close();
-            this.input.close();
-            this.socket.close();
-            synchronized (this.readThread){
-                this.readThread.notify();
-            }
-            synchronized (this.writeThread){
-                this.writeThread.notify();
-            }
-        } catch (IOException e) {
-            log.debug(e);
-        }
-    }
-
-    @Override
-    public void packetReceived(Packet packet) {
-        if(packet.getType() == PacketType.PING){
-            this.lastPingTimer.restart();
-            this.sendMessage(Packet.Ping());
-        }
-    }
 
     public class CommsWriteThread extends Thread {
 
         CommsWriteThread() {
-            super("Comms_Thread_w");
+            super("CommsThread_w");
         }
 
         @Override
         public void run() {
             final Logger log = LogManager.getLogger(CommsWriteThread.class);
             Packet packet;
+
+            log.debug("Write thread started!");
             while (!shouldQuit) {
                 while ((packet = Comms.this.packetQueue.poll()) != null) {
                     try {
-                        output.writeObject(packet);
-                        log.debug("Sent packet. Type: {}", packet.getType().toString());
-                    } catch (IOException e) {
-                        log.error("Failed to send packet. Reason: {}", e.getMessage());
-                        log.debug(e);
+                        Comms.this.sendDirectMessage(packet);
+                    } catch (PacketSendFailException e) {
+                        log.error(e.getMessage());
                     }
                 }
                 synchronized (this) {
                     try {
                         this.wait();
-                    } catch (InterruptedException ignored) {
+                    } catch (InterruptedException threadQuitNotice) {
+                        if(shouldQuit){
+                            break;
+                        }
                     }
                 }
             }
+
+            if(!Comms.this.socket.isClosed()) {
+                try {
+                    Comms.this.output.flush();
+                    log.trace("Flushed output stream.");
+
+                    Comms.this.output.close();
+                    log.trace("Closed output stream.");
+
+                } catch (IOException e) {
+                    log.trace(e);
+                    log.warn("Error flushing and closing output stream. {}", e.getMessage());
+                }
+            }
+            log.debug("Write thread shut down.");
         }
     }
 
     public class CommsReadThread extends Thread {
 
         CommsReadThread() {
-            super("Comms_Thread_r");
+            super("CommsThread_r");
         }
 
         @Override
         public void run() {
             final Logger log = LogManager.getLogger(CommsReadThread.class);
             Packet packet;
+
+            log.debug("Read thread started!");
             while (!shouldQuit) {
                 try {
                     packet = (Packet) input.readObject();
-                    log.debug("Received packet. Type: {}", packet.getType().toString());
-                    if(packet.getType() == PacketType.DISCONNECT){
+
+                    log.trace("Received packet. Type: {}", packet.getType().toString());
+                    if (packet.getType() == PacketType.DISCONNECT) {
                         Comms.this.fireConnectionClosed("Disconnect received.");
+                        Comms.this.shutdown();
                     } else {
                         Comms.this.firePacketReceived(packet);
                     }
+
                 } catch (SocketException e) {
-                    log.info("Socket was closed.");
+                    log.debug("Socket was closed.");
                     Comms.this.fireConnectionClosed("Connection was closed by remote.");
                     Comms.this.shutdown();
                 } catch (EOFException e) {
@@ -245,6 +300,17 @@ public class Comms implements PacketListener {
                     log.debug(e);
                 }
             }
+
+            try {
+                Comms.this.input.close();
+                log.trace("Closed input stream.");
+
+            } catch (IOException e) {
+                log.trace(e);
+                log.warn("Error closing input stream. {}", e.getMessage());
+            }
+
+            log.debug("Read thread shut down.");
         }
     }
 }

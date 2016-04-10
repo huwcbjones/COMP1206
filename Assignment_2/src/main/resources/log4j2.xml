@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
+<Configuration shutdownHook="disable">
     <Appenders>
         <Console name="stdout" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{yyyy/MM/dd HH:mm:ss.SSS}][%highlight{%-5level}][%t]\t%msg%n"/>
         </Console>
         <RollingFile name="logfile" fileName="logs/biddrd.log" filePattern="logs/biddrd-%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout>
-                <pattern>[%d{yyyy/MM/dd HH:mm:ss.SSS}][%-5level][%t]\t%msg%n</pattern>
-            </PatternLayout>
+            <PatternLayout pattern="[%d{yyyy/MM/dd HH:mm:ss.SSS}][%-5level][%t]\t%msg%n" />
             <Policies>
                 <OnStartupTriggeringPolicy/>
                 <TimeBasedTriggeringPolicy/>
@@ -16,8 +14,8 @@
     </Appenders>
     <loggers>
         <root level="all">
-            <appender-ref ref="stdout"/>
-            <appender-ref ref="logfile"/>
+            <appender-ref ref="stdout" level="ALL"/>
+            <appender-ref ref="logfile" level="INFO"/>
         </root>
     </loggers>
 </Configuration>

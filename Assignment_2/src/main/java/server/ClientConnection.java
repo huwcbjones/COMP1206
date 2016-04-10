@@ -31,7 +31,6 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     private final ArrayList<ServerPacketListener> serverPacketListeners;
 
     private final long clientID;
-    private final Socket socket;
     private final Comms comms;
     private final boolean isSecureConnection;
     private boolean isConnected = false;
@@ -42,21 +41,20 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
 
     public ClientConnection(long clientID, Socket socket, boolean isSecureConnection) throws ConnectionFailedException {
         this.clientID = clientID;
-        this.socket = socket;
         this.isSecureConnection = isSecureConnection;
         this.serverPacketListeners = new ArrayList<>();
 
-        log.info("New {} client connection #{}, from {}:{}", (isSecureConnection?"secure":""), this.clientID, this.socket.getInetAddress(), this.socket.getPort());
+        log.info("New {} client connection #{}, from {}:{}", (isSecureConnection ? "secure" : ""), this.clientID, socket.getInetAddress(), socket.getPort());
 
         try {
-            ObjectOutputStream outputStream = new ObjectOutputStream(this.socket.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(this.socket.getInputStream());
+            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
 
             this.comms = new Comms(
-                    clientID,
-                    socket,
-                    inputStream,
-                    outputStream
+                clientID,
+                socket,
+                inputStream,
+                outputStream
             );
             this.comms.addConnectionListener(this);
             this.comms.start();
@@ -75,22 +73,12 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         this.comms.sendMessage(Packet.Ping());
     }
 
-    public void closeConnection () {
-        log.info("Closing client connection...");
-        try {
-            this.comms.sendMessage(Packet.Disconnect("Server shutting down."));
-            socket.close();
-        } catch (IOException e) {
-            log.debug(e);
-        }
-    }
-
     /**
      * Gets the client ID for this client
      *
      * @return Client ID
      */
-    public long getClientID () {
+    public long getClientID() {
         return this.clientID;
     }
 
@@ -108,9 +96,10 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      *
      * @return True if client is connected
      */
-    public boolean isConnected() { return this.isConnected; }
+    public boolean isConnected() {
+        return this.isConnected;
+    }
 
-    //region Event Handling
     /**
      * Handle packet received from Comms class.
      * Fire ServerPacketReceived so action can be carried out in server worker thread.
@@ -119,14 +108,16 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      * @param packet Packet that was received from client
      */
     @Override
-    public void packetReceived (Packet packet) {
+    public void packetReceived(Packet packet) {
         Object[] listeners = this.listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i]==ServerPacketListener.class) {
-                ((ServerPacketListener)listeners[i+1]).packetReceived(this, packet);
+            if (listeners[i] == ServerPacketListener.class) {
+                ((ServerPacketListener) listeners[i + 1]).packetReceived(this, packet);
             }
         }
     }
+
+    //region Event Handling
 
     /**
      * Adds a PacketListener to this client
@@ -166,9 +157,10 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
 
     /**
      * Sends a packet to the client
+     *
      * @param packet Packet to send
      */
-    public void sendPacket(Packet packet){
+    public void sendPacket(Packet packet) {
         this.comms.sendMessage(packet);
     }
 
@@ -184,6 +176,12 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         this.isConnected = false;
         Server.getServer().removeClient(this);
         this.closeConnection();
+    }
+
+    public void closeConnection() {
+        log.info("Closing client connection #{}", this.clientID);
+        this.comms.removeConnectionListener(this);
+        this.comms.shutdown();
     }
     //endregion
 }

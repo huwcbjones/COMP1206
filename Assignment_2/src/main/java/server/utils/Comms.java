@@ -1,7 +1,7 @@
 package server.utils;
 
-import server.Server;
 import shared.Packet;
+import shared.exceptions.PacketSendFailException;
 
 import javax.swing.*;
 import java.io.ObjectInputStream;
@@ -19,11 +19,11 @@ public final class Comms extends shared.Comms {
 
     public Comms (long clientID, Socket socket, ObjectInputStream input, ObjectOutputStream output) {
         super(socket, input, output);
-        this.readThread.setName("Comms_Thread_r_" + clientID);
-        this.writeThread.setName("Comms_Thread_w_" + clientID);
+        this.readThread.setName("CommsThread_r_" + clientID);
+        this.writeThread.setName("CommsThread_w_" + clientID);
         this.clientID = clientID;
 
-        this.lastPingTimer = new Timer((int)(Comms.PING_TIMEOUT), e ->{
+        this.lastPingTimer = new Timer((int)(Comms.PING_TIMEOUT * 1.05), e ->{
             log.info("Ping not received in timeout period.");
             this.shutdown();
             fireConnectionClosed("Lost connection to client");});
@@ -41,5 +41,18 @@ public final class Comms extends shared.Comms {
     @Override
     public void packetReceived(Packet packet) {
         this.lastPingTimer.restart();
+    }
+
+    /**
+     * Shuts down this Comms class
+     */
+    @Override
+    public void shutdown() {
+        if(this.shouldQuit) return;
+        try {
+            this.sendDirectMessage(Packet.Disconnect("Server shutting down."));
+        } catch (PacketSendFailException ignore) {
+        }
+        super.shutdown();
     }
 }
