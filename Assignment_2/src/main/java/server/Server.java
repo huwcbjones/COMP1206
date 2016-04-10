@@ -246,6 +246,15 @@ public final class Server {
     }
 
     /**
+     * Dispatches an event handler in the EDT (any worker pool thread)
+     *
+     * @param event Event to dispatch
+     */
+    public static void dispatchEvent(Runnable event){
+        Server.workPool.dispatchEvent(event);
+    }
+
+    /**
      * Runs the server shutdown in its own thread
      */
     private class shutdownThread extends Thread {

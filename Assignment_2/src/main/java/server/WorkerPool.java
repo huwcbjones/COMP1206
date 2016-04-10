@@ -28,6 +28,14 @@ public class WorkerPool {
         this.workerPool.scheduleWithFixedDelay(new TaskCleanup(), 5, 5, TimeUnit.MINUTES);
     }
 
+    public void dispatchEvent(Runnable event){
+        if(this.workerPool.isShutdown()){
+            new Thread(event, "EventDispatch").start();
+        } else {
+            this.workerPool.submit(event);
+        }
+    }
+
     /**
      * Runs a task asynchronously in the worker pool
      *

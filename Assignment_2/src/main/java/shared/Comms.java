@@ -31,6 +31,7 @@ public class Comms implements PacketListener {
     public static final int PING_TIMEOUT = 30 * 1000;
 
     protected static final Logger log = LogManager.getLogger(Comms.class);
+    private static final DispatchThread dispatchThread = new DispatchThread();
 
     private final EventListenerList listenerList = new EventListenerList();
 
@@ -45,6 +46,9 @@ public class Comms implements PacketListener {
     protected Timer lastPingTimer;
     protected boolean shouldQuit = false;
 
+    static {
+        dispatchThread.start();
+    }
     public Comms(Socket socket, ObjectInputStream input, ObjectOutputStream output) {
         this.packetQueue = new ConcurrentLinkedQueue<>();
         this.socket = socket;
@@ -104,32 +108,47 @@ public class Comms implements PacketListener {
         }, "CommsShutdown").start();
     }
 
-    //region Event Listening
+    //region Event Handling
+
+    /**
+     * Dispatches the event
+     *
+     * @param event Event to dispatch
+     */
+    protected void dispatchEvent(Runnable event){
+        dispatchThread.dispatchEvent(event);
+    }
 
     @Override
     public void packetReceived(Packet packet) {
-        if (packet.getType() == PacketType.PING) {
-            this.lastPingTimer.restart();
-            this.sendMessage(Packet.Ping());
-        }
+        this.dispatchEvent(() -> {
+            if (packet.getType() == PacketType.PING) {
+                this.lastPingTimer.restart();
+                this.sendMessage(Packet.Ping());
+            }
+        });
     }
 
     private void firePacketReceived(Packet packet) {
-        Object[] listeners = this.listenerList.getListenerList();
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == PacketListener.class) {
-                ((PacketListener) listeners[i + 1]).packetReceived(packet);
+        this.dispatchEvent(() -> {
+            Object[] listeners = this.listenerList.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == PacketListener.class) {
+                    ((PacketListener) listeners[i + 1]).packetReceived(packet);
+                }
             }
-        }
+        });
     }
 
     protected final void fireConnectionClosed(String reason) {
-        Object[] listeners = this.listenerList.getListenerList();
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == ConnectionListener.class) {
-                ((ConnectionListener) listeners[i + 1]).connectionClosed(reason);
+        this.dispatchEvent(() -> {
+            Object[] listeners = this.listenerList.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == ConnectionListener.class) {
+                    ((ConnectionListener) listeners[i + 1]).connectionClosed(reason);
+                }
             }
-        }
+        });
     }
 
     /**
@@ -311,6 +330,43 @@ public class Comms implements PacketListener {
             }
 
             log.debug("Read thread shut down.");
+        }
+    }
+
+    private static class DispatchThread extends Thread {
+        private ConcurrentLinkedQueue<Runnable> events = new ConcurrentLinkedQueue<>();
+        private boolean shouldStop = false;
+
+        public DispatchThread(){
+            super("DispatchThread");
+        }
+
+        @Override
+        public void run() {
+            while(!shouldStop){
+                Runnable event;
+                while((event = this.events.poll()) != null){
+                    event.run();
+                }
+                synchronized (this){
+                    try {
+                        this.wait();
+                    } catch (InterruptedException shouldQuitNotification) {
+                    }
+                }
+            }
+        }
+
+        public void dispatchEvent(Runnable event){
+            this.events.add(event);
+            synchronized (this){
+                this.notify();
+            }
+        }
+
+        public void quit(){
+            this.shouldStop = true;
+            this.interrupt();
         }
     }
 }

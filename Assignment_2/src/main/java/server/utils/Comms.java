@@ -1,5 +1,6 @@
 package server.utils;
 
+import server.Server;
 import shared.Packet;
 import shared.exceptions.PacketSendFailException;
 
@@ -54,5 +55,15 @@ public final class Comms extends shared.Comms {
         } catch (PacketSendFailException ignore) {
         }
         super.shutdown();
+    }
+
+    /**
+     * Dispatches the event
+     *
+     * @param event Event to dispatch
+     */
+    @Override
+    protected void dispatchEvent(Runnable event) {
+        Server.dispatchEvent(event);
     }
 }
