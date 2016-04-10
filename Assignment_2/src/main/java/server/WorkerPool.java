@@ -24,6 +24,8 @@ public class WorkerPool {
         ThreadFactory factory = new WorkerPoolFactory();
         this.workerPool = Executors.newScheduledThreadPool(workers, factory);
         log.debug("Started worker pool: {}", workers);
+
+        this.workerPool.scheduleWithFixedDelay(new TaskCleanup(), 5, 5, TimeUnit.MINUTES);
     }
 
     /**
@@ -136,6 +138,24 @@ public class WorkerPool {
             if (t.getPriority() != Thread.NORM_PRIORITY)
                 t.setPriority(Thread.NORM_PRIORITY);
             return t;
+        }
+    }
+
+    /**
+     * Cleans up scheduled tasks ArrayList
+     */
+    private class TaskCleanup implements Runnable {
+
+        @Override
+        public void run() {
+            log.trace("Cleaning Scheduled Tasks ArrayList...");
+            ArrayList<ScheduledFuture> tasks = new ArrayList<>(WorkerPool.this.futureTasks);
+            for(ScheduledFuture task: tasks){
+                if(task.isDone()){
+                    WorkerPool.this.futureTasks.remove(task);
+                }
+            }
+            log.debug("There are {} scheduled tasks.", WorkerPool.this.futureTasks.size());
         }
     }
 }
