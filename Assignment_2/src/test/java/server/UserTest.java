@@ -1,9 +1,10 @@
 package server;
 
+import server.objects.User;
+
 import java.security.MessageDigest;
 
-import static org.junit.Assert.*;
-import server.User;
+import static org.junit.Assert.assertTrue;
 
 /**
  * {DESCRIPTION}

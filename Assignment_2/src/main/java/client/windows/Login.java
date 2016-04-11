@@ -244,6 +244,7 @@ public final class Login extends WindowTemplate {
     //endregion
 
     // region Event Listeners
+
     /**
      * Cancels the Login/exits the application
      */
@@ -324,12 +325,12 @@ public final class Login extends WindowTemplate {
             Client.removeLoginListener(Login.this.loginListener);
             Login.this.setFormEnabledState(true);
             Login.this.clearFields();
-            JOptionPane.showMessageDialog(
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                 Login.this,
                 message,
                 "Login Failed",
                 JOptionPane.ERROR_MESSAGE
-            );
+            ));
         }
     }
 

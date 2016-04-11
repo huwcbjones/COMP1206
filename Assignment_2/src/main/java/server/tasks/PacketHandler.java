@@ -34,6 +34,9 @@ public final class PacketHandler implements Runnable {
                 // of the physical time it takes to send the TCP packet.
                 Server.getWorkerPool().scheduleTask(new PingPongTask(this.client), (int)(Comms.PING_TIMEOUT * 0.95));
                 break;
+            case LOGIN:
+                Server.getWorkerPool().queueTask(new LoginTask(this.client, (char[][])packet.getPayload()));
+                break;
             case REGISTER:
                 Server.getWorkerPool().queueTask(new RegisterTask(this.client, (RegisterUser)packet.getPayload()));
                 break;

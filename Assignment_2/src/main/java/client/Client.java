@@ -9,7 +9,10 @@ import client.windows.Login;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import shared.*;
+import shared.Packet;
+import shared.PacketType;
+import shared.RegisterUser;
+import shared.User;
 import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
@@ -195,19 +198,19 @@ public final class Client implements ConnectionListener {
 
         Client.comms.addMessageListener(handler);
         Client.comms.sendMessage(new Packet<>(PacketType.LOGIN, new char[][]{username.toCharArray(), password}));
-        Arrays.fill(password, '\u0000'); // Clear password
 
         waiter.waitForReply();
         if (waiter.isReplyTimedOut()) {
             // Need to handle timeouts because the fail event only fires if we get a LOGIN_FAIL from the server
             fireLoginFailHandler("Request timed out.");
         }
+        Arrays.fill(password, '\u0000'); // Clear password
     }
 
     public static void register(User user, char[] password, char[] passwordConfirm){
         if (!Client.isConnected) {
-            ConnectionListener listener = new ConnectionAdapter() {
-                @Override
+            ConnectionListener listener = new ConnectionListener() {
+                           @Override
                 public void connectionSucceeded() {
                     Client.removeConnectionListener(this);
                     Client.register(user, password, passwordConfirm);
@@ -215,6 +218,12 @@ public final class Client implements ConnectionListener {
 
                 @Override
                 public void connectionFailed(String reason) {
+                    Client.removeConnectionListener(this);
+                    Client.fireRegisterFailHandler(reason);
+                }
+
+                @Override
+                public void connectionClosed(String reason) {
                     Client.removeConnectionListener(this);
                     Client.fireRegisterFailHandler(reason);
                 }
@@ -231,7 +240,7 @@ public final class Client implements ConnectionListener {
     private static void doRegister(User user, char[] password, char[] passwordConfirm){
         NotificationWaiter waiter = new NotificationWaiter();
 
-        ReplyWaiter handler=  new ReplyWaiter(waiter) {
+        ReplyWaiter handler =  new ReplyWaiter(waiter) {
             @Override
             public void packetReceived(Packet packet) {
                 switch (packet.getType()){
@@ -253,13 +262,13 @@ public final class Client implements ConnectionListener {
 
         Client.comms.addMessageListener(handler);
         Client.comms.sendMessage(new Packet<>(PacketType.REGISTER, new RegisterUser(user, password, passwordConfirm)));
-        Arrays.fill(password, '\u0000');
-        Arrays.fill(passwordConfirm, '\u0000');
 
         waiter.waitForReply();
         if(waiter.isReplyTimedOut()){
-
+            Client.fireRegisterFailHandler("Reply timed out.");
         }
+        Arrays.fill(password, '\u0000');
+        Arrays.fill(passwordConfirm, '\u0000');
     }
 
     /**

@@ -335,7 +335,13 @@ public final class Register extends WindowTemplate {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            Register.this.dispatchEvent(new WindowEvent(Register.this, WindowEvent.WINDOW_CLOSING));
+            if(isRegistering){
+                Register.this.isRegistering = false;
+                Client.removeRegisterListener(Register.this.registerListener);
+                Register.this.setFormEnabledState(true);
+            } else {
+                Register.this.dispatchEvent(new WindowEvent(Register.this, WindowEvent.WINDOW_CLOSING));
+            }
         }
     }
 
@@ -375,18 +381,19 @@ public final class Register extends WindowTemplate {
             Client.removeRegisterListener(Register.this.registerListener);
             Register.this.setFormEnabledState(true);
             Register.this.clearFields();
-            JOptionPane.showMessageDialog(
-                Register.this,
-                "Hi " + user.getFullName() + ",\n" +
-                    "You've successfully registered for Biddr on " + Register.this.config.getSelectedServer().getName() + ".\n" +
-                    "Click OK to continue to login to Biddr.\n\n" +
-                    "Just to confirm, your login details are as follows:\n" +
-                    "\t- Username: " + user.getUsername() + "\n" +
-                    "\t- Password: As Provided",
-                "Registration Succeeded!",
-                JOptionPane.INFORMATION_MESSAGE
-            );
-            Register.this.dispatchEvent(new WindowEvent(Register.this, WindowEvent.WINDOW_CLOSING));
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(
+                    Register.this,
+                    "Hi " + user.getFullName() + ",\n" +
+                        "You've successfully registered for Biddr on " + Register.this.config.getSelectedServer().getName() + ".\n" +
+                        "Click OK to continue to login to Biddr.\n\n" +
+                        "Just to confirm, your login details are as follows:\n" +
+                        "\t- Username: " + user.getUsername() + "\n" +
+                        "\t- Password: As Provided",
+                    "Registration Succeeded!",
+                    JOptionPane.INFORMATION_MESSAGE);
+                Register.this.dispatchEvent(new WindowEvent(Register.this, WindowEvent.WINDOW_CLOSING));
+            });
         }
 
         /**
@@ -399,12 +406,12 @@ public final class Register extends WindowTemplate {
             Register.this.isRegistering = false;
             Client.removeRegisterListener(Register.this.registerListener);
             Register.this.setFormEnabledState(true);
-            JOptionPane.showMessageDialog(
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                 Register.this,
                 "We're sorry, but we failed to register your account.\nReason: " + reason,
                 "Registration Failed",
                 JOptionPane.ERROR_MESSAGE
-            );
+            ));
         }
     }
 

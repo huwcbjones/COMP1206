@@ -1,6 +1,7 @@
 package shared;
 
 import shared.utils.StringUtils;
+import shared.utils.UUIDUtils;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -48,5 +49,9 @@ public class User implements Serializable {
 
     public UUID getUniqueID() {
         return this.uniqueID;
+    }
+
+    public byte[] getUniqueByteID() {
+        return UUIDUtils.UUIDToBytes(this.uniqueID);
     }
 }

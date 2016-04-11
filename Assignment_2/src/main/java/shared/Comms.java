@@ -9,6 +9,7 @@ import shared.exceptions.VersionMismatchException;
 
 import javax.swing.*;
 import javax.swing.event.EventListenerList;
+import java.awt.event.ActionListener;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,6 +45,7 @@ public class Comms implements PacketListener {
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
     protected Timer lastPingTimer;
+    protected ActionListener pingListener;
     protected boolean shouldQuit = false;
 
     static {
@@ -57,11 +59,12 @@ public class Comms implements PacketListener {
 
         readThread = new CommsReadThread();
         writeThread = new CommsWriteThread();
-        this.lastPingTimer = new Timer((int) (Comms.PING_TIMEOUT * 1.05), e -> {
+        this.pingListener =  e -> {
             log.info("Ping not received in timeout period.");
             this.shutdown();
             fireConnectionClosed("Lost connection to server");
-        });
+        };
+        this.lastPingTimer = new Timer((int) (Comms.PING_TIMEOUT * 1.05), this.pingListener);
         this.lastPingTimer.setRepeats(false);
     }
 
@@ -86,6 +89,7 @@ public class Comms implements PacketListener {
         new Thread(() -> {
             final Logger log = LogManager.getLogger(Thread.currentThread().getClass());
             this.lastPingTimer.stop();
+            this.lastPingTimer.removeActionListener(this.pingListener);
 
             try {
                 this.readThread.interrupt();
@@ -121,16 +125,15 @@ public class Comms implements PacketListener {
 
     @Override
     public void packetReceived(Packet packet) {
-        this.dispatchEvent(() -> {
-            if (packet.getType() == PacketType.PING) {
-                this.lastPingTimer.restart();
-                this.sendMessage(Packet.Ping());
-            }
-        });
+        if (packet.getType() == PacketType.PING) {
+            this.lastPingTimer.restart();
+            this.sendMessage(Packet.Ping());
+        }
     }
 
     private void firePacketReceived(Packet packet) {
         this.dispatchEvent(() -> {
+            log.trace("fired->PacketReceived");
             Object[] listeners = this.listenerList.getListenerList();
             for (int i = listeners.length - 2; i >= 0; i -= 2) {
                 if (listeners[i] == PacketListener.class) {
@@ -142,6 +145,7 @@ public class Comms implements PacketListener {
 
     protected final void fireConnectionClosed(String reason) {
         this.dispatchEvent(() -> {
+            log.trace("fired->ConnectionClosed");
             Object[] listeners = this.listenerList.getListenerList();
             for (int i = listeners.length - 2; i >= 0; i -= 2) {
                 if (listeners[i] == ConnectionListener.class) {
@@ -346,11 +350,13 @@ public class Comms implements PacketListener {
             while(!shouldStop){
                 Runnable event;
                 while((event = this.events.poll()) != null){
+                    log.trace("Running events");
                     event.run();
                 }
                 synchronized (this){
                     try {
                         this.wait();
+                        log.trace("Notified");
                     } catch (InterruptedException shouldQuitNotification) {
                     }
                 }
