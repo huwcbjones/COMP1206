@@ -22,7 +22,18 @@ public class ConnectHandler {
     private static final Logger log = LogManager.getLogger(ConnectHandler.class);
 
     private NotificationWaiter waiter = new NotificationWaiter();
+    private PacketListener okListener;
 
+    public ConnectHandler() {
+        this.initialise();
+    }
+
+    public void initialise(){
+        this.okListener = packet -> {
+            if (packet.getType() == PacketType.OK) waiter.replyReceived();
+        };
+        Client.addPacketListener(this.okListener);
+    }
     public void connect() throws ConnectionFailedException, ConnectionUpgradeException {
         this.doConnect();
 
@@ -51,17 +62,12 @@ public class ConnectHandler {
 
     private void doConnect() throws ConnectionFailedException {
         //region Wait for Server OK
-        PacketListener okListener = packet -> {
-            if (packet.getType() == PacketType.OK) waiter.replyReceived();
-        };
-        Client.addPacketListener(okListener);
-
         log.debug("Waiting for server to get ready...");
         this.waiter.waitForReply();
         if (this.waiter.isReplyTimedOut()) {
             throw new ConnectionFailedException("Server never connected.");
         }
-        Client.removePacketListener(okListener);
+        Client.removePacketListener(this.okListener);
         //endregion
 
         //region Say HELLO to server
