@@ -240,6 +240,7 @@ public final class Login extends WindowTemplate {
     private void clearFields() {
         this.text_username.setText("");
         this.text_password.setText("");
+        this.text_username.requestFocus();
     }
     //endregion
 
@@ -312,6 +313,8 @@ public final class Login extends WindowTemplate {
             Login.this.isLoggingIn = false;
             Client.removeLoginListener(Login.this.loginListener);
             Login.this.setFormEnabledState(true);
+            Login.this.clearFields();
+            Login.this.dispatchEvent(new WindowEvent(Login.this, WindowEvent.WINDOW_CLOSING));
         }
 
         /**
