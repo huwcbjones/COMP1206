@@ -105,8 +105,6 @@ public final class ValidationUtils {
             }
         }
 
-        Arrays.fill(password, '\u0000');
-
         if (lower && upper && number) {
             return;
         }
