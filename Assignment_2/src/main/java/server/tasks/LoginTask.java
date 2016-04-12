@@ -7,6 +7,8 @@ import server.objects.User;
 import shared.Packet;
 import shared.PacketType;
 import shared.exceptions.InvalidCredentialException;
+import shared.exceptions.ValidationFailedException;
+import shared.utils.ValidationUtils;
 
 import java.util.NoSuchElementException;
 
@@ -32,8 +34,22 @@ public class LoginTask extends Task {
                 this.client.sendPacket(new Packet<>(PacketType.LOGIN_FAIL, "A client/server error occurred during login."));
                 return;
             }
+
             String username = new String(this.details[0]);
             char[] password = this.details[1];
+
+            if(username.length() == 0){
+                log.trace("Username was blank.");
+                this.client.sendPacket(LoginTask.invalidCredentials());
+                return;
+            }
+            try {
+                ValidationUtils.validatePassword(password, true);
+            } catch (ValidationFailedException e){
+                this.client.sendPacket(LoginTask.invalidCredentials());
+                log.trace("Password failed validation.");
+                return;
+            }
 
             try {
                 User user = Server.getData().getUser(username);
@@ -51,6 +67,10 @@ public class LoginTask extends Task {
         } catch (Exception e){
             log.error("Error whilst processing login.", e);
         }
-        this.client.sendPacket(new Packet<>(PacketType.LOGIN_FAIL, "Invalid username/password."));
+        this.client.sendPacket(LoginTask.invalidCredentials());
+    }
+
+    private static Packet invalidCredentials(){
+        return new Packet<>(PacketType.LOGIN_FAIL, "Invalid username/password.");
     }
 }
