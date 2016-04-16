@@ -1,5 +1,7 @@
 package server.objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import server.exceptions.OperationFailureException;
 import shared.exceptions.InvalidCredentialException;
 import shared.exceptions.PasswordsDoNotMatchException;
@@ -77,9 +79,12 @@ public final class User extends shared.User {
     }
 
     public boolean isAuthenticated(char[] password) throws OperationFailureException {
+        final Logger log = LogManager.getLogger(User.class);
+        log.trace("PasswordHash: {}", this.passwordHash);
+        log.trace("Salt        : {}", this.salt);
         byte[] passwordHash = User.generatePasswordHash(password, this.salt);
         boolean returnValue = Arrays.equals(passwordHash, this.passwordHash);
-
+        log.trace("ComputedHash: {}", passwordHash);
         Arrays.fill(passwordHash, (byte) 0);
         Arrays.fill(password, '\u0000');
 
@@ -103,23 +108,27 @@ public final class User extends shared.User {
      */
     public static byte[] generatePasswordHash(char[] password, byte[] salt) throws OperationFailureException {
         try {
+            final Logger log = LogManager.getLogger(User.class);
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
 
             // Get the hash of the password
             byte[] passwordHash = messageDigest.digest(StringUtils.charsToBytes(password));
 
-            // Clear the password (for security reasons)
-            Arrays.fill(password, '\u0000');
 
             // Update the message digest with the salted password hash
             byte[] saltedHash = saltPassword(passwordHash, salt);
 
-            // Clear the passwordHash (for security reasons)
-            Arrays.fill(passwordHash, (byte) 0);
+            // Clear the password (for security reasons)
+            //Arrays.fill(password, '\u0000');
+            //Arrays.fill(passwordHash, (byte) 0);
 
             // Get the new hash
             messageDigest.reset();
-            return messageDigest.digest(saltedHash);
+            passwordHash = messageDigest.digest(saltedHash);
+            log.trace("pass: {}", password);
+            log.trace("salt: {}", salt);
+            log.trace("hash: {}", passwordHash);
+            return passwordHash;
         } catch (NoSuchAlgorithmException ex) {
             throw new OperationFailureException("Server configuration error. Security options not supported.");
         }

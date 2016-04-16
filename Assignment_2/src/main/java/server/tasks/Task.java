@@ -25,4 +25,24 @@ abstract class Task implements Runnable {
     public final String toString() {
         return this.name;
     }
+
+    @Override
+    public final void run() {
+        try {
+            this.doTask();
+        } catch (Exception e){
+            log.error("An Exception occurred whilst executing {}.", this.name, e);
+            this.failureAction();
+        }
+    }
+
+    /**
+     * Performs the Worker Task
+     */
+    protected abstract void doTask();
+
+    /**
+     * Executed on task failure
+     */
+    protected abstract void failureAction();
 }

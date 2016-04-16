@@ -34,10 +34,7 @@ public class StringUtils {
     public static byte[] charsToBytes (char[] chars) {
         CharBuffer charBuffer = CharBuffer.wrap(chars);
         ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
-        byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+        return Arrays.copyOfRange(byteBuffer.array(),
                 byteBuffer.position(), byteBuffer.limit());
-        Arrays.fill(charBuffer.array(), '\u0000'); // clear sensitive data
-        Arrays.fill(byteBuffer.array(), (byte) 0); // clear sensitive data
-        return bytes;
     }
 }

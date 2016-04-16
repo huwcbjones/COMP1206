@@ -15,9 +15,20 @@ public class PingPongTask extends Task {
         super("ClientPing", client);
     }
 
+    /**
+     * Performs the Worker Task
+     */
     @Override
-    public void run() {
+    protected void doTask() {
         if(!this.client.isConnected()) return;
         this.client.sendPacket(Packet.Ping());
+    }
+
+    /**
+     * Executed on task failure
+     */
+    @Override
+    protected void failureAction() {
+
     }
 }

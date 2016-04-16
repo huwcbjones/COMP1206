@@ -34,27 +34,28 @@ public class RegisterTask extends Task {
     }
 
     @Override
-    public void run() {
-        try {
-            if (Server.getData().userExists(this.user.getUsername())) {
-                log.warn("User tried to register with an in-use username.");
-                this.client.sendPacket(new Packet<>(PacketType.REGISTER_FAIL, "A user with that username already exists."));
-                return;
-            }
-            log.trace("Username is available.");
-            try {
-                validateFields();
-                log.debug("Input data validated.");
-                UUID newUser = this.addUserToDatabase();
-                log.info("New user ({}) added to database!", newUser);
-                this.client.sendPacket(new Packet<>(PacketType.REGISTER_SUCCESS, Server.getData().getUser(newUser).getSharedUser()));
-            } catch (ValidationFailedException | OperationFailureException e) {
-                this.client.sendPacket(new Packet<>(PacketType.REGISTER_FAIL, e.getMessage()));
-            }
-        } catch (Exception e){
-            log.error("An Exception occurred whilst executing {}.", this.name, e);
-
+    protected void doTask() {
+        log.trace("password: {} {}", user.getPassword(), user.getPasswordConfirm());
+        if (Server.getData().userExists(this.user.getUsername())) {
+            log.warn("User tried to register with an in-use username.");
+            this.client.sendPacket(new Packet<>(PacketType.REGISTER_FAIL, "A user with that username already exists."));
+            return;
         }
+        log.trace("Username is available.");
+        try {
+            validateFields();
+            log.debug("Input data validated.");
+            UUID newUser = this.addUserToDatabase();
+            log.info("New user ({}) added to database!", newUser);
+            this.client.sendPacket(new Packet<>(PacketType.REGISTER_SUCCESS, Server.getData().getUser(newUser).getSharedUser()));
+        } catch (ValidationFailedException | OperationFailureException e) {
+            this.client.sendPacket(new Packet<>(PacketType.REGISTER_FAIL, e.getMessage()));
+        }
+    }
+
+    @Override
+    protected void failureAction() {
+        this.client.sendPacket(new Packet<>(PacketType.REGISTER_FAIL, "Server encountered an error processing that request."));
     }
 
     private UUID addUserToDatabase() throws OperationFailureException {
@@ -70,7 +71,7 @@ public class RegisterTask extends Task {
         byte[] passwordHash = User.generatePasswordHash(password, salt);
         byte[] password_bytes = new byte[64];
         System.arraycopy(passwordHash, 0, password_bytes, 0, 32);
-        System.arraycopy(salt,0, password_bytes, 32, 32);
+        System.arraycopy(salt, 0, password_bytes, 32, 32);
 
         Connection c = null;
         PreparedStatement insertUser = null;

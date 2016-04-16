@@ -74,7 +74,7 @@ public final class DataPersistence {
             config.enableLoadExtension(true);
             config.enforceForeignKeys(true);
             ds.setConfig(config);
-            this.dataSource = (SQLitePooledConnection)ds.getPooledConnection();
+            this.dataSource = (SQLitePooledConnection) ds.getPooledConnection();
 
         } catch (SQLException e) {
             log.trace(e);
@@ -91,7 +91,7 @@ public final class DataPersistence {
     /**
      * Creates the initial database structure
      *
-     * @throws OperationFailureException If the operation faield
+     * @throws OperationFailureException If the operation failed
      */
     private void createDatabaseStructure() throws OperationFailureException {
         Connection c = null;
@@ -278,7 +278,15 @@ public final class DataPersistence {
         }
         try {
             this.loadUser(null, username);
-            return this.users.get(this.usernameToUUID.get(username));
+            if (!this.usernameToUUID.containsKey(username)) {
+                throw new NoSuchElementException();
+            }
+
+            User user = this.users.get(this.usernameToUUID.get(username));
+            if (user == null) {
+                throw new NoSuchElementException();
+            }
+            return user;
         } catch (OperationFailureException e) {
             e.printStackTrace();
         }
@@ -298,7 +306,11 @@ public final class DataPersistence {
         } else {
             try {
                 this.loadUser(uniqueID, null);
-                return this.users.get(uniqueID);
+                User user = this.users.get(uniqueID);
+                if (user == null) {
+                    throw new NoSuchElementException();
+                }
+                return user;
             } catch (OperationFailureException e) {
                 throw new NoSuchElementException();
             }
@@ -312,7 +324,7 @@ public final class DataPersistence {
      * @return true if user exists
      */
     public boolean userExists(UUID userID) {
-        if(this.users.containsKey(userID)){
+        if (this.users.containsKey(userID)) {
             return true;
         }
         try {
@@ -330,7 +342,7 @@ public final class DataPersistence {
      * @return true if user exists
      */
     public boolean userExists(String username) {
-        if(this.usernameToUUID.containsKey(username)){
+        if (this.usernameToUUID.containsKey(username)) {
             return true;
         }
         try {

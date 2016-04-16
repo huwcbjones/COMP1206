@@ -53,6 +53,10 @@ public enum PacketType {
     REGISTER_SUCCESS,
     //endregion
 
+    //region User
+
+    //endregion
+
     //region Connection Maintenance
     // Let's create a game of ping pong to maintain connection
     /**

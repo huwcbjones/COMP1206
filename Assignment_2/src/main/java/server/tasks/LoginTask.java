@@ -28,49 +28,53 @@ public class LoginTask extends Task {
     }
 
     @Override
-    public void run() {
+    protected void doTask() {
+        if (this.details.length != 2) {
+            this.client.sendPacket(new Packet<>(PacketType.LOGIN_FAIL, "A client/server error occurred during login."));
+            return;
+        }
+
+        String username = new String(this.details[0]);
+        char[] password = this.details[1];
+        log.trace("u: {}, p: {}", username, password);
+        if (username.length() == 0) {
+            log.trace("Username was blank.");
+            this.client.sendPacket(LoginTask.invalidCredentials());
+            return;
+        }
         try {
-            if (this.details.length != 2) {
-                this.client.sendPacket(new Packet<>(PacketType.LOGIN_FAIL, "A client/server error occurred during login."));
+            ValidationUtils.validatePassword(password, true);
+        } catch (ValidationFailedException e) {
+            this.client.sendPacket(LoginTask.invalidCredentials());
+            log.trace("Password failed validation.");
+            return;
+        }
+
+        try {
+            User user = Server.getData().getUser(username);
+            if (user != null) {
+                log.trace("Authenticating user...");
+                user.login(password);
+                log.info("{} ({}) logged in on Client #{}", user.getUsername(), user.getUniqueID(), this.client.getClientID());
+                this.client.sendPacket(new Packet<>(PacketType.LOGIN_SUCCESS, user.getSharedUser()));
                 return;
             }
-
-            String username = new String(this.details[0]);
-            char[] password = this.details[1];
-
-            if(username.length() == 0){
-                log.trace("Username was blank.");
-                this.client.sendPacket(LoginTask.invalidCredentials());
-                return;
-            }
-            try {
-                ValidationUtils.validatePassword(password, true);
-            } catch (ValidationFailedException e){
-                this.client.sendPacket(LoginTask.invalidCredentials());
-                log.trace("Password failed validation.");
-                return;
-            }
-
-            try {
-                User user = Server.getData().getUser(username);
-                if (user != null) {
-                    log.trace("Authenticating user...");
-                    user.login(password);
-                    log.info("{} ({}) logged in on Client #{}", user.getUsername(), user.getUniqueID(), this.client.getClientID());
-                    this.client.sendPacket(new Packet<>(PacketType.LOGIN_SUCCESS, user.getSharedUser()));
-                    return;
-                }
-                log.warn("Failed to load user. Is something wrong?");
-            } catch (NoSuchElementException | InvalidCredentialException | OperationFailureException e) {
-                log.warn("User ({}) failed to login. {}", username, e.getMessage());
-            }
-        } catch (Exception e){
-            log.error("Error whilst processing login.", e);
+            log.warn("Failed to load user. Is something wrong?");
+        } catch (NoSuchElementException | InvalidCredentialException | OperationFailureException e) {
+            log.warn("User ({}) failed to login. {}", username, e.getMessage());
         }
         this.client.sendPacket(LoginTask.invalidCredentials());
     }
 
-    private static Packet invalidCredentials(){
+    /**
+     * Executed on task failure
+     */
+    @Override
+    protected void failureAction() {
+        this.client.sendPacket(LoginTask.invalidCredentials());
+    }
+
+    private static Packet invalidCredentials() {
         return new Packet<>(PacketType.LOGIN_FAIL, "Invalid username/password.");
     }
 }

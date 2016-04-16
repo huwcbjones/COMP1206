@@ -314,6 +314,7 @@ public final class Login extends WindowTemplate {
             Client.removeLoginListener(Login.this.loginListener);
             Login.this.setFormEnabledState(true);
             Login.this.clearFields();
+            Login.this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             Login.this.dispatchEvent(new WindowEvent(Login.this, WindowEvent.WINDOW_CLOSING));
         }
 

@@ -1,11 +1,13 @@
 package client;
 
+import client.events.LoginAdapter;
 import client.events.LoginListener;
 import client.events.RegisterListener;
 import client.utils.ConnectHandler;
 import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Login;
+import client.windows.Main;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,12 +25,12 @@ import shared.utils.ReplyWaiter;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -41,18 +43,13 @@ public final class Client implements ConnectionListener {
 
     private static final Logger log = LogManager.getLogger(Client.class);
     private static final Config config = new Config();
+    private static final EventListenerList listenerList = new EventListenerList();
     private static User user;
     private static boolean isConnected = false;
-
-    private static final EventListenerList listenerList = new EventListenerList();
-
-    private static final ArrayList<LoginListener> loginListeners = new ArrayList<>();
-    private static final ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
-
     private static Comms comms;
     private static Client client;
 
-    public Client () {
+    public Client() {
         Client.client = this;
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
         try {
@@ -63,20 +60,28 @@ public final class Client implements ConnectionListener {
         System.setProperty("javax.net.ssl.trustStore", "config/keys/biddr.jks");
         System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
+        Client.addLoginListener(new LoginAdapter() {
+            @Override
+            public void loginSuccess(User user) {
+                SwingUtilities.invokeLater(() -> {
+                    Main main = new Main();
+                    main.setVisible(true);
+                });
+            }
+        });
         Login loginWindow = new Login();
-
         loginWindow.setVisible(true);
     }
 
-    public static Config getConfig () {
-        return Client.config;
-    }
-
-    private void shutdown () {
+    private void shutdown() {
         log.info("Shutting down client...");
         if (Client.isConnected) {
             Client.comms.shutdown();
         }
+    }
+
+    public static Config getConfig() {
+        return Client.config;
     }
 
     public static void disconnect() {
@@ -95,11 +100,14 @@ public final class Client implements ConnectionListener {
             ObjectOutputStream outputStream = new ObjectOutputStream(plainSocket.getOutputStream());
             ObjectInputStream inputStream = new ObjectInputStream(plainSocket.getInputStream());
 
+
             // Create comms class
             Client.comms = new Comms(plainSocket, inputStream, outputStream);
-            Client.comms.start();
 
             ConnectHandler connectHandler = new ConnectHandler();
+
+            Client.comms.start();
+
             try {
                 connectHandler.connect();
             } catch (ConnectionUpgradeException e) {
@@ -110,7 +118,7 @@ public final class Client implements ConnectionListener {
 
                 // Create SSLSocket
                 SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
-                SSLSocket secureSocket = (SSLSocket)sf.createSocket(server.getAddress(), server.getSecurePort());
+                SSLSocket secureSocket = (SSLSocket) sf.createSocket(server.getAddress(), server.getSecurePort());
                 secureSocket.setUseClientMode(true);
                 secureSocket.setEnabledProtocols(StrongTls.intersection(secureSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
                 log.debug("Enabled Protocols: ");
@@ -123,6 +131,7 @@ public final class Client implements ConnectionListener {
 
                 // Create comms class
                 Client.comms = new Comms(secureSocket, inputStream, outputStream);
+                connectHandler.initialise();
                 Client.comms.start();
 
                 connectHandler.secureConnect();
@@ -207,10 +216,10 @@ public final class Client implements ConnectionListener {
         Arrays.fill(password, '\u0000'); // Clear password
     }
 
-    public static void register(User user, char[] password, char[] passwordConfirm){
+    public static void register(User user, char[] password, char[] passwordConfirm) {
         if (!Client.isConnected) {
             ConnectionListener listener = new ConnectionListener() {
-                           @Override
+                @Override
                 public void connectionSucceeded() {
                     Client.removeConnectionListener(this);
                     Client.register(user, password, passwordConfirm);
@@ -237,18 +246,18 @@ public final class Client implements ConnectionListener {
         }
     }
 
-    private static void doRegister(User user, char[] password, char[] passwordConfirm){
+    private static void doRegister(User user, char[] password, char[] passwordConfirm) {
         NotificationWaiter waiter = new NotificationWaiter();
 
-        ReplyWaiter handler =  new ReplyWaiter(waiter) {
+        ReplyWaiter handler = new ReplyWaiter(waiter) {
             @Override
             public void packetReceived(Packet packet) {
-                switch (packet.getType()){
+                switch (packet.getType()) {
                     case REGISTER_SUCCESS:
                         Client.fireRegisterSuccessHandler((User) packet.getPayload());
                         break;
                     case REGISTER_FAIL:
-                        Client.fireRegisterFailHandler((String)packet.getPayload());
+                        Client.fireRegisterFailHandler((String) packet.getPayload());
                         break;
                     case NOK:
                         Client.fireRegisterFailHandler("Server failed to process request.");
@@ -260,13 +269,15 @@ public final class Client implements ConnectionListener {
             }
         };
 
+        log.trace("password: {}", password);
         Client.comms.addMessageListener(handler);
         Client.comms.sendMessage(new Packet<>(PacketType.REGISTER, new RegisterUser(user, password, passwordConfirm)));
 
         waiter.waitForReply();
-        if(waiter.isReplyTimedOut()){
+        if (waiter.isReplyTimedOut()) {
             Client.fireRegisterFailHandler("Reply timed out.");
         }
+
         Arrays.fill(password, '\u0000');
         Arrays.fill(passwordConfirm, '\u0000');
     }
@@ -288,14 +299,16 @@ public final class Client implements ConnectionListener {
 
     /**
      * Sends a packet
+     *
      * @param packet
      */
-    public static void sendPacket(Packet packet){
+    public static void sendPacket(Packet packet) {
         Client.comms.sendMessage(packet);
     }
     //endregion
 
     //region Event Trigger Methods
+
     /**
      * Fires RegisterSuccess Event
      *
@@ -393,6 +406,13 @@ public final class Client implements ConnectionListener {
     }
 
     /**
+     * Adds a packet listener to the communications handler
+     *
+     * @param listener Listener to add
+     */
+    public static void addPacketListener(PacketListener listener) {
+        Client.comms.addMessageListener(listener);
+    }    /**
      * Fires when the connection succeeds
      */
     @Override
@@ -401,6 +421,13 @@ public final class Client implements ConnectionListener {
     }
 
     /**
+     * Removes a packet listener to the communications handler
+     *
+     * @param listener Listener to remove
+     */
+    public static void removePacketListener(PacketListener listener) {
+        Client.comms.removeMessageListener(listener);
+    }    /**
      * Fires when the connection fails
      *
      * @param reason Reason why connection failed
@@ -412,6 +439,13 @@ public final class Client implements ConnectionListener {
     }
 
     /**
+     * Adds a Register listener to the Client
+     *
+     * @param listener Listener to add
+     */
+    public static void addRegisterListener(RegisterListener listener) {
+        Client.listenerList.add(RegisterListener.class, listener);
+    }    /**
      * Fires when the connection is closed
      *
      * @param reason Reason why the connection is closed
@@ -425,32 +459,6 @@ public final class Client implements ConnectionListener {
     //endregion
 
     //region Add/Remove Event Handlers
-
-    /**
-     * Adds a packet listener to the communications handler
-     *
-     * @param listener Listener to add
-     */
-    public static void addPacketListener(PacketListener listener) {
-        Client.comms.addMessageListener(listener);
-    }
-
-    /**
-     * Removes a packet listener to the communications handler
-     *
-     * @param listener Listener to remove
-     */
-    public static void removePacketListener(PacketListener listener) {
-        Client.comms.removeMessageListener(listener);
-    }
-    /**
-     * Adds a Register listener to the Client
-     *
-     * @param listener Listener to add
-     */
-    public static void addRegisterListener(RegisterListener listener) {
-        Client.listenerList.add(RegisterListener.class, listener);
-    }
 
     /**
      * Removes a Register listener to the Client
@@ -496,5 +504,11 @@ public final class Client implements ConnectionListener {
     public static void removeConnectionListener(ConnectionListener listener) {
         Client.listenerList.remove(ConnectionListener.class, listener);
     }
+
+
+
+
+
+
     //endregion
 }
