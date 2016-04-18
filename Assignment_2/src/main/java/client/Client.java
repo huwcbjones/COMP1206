@@ -97,9 +97,9 @@ public final class Client implements ConnectionListener {
 
             // Create comms class
             Client.comms = new Comms(plainSocket, inputStream, outputStream);
+            ConnectHandler connectHandler = new ConnectHandler();
             Client.comms.start();
 
-            ConnectHandler connectHandler = new ConnectHandler();
             try {
                 connectHandler.connect();
             } catch (ConnectionUpgradeException e) {
@@ -123,6 +123,7 @@ public final class Client implements ConnectionListener {
 
                 // Create comms class
                 Client.comms = new Comms(secureSocket, inputStream, outputStream);
+                connectHandler.initialise();
                 Client.comms.start();
 
                 connectHandler.secureConnect();
