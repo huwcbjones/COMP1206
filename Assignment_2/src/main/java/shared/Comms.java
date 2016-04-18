@@ -347,16 +347,15 @@ public class Comms implements PacketListener {
 
         @Override
         public void run() {
+            Runnable event;
             while(!shouldStop){
-                Runnable event;
+                log.trace("Running events");
                 while((event = this.events.poll()) != null){
-                    log.trace("Running events");
                     event.run();
                 }
                 synchronized (this){
                     try {
                         this.wait();
-                        log.trace("Notified");
                     } catch (InterruptedException shouldQuitNotification) {
                     }
                 }

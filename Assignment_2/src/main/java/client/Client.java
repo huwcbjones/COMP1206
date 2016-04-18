@@ -7,7 +7,6 @@ import client.utils.ConnectHandler;
 import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Login;
-import client.windows.Main;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +24,6 @@ import shared.utils.ReplyWaiter;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -46,6 +44,12 @@ public final class Client implements ConnectionListener {
     private static final EventListenerList listenerList = new EventListenerList();
     private static User user;
     private static boolean isConnected = false;
+
+    private static final EventListenerList listenerList = new EventListenerList();
+
+    private static final ArrayList<LoginListener> loginListeners = new ArrayList<>();
+    private static final ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
+
     private static Comms comms;
     private static Client client;
 
@@ -70,6 +74,7 @@ public final class Client implements ConnectionListener {
             }
         });
         Login loginWindow = new Login();
+
         loginWindow.setVisible(true);
     }
 
@@ -100,12 +105,9 @@ public final class Client implements ConnectionListener {
             ObjectOutputStream outputStream = new ObjectOutputStream(plainSocket.getOutputStream());
             ObjectInputStream inputStream = new ObjectInputStream(plainSocket.getInputStream());
 
-
             // Create comms class
             Client.comms = new Comms(plainSocket, inputStream, outputStream);
-
             ConnectHandler connectHandler = new ConnectHandler();
-
             Client.comms.start();
 
             try {
@@ -118,7 +120,7 @@ public final class Client implements ConnectionListener {
 
                 // Create SSLSocket
                 SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
-                SSLSocket secureSocket = (SSLSocket) sf.createSocket(server.getAddress(), server.getSecurePort());
+                SSLSocket secureSocket = (SSLSocket)sf.createSocket(server.getAddress(), server.getSecurePort());
                 secureSocket.setUseClientMode(true);
                 secureSocket.setEnabledProtocols(StrongTls.intersection(secureSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
                 log.debug("Enabled Protocols: ");
@@ -257,7 +259,7 @@ public final class Client implements ConnectionListener {
                         Client.fireRegisterSuccessHandler((User) packet.getPayload());
                         break;
                     case REGISTER_FAIL:
-                        Client.fireRegisterFailHandler((String) packet.getPayload());
+                        Client.fireRegisterFailHandler((String)packet.getPayload());
                         break;
                     case NOK:
                         Client.fireRegisterFailHandler("Server failed to process request.");
@@ -269,7 +271,6 @@ public final class Client implements ConnectionListener {
             }
         };
 
-        log.trace("password: {}", password);
         Client.comms.addMessageListener(handler);
         Client.comms.sendMessage(new Packet<>(PacketType.REGISTER, new RegisterUser(user, password, passwordConfirm)));
 
@@ -504,11 +505,5 @@ public final class Client implements ConnectionListener {
     public static void removeConnectionListener(ConnectionListener listener) {
         Client.listenerList.remove(ConnectionListener.class, listener);
     }
-
-
-
-
-
-
     //endregion
 }
