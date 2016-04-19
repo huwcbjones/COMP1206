@@ -5,7 +5,6 @@ import shared.exceptions.ValidationFailedException;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -100,7 +99,6 @@ public final class ValidationUtils {
             number |= Character.isDigit(c);
 
             if (lower & upper & number) {
-                Arrays.fill(password, '\u0000');
                 return;
             }
         }
