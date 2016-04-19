@@ -7,6 +7,7 @@ import client.utils.ConnectHandler;
 import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Login;
+import client.windows.Main;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +25,7 @@ import shared.utils.ReplyWaiter;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,11 +46,6 @@ public final class Client implements ConnectionListener {
     private static final EventListenerList listenerList = new EventListenerList();
     private static User user;
     private static boolean isConnected = false;
-
-    private static final EventListenerList listenerList = new EventListenerList();
-
-    private static final ArrayList<LoginListener> loginListeners = new ArrayList<>();
-    private static final ArrayList<ConnectionListener> connectionListeners = new ArrayList<>();
 
     private static Comms comms;
     private static Client client;
