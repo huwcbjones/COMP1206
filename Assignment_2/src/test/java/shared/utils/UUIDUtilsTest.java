@@ -20,4 +20,11 @@ public class UUIDUtilsTest {
         assertEquals(uuid, UUIDUtils.BytesToUUID(uuid_bytes));
     }
 
+    @Test
+    public void base64Check() throws Exception{
+        UUID uuid = UUID.randomUUID();
+        System.out.println(uuid);
+        System.out.println(UUIDUtils.UUIDToBase64String(uuid));
+        System.out.println(UUIDUtils.UUIDToBase64String(uuid).length());
+    }
 }
