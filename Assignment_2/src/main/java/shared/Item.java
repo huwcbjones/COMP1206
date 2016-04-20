@@ -2,9 +2,10 @@ package shared;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -16,17 +17,29 @@ import java.util.UUID;
  */
 public class Item implements Serializable {
 
-    private UUID itemID;
-    private UUID userID;
-    private String title;
-    private String description;
-    private ArrayList<String> keywords;
-    private Calendar startTime;
-    private Calendar endTime;
-    private BigDecimal reservePrice;
-    private ArrayList<Bid> bids;
+    private final UUID itemID;
+    private final UUID userID;
+    private final String title;
+    private final String description;
+    private final HashSet<String> keywords;
+    private final Timestamp startTime;
+    private final Timestamp endTime;
+    private final BigDecimal reservePrice;
+    private final ArrayList<Bid> bids;
     private Bid topBid;
 
+    public Item(UUID itemID, UUID userID, String title, String description, HashSet<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<Bid> bids) {
+        this.itemID = itemID;
+        this.userID = userID;
+        this.title = title;
+        this.description = description;
+        this.keywords = keywords;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.reservePrice = reservePrice;
+        this.bids = bids;
+        this.setTopBid();
+    }
 
     private void setTopBid() {
         for (Bid b : this.bids) {
@@ -80,5 +93,9 @@ public class Item implements Serializable {
 
     public String getDescription() {
         return this.description;
+    }
+
+    public static ItemBuilder createBuilder(){
+        return new ItemBuilder();
     }
 }
