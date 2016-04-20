@@ -36,7 +36,7 @@ public class LoginTask extends Task {
 
         String username = new String(this.details[0]);
         char[] password = this.details[1];
-        log.trace("u: {}, p: {}", username, password);
+
         if (username.length() == 0) {
             log.trace("Username was blank.");
             this.client.sendPacket(LoginTask.invalidCredentials());
@@ -53,7 +53,7 @@ public class LoginTask extends Task {
         try {
             User user = Server.getData().getUser(username);
             if (user != null) {
-                log.trace("Authenticating user...");
+                log.debug("Authenticating user...");
                 user.login(password);
                 log.info("{} ({}) logged in on Client #{}", user.getUsername(), user.getUniqueID(), this.client.getClientID());
                 this.client.sendPacket(new Packet<>(PacketType.LOGIN_SUCCESS, user.getSharedUser()));
