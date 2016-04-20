@@ -4,7 +4,7 @@
         <Console name="stdout" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{yyyy/MM/dd HH:mm:ss.SSS}][%highlight{%-5level}][%t]\t%msg%n"/>
         </Console>
-        <RollingFile name="logfile" fileName="logs/biddrd.log" filePattern="logs/biddrd-%d{yyyy-MM-dd}-%i.log.gz" maxBackupIndex="20">
+        <RollingFile name="logfile" fileName="logs/biddrd.log" filePattern="logs/biddrd-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="[%d{yyyy/MM/dd HH:mm:ss.SSS}][%-5level][%t]\t%msg%n" />
             <Policies>
                 <OnStartupTriggeringPolicy/>
