@@ -39,7 +39,7 @@ public enum PacketType {
      */
     SECURE,
 
-    //region LoginWindow Types
+    //region Login Types
     LOGIN,
     LOGIN_FAIL,
     LOGIN_SUCCESS,
@@ -53,6 +53,13 @@ public enum PacketType {
     REGISTER_SUCCESS,
     //endregion
 
+    CREATE_ITEM,
+    EDIT_ITEM,
+    SEARCH_ITEM,
+
+    BID,
+    FETCH_BIDS,
+
     //region User
 
     //endregion
@@ -62,6 +69,6 @@ public enum PacketType {
     /**
      * Server sends a ping to client to check client is alive, if client is alive, a ping is sent back
      */
-    PING,
+    PING
     //endregion
 }
