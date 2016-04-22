@@ -11,10 +11,14 @@
                 <TimeBasedTriggeringPolicy/>
             </Policies>
         </RollingFile>
+        <JTextAreaAppender name="jtextarea" maxlines="5000">
+            <PatternLayout pattern="[%d{yyyy/MM/dd HH:mm:ss.SSS}][%-5level] %msg%n"/>
+        </JTextAreaAppender>
     </Appenders>
     <loggers>
         <root level="all">
             <appender-ref ref="stdout" level="ALL"/>
+            <appender-ref ref="jtextarea" level="INFO"/>
             <appender-ref ref="logfile" level="INFO"/>
         </root>
     </loggers>
