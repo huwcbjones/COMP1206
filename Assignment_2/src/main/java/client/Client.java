@@ -70,9 +70,11 @@ public final class Client implements ConnectionListener {
                 });
             }
         });
-        Login loginWindow = new Login();
 
-        loginWindow.setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            Login loginWindow = new Login();
+            loginWindow.setVisible(true);
+        });
     }
 
     private void shutdown() {
@@ -117,7 +119,7 @@ public final class Client implements ConnectionListener {
 
                 // Create SSLSocket
                 SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
-                SSLSocket secureSocket = (SSLSocket)sf.createSocket(server.getAddress(), server.getSecurePort());
+                SSLSocket secureSocket = (SSLSocket) sf.createSocket(server.getAddress(), server.getSecurePort());
                 secureSocket.setUseClientMode(true);
                 secureSocket.setEnabledProtocols(StrongTls.intersection(secureSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
                 log.debug("Enabled Protocols: ");
@@ -256,7 +258,7 @@ public final class Client implements ConnectionListener {
                         Client.fireRegisterSuccessHandler((User) packet.getPayload());
                         break;
                     case REGISTER_FAIL:
-                        Client.fireRegisterFailHandler((String)packet.getPayload());
+                        Client.fireRegisterFailHandler((String) packet.getPayload());
                         break;
                     case NOK:
                         Client.fireRegisterFailHandler("Server failed to process request.");
@@ -410,12 +412,6 @@ public final class Client implements ConnectionListener {
      */
     public static void addPacketListener(PacketListener listener) {
         Client.comms.addMessageListener(listener);
-    }    /**
-     * Fires when the connection succeeds
-     */
-    @Override
-    public void connectionSucceeded() {
-        fireConnectionSucceeded();
     }
 
     /**
@@ -426,14 +422,11 @@ public final class Client implements ConnectionListener {
     public static void removePacketListener(PacketListener listener) {
         Client.comms.removeMessageListener(listener);
     }    /**
-     * Fires when the connection fails
-     *
-     * @param reason Reason why connection failed
+     * Fires when the connection succeeds
      */
     @Override
-    public void connectionFailed(String reason) {
-        Client.isConnected = false;
-        fireConnectionFailed(reason);
+    public void connectionSucceeded() {
+        fireConnectionSucceeded();
     }
 
     /**
@@ -443,20 +436,7 @@ public final class Client implements ConnectionListener {
      */
     public static void addRegisterListener(RegisterListener listener) {
         Client.listenerList.add(RegisterListener.class, listener);
-    }    /**
-     * Fires when the connection is closed
-     *
-     * @param reason Reason why the connection is closed
-     */
-    @Override
-    public void connectionClosed(String reason) {
-        Client.isConnected = false;
-        log.info("Connection to server closed. {}", reason);
-        fireConnectionClosed(reason);
     }
-    //endregion
-
-    //region Add/Remove Event Handlers
 
     /**
      * Removes a Register listener to the Client
@@ -465,6 +445,15 @@ public final class Client implements ConnectionListener {
      */
     public static void removeRegisterListener(RegisterListener listener) {
         Client.listenerList.remove(RegisterListener.class, listener);
+    }    /**
+     * Fires when the connection fails
+     *
+     * @param reason Reason why connection failed
+     */
+    @Override
+    public void connectionFailed(String reason) {
+        Client.isConnected = false;
+        fireConnectionFailed(reason);
     }
 
     /**
@@ -483,7 +472,20 @@ public final class Client implements ConnectionListener {
      */
     public static void removeLoginListener(LoginListener listener) {
         Client.listenerList.remove(LoginListener.class, listener);
+    }    /**
+     * Fires when the connection is closed
+     *
+     * @param reason Reason why the connection is closed
+     */
+    @Override
+    public void connectionClosed(String reason) {
+        Client.isConnected = false;
+        log.info("Connection to server closed. {}", reason);
+        fireConnectionClosed(reason);
     }
+    //endregion
+
+    //region Add/Remove Event Handlers
 
     /**
      * Adds a connection listener to the Client
@@ -502,5 +504,11 @@ public final class Client implements ConnectionListener {
     public static void removeConnectionListener(ConnectionListener listener) {
         Client.listenerList.remove(ConnectionListener.class, listener);
     }
+
+
+
+
+
+
     //endregion
 }
