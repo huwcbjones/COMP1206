@@ -156,7 +156,7 @@ public class WorkerPool {
 
         @Override
         public void run() {
-            log.trace("Cleaning Scheduled Tasks ArrayList...");
+            log.trace("Cleaning Scheduled Tasks...");
             ArrayList<ScheduledFuture> tasks = new ArrayList<>(WorkerPool.this.futureTasks);
             for(ScheduledFuture task: tasks){
                 if(task.isDone()){
