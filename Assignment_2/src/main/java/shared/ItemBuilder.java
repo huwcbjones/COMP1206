@@ -1,5 +1,6 @@
 package shared;
 
+import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class ItemBuilder {
     private Timestamp endTime = null;
     private BigDecimal reservePrice = null;
     private ArrayList<Bid> bids = new ArrayList<>();
+    private BufferedImage image = null;
 
     public Item getItem() throws IllegalArgumentException {
         if (itemID == null) {
@@ -46,7 +48,7 @@ public class ItemBuilder {
         if (reservePrice == null) {
             reservePrice = BigDecimal.ZERO;
         }
-        return new Item(itemID, userID, title, description, keywords, startTime, endTime, reservePrice, bids);
+        return new Item(itemID, userID, title, description, keywords, startTime, endTime, reservePrice, bids, image);
     }
 
     public ItemBuilder setID(UUID ID) {
@@ -84,43 +86,48 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder addKeyword(String keyword){
+    public ItemBuilder addKeyword(String keyword) {
         this.keywords.add(keyword);
         return this;
     }
 
-    public ItemBuilder addAllKeywords(String[] keywords){
+    public ItemBuilder addAllKeywords(String[] keywords) {
         this.keywords.addAll(Arrays.asList(keywords));
         return this;
     }
 
-    public ItemBuilder removeKeyword(String keyword){
+    public ItemBuilder removeKeyword(String keyword) {
         this.keywords.remove(keyword);
         return this;
     }
 
-    public ItemBuilder removeAllKeywords(String[] keywords){
+    public ItemBuilder removeAllKeywords(String[] keywords) {
         this.keywords.removeAll(Arrays.asList(keywords));
         return this;
     }
 
-    public ItemBuilder addBid(Bid bid){
+    public ItemBuilder addBid(Bid bid) {
         this.bids.add(bid);
         return this;
     }
 
-    public ItemBuilder addAllBids(Bid[] bids){
+    public ItemBuilder addAllBids(Bid[] bids) {
         this.bids.addAll(Arrays.asList(bids));
         return this;
     }
 
-    public ItemBuilder removeBid(Bid bid){
+    public ItemBuilder removeBid(Bid bid) {
         this.bids.remove(bid);
         return this;
     }
 
-    public ItemBuilder removeAllBids(Bid[] bids){
+    public ItemBuilder removeAllBids(Bid[] bids) {
         this.bids.removeAll(Arrays.asList(bids));
+        return this;
+    }
+
+    public ItemBuilder setImage(BufferedImage image) {
+        this.image = image;
         return this;
     }
 }
