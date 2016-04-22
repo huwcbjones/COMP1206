@@ -1,3 +1,7 @@
+import server.ServerGUI;
+
+import javax.swing.*;
+
 /**
  * Auction Server GUI entry point
  *
@@ -7,6 +11,8 @@
 public class BiddrServer {
 
     public static void main(String[] args){
-
+        SwingUtilities.invokeLater(() ->{
+            ServerGUI s = new ServerGUI();
+        });
     }
 }
