@@ -4,6 +4,8 @@ import com.djdch.log4j.StaticShutdownCallbackRegistry;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import server.events.LoginListener;
+import server.events.ServerListener;
 import server.events.ServerPacketListener;
 import server.exceptions.OperationFailureException;
 import server.tasks.PacketHandler;
@@ -12,6 +14,7 @@ import shared.exceptions.ConfigLoadException;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.swing.event.EventListenerList;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -38,6 +41,9 @@ public final class Server {
     private AtomicLong clientConnectionCounter = new AtomicLong(0);
     private ServerListenThread plainSocket;
     private ServerListenThread secureSocket;
+    private final EventListenerList listeners = new EventListenerList();
+
+    private boolean isRunning = false;
 
     static {
         System.setProperty("log4j.shutdownCallbackRegistry", "com.djdch.log4j.StaticShutdownCallbackRegistry");
@@ -46,6 +52,7 @@ public final class Server {
     public Server() {
         clients = new HashMap<>();
         Server.server = this;
+        Runtime.getRuntime().addShutdownHook(new shutdownThread());
     }
 
     public void setConfigFile(String file) {
@@ -71,14 +78,15 @@ public final class Server {
     }
 
     public void run(boolean createDatabase) {
-        Runtime.getRuntime().addShutdownHook(new shutdownThread());
-
+        this.fireServerStarting();
         log.info("Starting server...");
+
         this.loadConfig();
         try {
             this.loadData(createDatabase);
         } catch (OperationFailureException e) {
             log.fatal(e.getMessage());
+            this.fireServerShutdown();
             return;
         }
         this.startWorkers();
@@ -87,6 +95,7 @@ public final class Server {
             this.createSockets();
         } catch (IOException | OperationFailureException e) {
             log.error("Failed to create socket: {}", e.getMessage());
+            this.fireServerShutdown();
             return;
         }
 
@@ -94,6 +103,8 @@ public final class Server {
         if (Server.config.isSecureConnectionEnabled()) {
             this.secureSocket.start();
         }
+        this.isRunning = true;
+        this.fireServerStarted();
     }
 
     private void loadConfig() {
@@ -157,7 +168,15 @@ public final class Server {
     }
 
     public void shutdownServer() {
+        new shutdownThread().run();
+    }
+
+    private void doShutdown(){
+        if(!this.isRunning) return;
+
         log.info("Server shutting down...");
+        this.fireServerShuttingDown();
+
 
         // Only send disconnects if there are clients connected
         if (this.clients.size() != 0) {
@@ -189,6 +208,8 @@ public final class Server {
 
         log.info("Server safely shut down!");
         StaticShutdownCallbackRegistry.invoke();
+        this.isRunning = false;
+        this.fireServerShutdown();
     }
 
     public void saveState() {
@@ -251,7 +272,91 @@ public final class Server {
      * @param event Event to dispatch
      */
     public static void dispatchEvent(Runnable event){
-        Server.workPool.dispatchEvent(event);
+        if(server.isRunning) {
+            Server.workPool.dispatchEvent(event);
+        } else {
+            event.run();
+        }
+    }
+
+    /**
+     * Adds a Login listener to this server instance
+     *
+     * @param listener LoginListener
+     */
+    public static void addLoginListener(LoginListener listener){
+        Server.getServer().listeners.add(LoginListener.class, listener);
+    }
+
+    /**
+     * Removes a Login listener to this server instance
+     *
+     * @param listener LoginListener
+     */
+    public static void removeLoginListener(LoginListener listener){
+        Server.getServer().listeners.remove(LoginListener.class, listener);
+    }
+
+    /**
+     * Adds a Server listener to this server instance
+     *
+     * @param listener ServerListener
+     */
+    public static void addServerListener(ServerListener listener){
+        Server.getServer().listeners.add(ServerListener.class, listener);
+    }
+
+    /**
+     * Removes a Server listener to this server instance
+     *
+     * @param listener ServerListener
+     */
+    public static void removeServerListener(ServerListener listener){
+        Server.getServer().listeners.remove(ServerListener.class, listener);
+    }
+
+    private void fireServerStarting(){
+        Server.dispatchEvent(() ->{
+            Object[] listeners = this.listeners.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == ServerListener.class) {
+                    ((ServerListener) listeners[i + 1]).serverStarting();
+                }
+            }
+        });
+    }
+
+    private void fireServerStarted(){
+        Server.dispatchEvent(() ->{
+            Object[] listeners = this.listeners.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == ServerListener.class) {
+                    ((ServerListener) listeners[i + 1]).serverStarted();
+                }
+            }
+        });
+    }
+
+    private void fireServerShuttingDown(){
+        Server.dispatchEvent(() ->{
+            Object[] listeners = this.listeners.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == ServerListener.class) {
+                    ((ServerListener) listeners[i + 1]).serverShuttingDown();
+                }
+            }
+        });
+    }
+
+    private void fireServerShutdown(){
+        Server.dispatchEvent(() ->{
+            Object[] listeners = this.listeners.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == ServerListener.class) {
+                    ((ServerListener) listeners[i + 1]).serverShutdown();
+                }
+            }
+        });
     }
 
     /**
@@ -264,7 +369,7 @@ public final class Server {
 
         @Override
         public void run() {
-            shutdownServer();
+            doShutdown();
         }
     }
 
