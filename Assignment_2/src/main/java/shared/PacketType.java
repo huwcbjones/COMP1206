@@ -54,7 +54,11 @@ public enum PacketType {
     //endregion
 
     CREATE_ITEM,
+    CREATE_ITEM_FAIL,
+    CREATE_ITEM_SUCCESS,
     EDIT_ITEM,
+    EDIT_ITEM_FAIL,
+    EDIT_ITEM_SUCCESS,
     SEARCH_ITEM,
 
     BID,
