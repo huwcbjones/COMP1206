@@ -125,7 +125,7 @@ public class RegisterTask extends Task {
         ValidationUtils.validateName(this.user.getFirstName());
         ValidationUtils.validateName(this.user.getLastName());
         ValidationUtils.validatePassword(this.user.getPassword());
-        if (Arrays.equals(this.user.getPassword(), this.user.getPasswordConfirm())) {
+        if (!Arrays.equals(this.user.getPassword(), this.user.getPasswordConfirm())) {
             throw new ValidationFailedException("Passwords don't match.");
         }
     }
