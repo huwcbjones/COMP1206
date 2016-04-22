@@ -7,11 +7,15 @@ import org.sqlite.javax.SQLiteConnectionPoolDataSource;
 import org.sqlite.javax.SQLitePooledConnection;
 import server.exceptions.OperationFailureException;
 import server.objects.User;
+import shared.Bid;
+import shared.Item;
+import shared.ItemBuilder;
 import shared.utils.UUIDUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -29,6 +33,8 @@ public final class DataPersistence {
 
     private final ConcurrentHashMap<UUID, User> users = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, UUID> usernameToUUID = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<UUID, Item> items = new ConcurrentHashMap<>();
 
     private SQLitePooledConnection dataSource;
 
@@ -84,7 +90,7 @@ public final class DataPersistence {
         if (shouldCreateInitialDB) {
             this.createDatabaseStructure();
         }
-
+        this.loadServer();
         log.info("Loaded data!");
     }
 
@@ -124,7 +130,7 @@ public final class DataPersistence {
                 "  description TEXT NOT NULL," +
                 "  startTime DATETIME NOT NULL," +
                 "  endTime DATETIME NOT NULL," +
-                "  reservePrice INT," +
+                "  reservePrice DECIMAL(9, 2)," +
                 "  FOREIGN KEY (userID) REFERENCES users(userID)" +
                 ")";
             statement.execute(itemsTable);
@@ -153,6 +159,7 @@ public final class DataPersistence {
 
             statement.execute("CREATE UNIQUE INDEX username ON users (username)");
             statement.execute("CREATE UNIQUE INDEX userID ON items (userID)");
+            statement.execute("CREATE UNIQUE INDEX itemKeywordIndex ON item_keywords (itemID, keywordID)");
             log.info("Created indexes!");
 
         } catch (SQLException e) {
@@ -239,6 +246,147 @@ public final class DataPersistence {
                 log.trace(suppress);
             }
         }
+    }
+
+    /**
+     * Loads items with itemID into memory
+     *
+     * @param query_itemID ItemID of item
+     * @throws OperationFailureException If the operation failed
+     */
+    private void loadItem(UUID query_itemID) throws OperationFailureException {
+        log.debug("Querying database for Item({})", query_itemID);
+        String selectItemSql = "SELECT itemID, userID, title, description, startTime, endTime, reservePrice FROM items WHERE itemID=?";
+        String selectBidSql = "SELECT bidID, userID, price, time FROM bids WHERE itemID=?";
+        Connection c = null;
+        PreparedStatement selectItemQuery = null;
+        PreparedStatement selectBidQuery = null;
+        try {
+            c = this.getConnection();
+
+            selectItemQuery = c.prepareStatement(selectItemSql);
+            selectBidQuery = c.prepareStatement(selectBidSql);
+
+            selectItemQuery.setBytes(1, UUIDUtils.UUIDToBytes(query_itemID));
+            ResultSet itemResults = selectItemQuery.executeQuery();
+
+            ItemBuilder ib;
+            Item newItem;
+            Bid newBid;
+            ResultSet bidResults;
+
+            while (itemResults.next()) {
+                ib = Item.createBuilder();
+                ib
+                    .setID(query_itemID)
+                    .setUserID(UUIDUtils.BytesToUUID(itemResults.getBytes("userID")))
+                    .setTitle(itemResults.getString("title"))
+                    .setDescription(itemResults.getString("description"))
+                    .setStartTime(itemResults.getTimestamp("startTime"))
+                    .setEndTime(itemResults.getTimestamp("endTime"))
+                    .setReservePrice(itemResults.getBigDecimal("reservePrice"));
+
+                selectBidQuery.setBytes(1, UUIDUtils.UUIDToBytes(query_itemID));
+                bidResults = selectBidQuery.executeQuery();
+
+                while (bidResults.next()) {
+                    newBid = new Bid(
+                        query_itemID,
+                        UUIDUtils.BytesToUUID(bidResults.getBytes("itemID")),
+                        UUIDUtils.BytesToUUID(bidResults.getBytes("userID")),
+                        bidResults.getBigDecimal("bidPrice"),
+                        bidResults.getTimestamp("time")
+                    );
+                    ib.addBid(newBid);
+                }
+
+                newItem = ib.getItem();
+                this.items.put(newItem.getID(), newItem);
+                log.info("Loaded item to memory.");
+            }
+            itemResults.close();
+        } catch (SQLException e) {
+            log.debug("SQLState: {}", e.getSQLState());
+            log.debug("Error Code: {}", e.getErrorCode());
+            log.debug("Message: {}", e.getMessage());
+            log.debug("Cause: {}", e.getCause());
+            log.error("Failed to load user.", e);
+        } finally {
+            try {
+                if (selectItemQuery != null) {
+                    selectItemQuery.close();
+                }
+                if (selectBidQuery != null) {
+                    selectBidQuery.close();
+                }
+                if (c != null) {
+                    c.close();
+                }
+            } catch (SQLException suppress) {
+                log.trace(suppress);
+            }
+        }
+    }
+
+    /**
+     * Loads all the data into the server and starts tasks
+     *
+     * @throws OperationFailureException
+     */
+    private void loadServer() throws OperationFailureException {
+        ArrayList<UUID> itemIDs = getCurrentItems(true);
+        for(UUID itemID: itemIDs){
+            this.loadItem(itemID);
+        }
+    }
+
+    /**
+     * Gets an ArrayList of item UUIDs where the Item is currently in Auction
+     *
+     * @param includePreAuction If true, the function will also return items that have yet to start their auction.
+     * @return UUIDs of Items in Auction
+     * @throws OperationFailureException If the operation failed
+     */
+    private ArrayList<UUID> getCurrentItems(boolean includePreAuction) throws OperationFailureException {
+        log.debug("Querying database for all 'in-auction' items");
+        String selectItemSql;
+        if(includePreAuction) {
+            selectItemSql = "SELECT itemID FROM items WHERE DATE('now') < endTime";
+        } else {
+            selectItemSql = "SELECT itemID FROM items WHERE DATE('now') BETWEEN startTime AND endTime";
+        }
+        Connection c = null;
+        PreparedStatement selectItemQuery = null;
+        ArrayList<UUID> itemIDs = new ArrayList<>();
+
+        try {
+            c = this.getConnection();
+            selectItemQuery = c.prepareStatement(selectItemSql);
+            ResultSet itemResults = selectItemQuery.executeQuery();
+
+            while (itemResults.next()) {
+                itemIDs.add(UUIDUtils.BytesToUUID(itemResults.getBytes("itemID")));
+            }
+            itemResults.close();
+        } catch (SQLException e) {
+            log.debug("SQLState: {}", e.getSQLState());
+            log.debug("Error Code: {}", e.getErrorCode());
+            log.debug("Message: {}", e.getMessage());
+            log.debug("Cause: {}", e.getCause());
+            log.error("Failed to load user.", e);
+        } finally {
+            try {
+                if (selectItemQuery != null) {
+                    selectItemQuery.close();
+                }
+                if (c != null) {
+                    c.close();
+                }
+            } catch (SQLException suppress) {
+                log.trace(suppress);
+            }
+        }
+        return itemIDs;
     }
     //endregion
 
