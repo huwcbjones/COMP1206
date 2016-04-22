@@ -1,5 +1,6 @@
 package shared;
 
+import java.awt.image.BufferedImage;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -26,9 +27,10 @@ public class Item implements Serializable {
     private final Timestamp endTime;
     private final BigDecimal reservePrice;
     private final ArrayList<Bid> bids;
+    private final BufferedImage image;
     private Bid topBid;
 
-    public Item(UUID itemID, UUID userID, String title, String description, HashSet<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<Bid> bids) {
+    public Item(UUID itemID, UUID userID, String title, String description, HashSet<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<Bid> bids, BufferedImage image) {
         this.itemID = itemID;
         this.userID = userID;
         this.title = title;
@@ -38,6 +40,7 @@ public class Item implements Serializable {
         this.endTime = endTime;
         this.reservePrice = reservePrice;
         this.bids = bids;
+        this.image = image;
         this.setTopBid();
     }
 
@@ -50,6 +53,25 @@ public class Item implements Serializable {
             }
         }
     }
+
+    /**
+     * Gets the UUID of the item
+     *
+     * @return UUID of item
+     */
+    public UUID getID() {
+        return this.itemID;
+    }
+
+    /**
+     * Gets the UUID of the User who placed this item for auction
+     *
+     * @return UUID of seller
+     */
+    public UUID getUserID() {
+        return this.userID;
+    }
+
 
     /**
      * Gets the item title
@@ -79,23 +101,57 @@ public class Item implements Serializable {
         return String.join(", ", keywords);
     }
 
+    /**
+     * Gets the top Bid
+     *
+     * @return Top Bid
+     */
     public Bid getTopBid() {
         return this.topBid;
     }
 
+    /**
+     * Gets the number of bids on an item
+     *
+     * @return NUmber of bids
+     */
     public int getNumberOfBids() {
         return this.bids.size();
     }
 
+    /**
+     * Gets the reserve price formatted as a currency
+     *
+     * @return String, reserve price in format £x.xx
+     */
     public String getReserveString() {
         return NumberFormat.getCurrencyInstance(Locale.UK).format(this.reservePrice);
     }
 
+    /**
+     * Gets the description
+     *
+     * @return Description of item
+     */
     public String getDescription() {
         return this.description;
     }
 
-    public static ItemBuilder createBuilder(){
+    /**
+     * Gets the item's image
+     *
+     * @return BufferedImage, item image
+     */
+    public BufferedImage getImage() {
+        return this.image;
+    }
+
+    /**
+     * Creates an ItemBuilder instance
+     *
+     * @return A new ItemBuilder instance.
+     */
+    public static ItemBuilder createBuilder() {
         return new ItemBuilder();
     }
 }
