@@ -5,11 +5,11 @@ import client.events.LoginListener;
 import client.utils.ImagePanel;
 import client.utils.Server;
 import client.utils.SpringUtilities;
-import client.utils.WindowTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
 import shared.events.ConnectionAdapter;
+import shared.utils.WindowTemplate;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -154,7 +154,7 @@ public final class Login extends WindowTemplate {
         this.panel_fields.add(this.label_server);
 
         this.combo_server = new JComboBox<>();
-        for (Server s : this.config.getServers()) {
+        for (Server s : Client.getConfig().getServers()) {
             this.combo_server.addItem(s);
         }
 
@@ -293,7 +293,7 @@ public final class Login extends WindowTemplate {
                 Client.disconnect();
             }
 
-            Login.this.config.setSelectedServer(selectedServer);
+            Client.getConfig().setSelectedServer(selectedServer);
         }
     }
 

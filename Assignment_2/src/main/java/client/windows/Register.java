@@ -4,12 +4,12 @@ import client.Client;
 import client.events.RegisterListener;
 import client.utils.HintTextFieldUI;
 import client.utils.SpringUtilities;
-import client.utils.WindowTemplate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.User;
 import shared.exceptions.ValidationFailedException;
 import shared.utils.ValidationUtils;
+import shared.utils.WindowTemplate;
 
 import javax.swing.*;
 import java.awt.*;
@@ -149,7 +149,7 @@ public final class Register extends WindowTemplate {
         this.label_server = new JLabel("Server", JLabel.LEADING);
         this.panel_form.add(this.label_server);
 
-        this.text_server = new JTextField(this.config.getSelectedServer().getName());
+        this.text_server = new JTextField(Client.getConfig().getSelectedServer().getName());
         this.text_server.setEnabled(false);
         this.panel_form.add(this.text_server);
 
@@ -385,7 +385,7 @@ public final class Register extends WindowTemplate {
                 JOptionPane.showMessageDialog(
                     Register.this,
                     "Hi " + user.getFullName() + ",\n" +
-                        "You've successfully registered for Biddr on " + Register.this.config.getSelectedServer().getName() + ".\n" +
+                        "You've successfully registered for Biddr on " + Client.getConfig().getSelectedServer().getName() + ".\n" +
                         "Click OK to continue to login to Biddr.\n\n" +
                         "Just to confirm, your login details are as follows:\n" +
                         "\t- Username: " + user.getUsername() + "\n" +

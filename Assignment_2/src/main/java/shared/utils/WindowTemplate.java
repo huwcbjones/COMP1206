@@ -1,7 +1,5 @@
-package client.utils;
+package shared.utils;
 
-import client.Client;
-import client.Config;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,12 +15,22 @@ import java.net.URL;
 public abstract class WindowTemplate extends JFrame {
 
     protected static final Logger log = LogManager.getLogger(WindowTemplate.class);
-    protected final Config config;
 
+    public WindowTemplate(){
+        super();
+        this.setImageIcon();
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+            log.debug("Failed to set System Look and Feel. {}", ex.getMessage());
+            log.trace(ex);
+        }
+        this.initComponents();
+    }
     public WindowTemplate(String title) {
         super(title + " | Biddr");
         this.setImageIcon();
-        this.config = Client.getConfig();
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());

@@ -1,6 +1,6 @@
 package client.windows;
 
-import client.utils.WindowTemplate;
+import shared.utils.WindowTemplate;
 
 import javax.swing.*;
 import java.awt.*;
