@@ -11,10 +11,12 @@ import shared.PacketType;
 import shared.RegisterUser;
 import shared.exceptions.ValidationFailedException;
 import shared.utils.UUIDUtils;
+import shared.utils.ValidationUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -119,6 +121,12 @@ public class RegisterTask extends Task {
     }
 
     private void validateFields() throws ValidationFailedException {
-
+        ValidationUtils.validateUsername(this.user.getUsername());
+        ValidationUtils.validateName(this.user.getFirstName());
+        ValidationUtils.validateName(this.user.getLastName());
+        ValidationUtils.validatePassword(this.user.getPassword());
+        if (Arrays.equals(this.user.getPassword(), this.user.getPasswordConfirm())) {
+            throw new ValidationFailedException("Passwords don't match.");
+        }
     }
 }
