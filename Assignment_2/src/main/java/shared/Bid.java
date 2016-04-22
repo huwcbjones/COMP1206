@@ -2,6 +2,7 @@ package shared;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.UUID;
@@ -14,9 +15,55 @@ import java.util.UUID;
  */
 public class Bid implements Serializable, Comparable<Bid> {
 
-    private BigDecimal bidPrice;
-    private UUID itemID;
-    private UUID userID;
+    private final UUID bidID;
+    private final UUID itemID;
+    private final UUID userID;
+    private final BigDecimal bidPrice;
+    private final Timestamp time;
+
+    public Bid(UUID bidID, UUID itemID, UUID userID, BigDecimal bidPrice, Timestamp time) {
+        this.bidID = bidID;
+        this.itemID = itemID;
+        this.userID = userID;
+        this.bidPrice = bidPrice;
+        this.time = time;
+    }
+
+    /**
+     * Gets the UUID of this Bid
+     *
+     * @return UUID of bid
+     */
+    public UUID getID() {
+        return bidID;
+    }
+
+    /**
+     * Gets the UUID of the Item the bid was placed on
+     *
+     * @return UUID of Item
+     */
+    public UUID getItemID() {
+        return itemID;
+    }
+
+    /**
+     * Gets UUID of User that placed the bid
+     *
+     * @return UUID of buyer
+     */
+    public UUID getUserID() {
+        return userID;
+    }
+
+    /**
+     * Gets the time the bid was placed
+     *
+     * @return Time bid was placed
+     */
+    public Timestamp getTime() {
+        return time;
+    }
 
     @Override
     public int compareTo(Bid o) {
@@ -24,11 +71,22 @@ public class Bid implements Serializable, Comparable<Bid> {
         return this.bidPrice.compareTo(o.bidPrice);
     }
 
+    /**
+     * Gets the price as a currency formatted string
+     *
+     * @return Returns price as £x.xx
+     */
     public String getPriceString() {
         return NumberFormat.getCurrencyInstance(Locale.UK).format(this.bidPrice);
     }
 
+    /**
+     * Gets the price of the bid
+     *
+     * @return Price of bid
+     */
     public BigDecimal getPrice() {
         return this.bidPrice;
     }
+
 }
