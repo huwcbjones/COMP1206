@@ -6,6 +6,7 @@ import server.events.ServerListener;
 import server.objects.User;
 import server.utils.JTextAreaAppender;
 import shared.Item;
+import shared.components.JTextAreaOutputStream;
 import shared.utils.WindowTemplate;
 
 import javax.swing.*;
@@ -13,6 +14,7 @@ import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.PrintStream;
 
 /**
  * Server GUI interface
@@ -44,6 +46,7 @@ public final class ServerGUI extends WindowTemplate {
 
     public ServerGUI() {
         super();
+        this.redirectConsole();
         this.setMinimumSize(new Dimension(800, 600));
         this.pack();
         this.setVisible(true);
@@ -51,6 +54,12 @@ public final class ServerGUI extends WindowTemplate {
         this.setTitle(WINDOW_TITLE + " [STOPPED]");
 
         this.initEventListeners();
+    }
+
+    private void redirectConsole(){
+        PrintStream textStream = new PrintStream(new JTextAreaOutputStream(this.text_console));
+        System.setOut(textStream);
+        System.setErr(textStream);
     }
 
     /**
