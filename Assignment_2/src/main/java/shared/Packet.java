@@ -17,16 +17,16 @@ public final class Packet<T extends Serializable> implements Serializable {
     private final PacketType type;
     private final T payload;
 
-    public Packet (PacketType type, T payload) {
+    public Packet(PacketType type, T payload) {
         this.type = type;
         this.payload = payload;
     }
 
-    public T getPayload () {
+    public T getPayload() {
         return this.payload;
     }
 
-    public PacketType getType () {
+    public PacketType getType() {
         return this.type;
     }
 
@@ -76,5 +76,14 @@ public final class Packet<T extends Serializable> implements Serializable {
      */
     public static Packet<Serializable> Ping() {
         return new Packet<>(PacketType.PING, null);
+    }
+
+    /**
+     * Returns a LOGOUT packet
+     *
+     * @return LOGOUT packet
+     */
+    public static Packet<Serializable> Logout() {
+        return new Packet<>(PacketType.LOGOUT, null);
     }
 }
