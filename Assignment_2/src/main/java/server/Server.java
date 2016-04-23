@@ -8,6 +8,7 @@ import server.events.LoginListener;
 import server.events.ServerListener;
 import server.events.ServerPacketListener;
 import server.exceptions.OperationFailureException;
+import server.objects.User;
 import server.tasks.PacketHandler;
 import shared.Packet;
 import shared.exceptions.ConfigLoadException;
@@ -32,16 +33,41 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class Server {
 
     private static final Logger log = LogManager.getLogger(Server.class);
+
+    /**
+     * Static instance of Config
+     */
     private static final Config config = new Config();
+
+    /**
+     * Static instance of data persistence layer
+     */
     private static final DataPersistence data = new DataPersistence();
+
+    /**
+     * Static instance of this
+     */
     private static Server server;
+
+    /**
+     * Server WorkerPool for running tasks
+     */
     private static WorkerPool workPool;
-    private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
+
+    /**
+     * Client HashMap
+     */
     private final HashMap<Long, ClientConnection> clients;
+
     private AtomicLong clientConnectionCounter = new AtomicLong(0);
     private ServerListenThread plainSocket;
     private ServerListenThread secureSocket;
+
+    //region Event Management
     private final EventListenerList listeners = new EventListenerList();
+    private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
+    private static final LoginHandler userLoginHandler = new LoginHandler();
+    //endregion
 
     private boolean isRunning = false;
 
@@ -73,10 +99,19 @@ public final class Server {
         System.out.print(config.getConfig());
     }
 
+    //region Starting Server
+
+    /**
+     * Runs the server.
+     */
     public void run() {
         this.run(false);
     }
 
+    /**
+     * Runs the server
+     * @param createDatabase Will create the database if it does not exist
+     */
     public void run(boolean createDatabase) {
         this.fireServerStarting();
         log.info("Starting server...");
@@ -107,6 +142,9 @@ public final class Server {
         this.fireServerStarted();
     }
 
+    /**
+     * Loads the server config
+     */
     private void loadConfig() {
         log.info("Loading config...");
 
@@ -118,17 +156,33 @@ public final class Server {
         }
     }
 
+    /**
+     * Loads the data layer
+     * @param createDatabase Will create the database if it doesn't exist
+     * @throws OperationFailureException Thrown if there was an error loading data
+     */
     private void loadData(boolean createDatabase) throws OperationFailureException {
         Server.data.loadData(createDatabase);
     }
 
+    /**
+     * Starts the Worker Pool
+     */
     private void startWorkers() {
         log.info("Starting workers...");
         Server.workPool = new WorkerPool(Server.config.getWorkers());
     }
 
+    /**
+     * Creates the server sockets to listen to connections
+     * @throws IOException On Socket Error
+     * @throws OperationFailureException On Server Error
+     */
     private void createSockets() throws IOException, OperationFailureException {
+
         log.info("Starting plain socket...");
+        // Create plain ServerSocket (no encryption)
+
         ServerSocket plainSocket = new ServerSocket(Server.config.getPlainPort());
         this.plainSocket = new ServerListenThread(this, plainSocket);
         log.info("Plain socket started successfully!");
@@ -137,6 +191,8 @@ public final class Server {
         if (!Server.config.isSecureConnectionEnabled()) return;
 
         log.info("Starting secure socket...");
+
+        // Set the JVM SSL Keystore
         File keyStore = Server.config.getKeyStore();
         if (keyStore == null) {
             throw new OperationFailureException("Could not find server keystore.");
@@ -146,19 +202,26 @@ public final class Server {
         System.setProperty("javax.net.ssl.keyStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
         try {
+            // Create SLLServerSocket
             SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
             SSLServerSocket sslSocket = (SSLServerSocket) sslSocketFactory.createServerSocket(Server.config.getSecurePort());
             sslSocket.setUseClientMode(false);
+
+            // Enable strong protocols
             sslSocket.setEnabledProtocols(StrongTls.intersection(sslSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
             log.debug("Enabled Protocols: ");
             for (String protocol : sslSocket.getEnabledProtocols()) {
                 log.debug("\t- {}", protocol);
             }
+
+            // Enable stong cipher suites
             sslSocket.setEnabledCipherSuites(StrongTls.intersection(sslSocket.getSupportedCipherSuites(), StrongTls.ENABLED_CIPHER_SUITES));
             log.debug("Enabled Cipher Suites: ");
             for (String cipherSuite : sslSocket.getEnabledCipherSuites()) {
                 log.debug("\t- {}", cipherSuite);
             }
+
+            // Start Listen Thread
             this.secureSocket = new SecureServerListenThread(this, sslSocket);
         } catch (SocketException e) {
             log.debug(e);
@@ -166,7 +229,8 @@ public final class Server {
         }
         log.info("Secure socket started successfully!");
     }
-
+    //endregion
+    //region Shutting Server Down
     public void shutdownServer() {
         new shutdownThread().run();
     }
@@ -215,10 +279,7 @@ public final class Server {
     public void saveState() {
 
     }
-
-    protected long getNextClientID() {
-        return this.clientConnectionCounter.getAndIncrement();
-    }
+    //endregion
 
     void addClient(ClientConnection clientConnection) {
         this.clients.put(clientConnection.getClientID(), clientConnection);
@@ -228,6 +289,16 @@ public final class Server {
     void removeClient(ClientConnection clientConnection) {
         this.clients.remove(clientConnection.getClientID());
         clientConnection.removeServerPacketListener(this.packetTaskHandler);
+    }
+
+    //region Get Methods
+
+    /**
+     * Gets the next ClientID
+     * @return Next ClientID
+     */
+    long getNextClientID() {
+        return this.clientConnectionCounter.getAndIncrement();
     }
 
     /**
@@ -266,13 +337,18 @@ public final class Server {
         return Server.workPool;
     }
 
+    public static LoginHandler getLoginEventHandler() { return Server.userLoginHandler; }
+    //endregion
+
+    //region Event Handling and Dispatching
     /**
-     * Dispatches an event handler in the EDT (any worker pool thread)
+     * Dispatches an event handler in the EDT (any worker pool thread).
+     * Or, if the server isn't running, just run the event handler in the current thread.
      *
      * @param event Event to dispatch
      */
     public static void dispatchEvent(Runnable event){
-        if(server.isRunning) {
+        if(/*Server.getServer().isRunning &&*/ Server.workPool.isRunning()) {
             Server.workPool.dispatchEvent(event);
         } else {
             event.run();
@@ -315,6 +391,9 @@ public final class Server {
         Server.getServer().listeners.remove(ServerListener.class, listener);
     }
 
+    /**
+     * Fires server starting event
+     */
     private void fireServerStarting(){
         Server.dispatchEvent(() ->{
             Object[] listeners = this.listeners.getListenerList();
@@ -326,6 +405,9 @@ public final class Server {
         });
     }
 
+    /**
+     * Fires server started event
+     */
     private void fireServerStarted(){
         Server.dispatchEvent(() ->{
             Object[] listeners = this.listeners.getListenerList();
@@ -337,6 +419,9 @@ public final class Server {
         });
     }
 
+    /**
+     * Fires server shutting down event
+     */
     private void fireServerShuttingDown(){
         Server.dispatchEvent(() ->{
             Object[] listeners = this.listeners.getListenerList();
@@ -348,6 +433,9 @@ public final class Server {
         });
     }
 
+    /**
+     * Fires server shutdown event
+     */
     private void fireServerShutdown(){
         Server.dispatchEvent(() ->{
             Object[] listeners = this.listeners.getListenerList();
@@ -359,6 +447,9 @@ public final class Server {
         });
     }
 
+    //endregion
+
+    //region Event Handler Classes
     /**
      * Runs the server shutdown in its own thread
      */
@@ -373,6 +464,10 @@ public final class Server {
         }
     }
 
+    /**
+     * Handles Server Packets
+     * Queues PacketHandler to run in worker pool
+     */
     private class PacketTaskHandler implements ServerPacketListener {
 
         @Override
@@ -380,4 +475,47 @@ public final class Server {
             Server.workPool.queueTask(new PacketHandler(client, packet));
         }
     }
+
+    /**
+     * Handles Users logging in and out
+     */
+    private static class LoginHandler implements LoginListener {
+
+        /**
+         * Occurs when a user logs in
+         *
+         * @param user User that logged in
+         */
+        @Override
+        public void userLoggedIn(User user) {
+            Server.dispatchEvent(() ->{
+                Object[] listeners = Server.getServer().listeners.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == LoginListener.class) {
+                        ((LoginListener) listeners[i + 1]).userLoggedIn(user);
+                    }
+                }
+            });
+        }
+
+        /**
+         * Occurs when a user logs out
+         *
+         * @param user User that logged in
+         */
+        @Override
+        public void userLoggedOut(User user) {
+            log.info("User ({}) logged out on Client #{}", user.getUniqueID());
+            Server.dispatchEvent(() ->{
+                Object[] listeners = Server.getServer().listeners.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == LoginListener.class) {
+                        ((LoginListener) listeners[i + 1]).userLoggedOut(user);
+                    }
+                }
+            });
+        }
+    }
+
+    //endregion
 }
