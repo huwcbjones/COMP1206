@@ -1,12 +1,12 @@
 package server;
 
+import server.components.ItemTableModel;
 import server.components.UserTableModel;
 import server.events.LoginListener;
 import server.events.ServerAdapter;
 import server.events.ServerListener;
 import server.objects.User;
 import server.utils.JTextAreaAppender;
-import shared.Item;
 import shared.components.JTextAreaOutputStream;
 import shared.utils.WindowTemplate;
 
@@ -30,6 +30,8 @@ public final class ServerGUI extends WindowTemplate {
     private final Server server = new Server();
     private JPanel panel_GUI;
     private JPanel panel_controls;
+    private JSplitPane panel_split;
+    private JPanel panel_tables;
     private JPanel panel_results;
     private JPanel panel_users;
     private JPanel panel_items;
@@ -39,8 +41,8 @@ public final class ServerGUI extends WindowTemplate {
     private JButton btn_results;
     private JTable table_users;
     private UserTableModel model_users;
-    private JList<Item> list_items;
-    private DefaultListModel<Item> lm_items;
+    private JTable table_items;
+    private ItemTableModel model_items;
     private JTextArea text_console;
 
     private ServerListener serverListener = new ServerHandler();
@@ -69,10 +71,15 @@ public final class ServerGUI extends WindowTemplate {
      */
     @Override
     protected void initComponents() {
-        this.panel_GUI = new JPanel(new GridBagLayout());
-        GridBagConstraints c;
+        this.panel_GUI = new JPanel(new BorderLayout());
         BorderLayout borderLayout;
 
+        this.panel_split = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        this.panel_split.setResizeWeight(0.6d);
+        this.panel_split.setDividerSize(5);
+        this.panel_split.setContinuousLayout(true);
+
+        this.panel_tables = new JPanel(new GridLayout(1, 3));
         //region Controls
         borderLayout = new BorderLayout();
         this.panel_controls = new JPanel(borderLayout);
@@ -96,13 +103,7 @@ public final class ServerGUI extends WindowTemplate {
 
         this.panel_controls.add(panel_controls_inner, BorderLayout.CENTER);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 3;
-        c.weightx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        this.panel_GUI.add(this.panel_controls, c);
+        this.panel_GUI.add(this.panel_controls, BorderLayout.PAGE_START);
         //endregion
 
         //region Results
@@ -111,13 +112,7 @@ public final class ServerGUI extends WindowTemplate {
         this.panel_results.setPreferredSize(new Dimension(260, 240));
         this.panel_results.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Auction Results"));
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.weightx = 1;
-        c.weighty = 0.4;
-        c.fill = GridBagConstraints.BOTH;
-        this.panel_GUI.add(this.panel_results, c);
+        this.panel_tables.add(this.panel_results);
         //endregion
 
         //region Items
@@ -126,21 +121,19 @@ public final class ServerGUI extends WindowTemplate {
         this.panel_items.setPreferredSize(new Dimension(260, 240));
         this.panel_items.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Items in Auction"));
 
-        this.lm_items = new DefaultListModel<>();
-        this.list_items = new JList<>(this.lm_items);
-        this.list_items.setDragEnabled(false);
-        this.list_items.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        this.list_items.setLayoutOrientation(JList.VERTICAL);
+        this.model_items = new ItemTableModel();
+        this.table_items = new JTable(this.model_items);
+        this.table_items.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        this.table_items.setShowGrid(false);
+        this.table_items.setShowHorizontalLines(false);
+        this.table_items.setShowVerticalLines(true);
+        this.table_items.setRowMargin(0);
+        this.table_items.setIntercellSpacing(new Dimension(1, 1));
+        this.table_items.setFillsViewportHeight(true);
+        this.table_items.setRowSorter(new TableRowSorter<>(this.model_items));
+        this.panel_items.add(new JScrollPane(this.table_items));
 
-        this.panel_items.add(this.list_items, BorderLayout.CENTER);
-
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 1;
-        c.weightx = 1;
-        c.weighty = 0.4;
-        c.fill = GridBagConstraints.BOTH;
-        this.panel_GUI.add(this.panel_items, c);
+        this.panel_tables.add(this.panel_items);
         //endregion
 
         //region Users
@@ -160,15 +153,11 @@ public final class ServerGUI extends WindowTemplate {
         this.table_users.setFillsViewportHeight(true);
         this.table_users.setRowSorter(new TableRowSorter<>(this.model_users));
         this.panel_users.add(new JScrollPane(this.table_users), BorderLayout.CENTER);
-        c = new GridBagConstraints();
-        c.gridx = 2;
-        c.gridy = 1;
-        c.weightx = 1;
-        c.weighty = 0.4;
-        c.fill = GridBagConstraints.BOTH;
-        this.panel_GUI.add(this.panel_users, c);
+
+        this.panel_tables.add(this.panel_users);
         //endregion
 
+        this.panel_split.add(this.panel_tables);
         //region Console
         borderLayout = new BorderLayout();
         this.panel_console = new JPanel(borderLayout);
@@ -180,16 +169,10 @@ public final class ServerGUI extends WindowTemplate {
         JTextAreaAppender.addTextArea(this.text_console);
         this.panel_console.add(new JScrollPane(this.text_console), BorderLayout.CENTER);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.gridwidth = 3;
-        c.weightx = 1;
-        c.weighty = 0.6;
-        c.fill = GridBagConstraints.BOTH;
-        this.panel_GUI.add(this.panel_console, c);
+        this.panel_split.add(this.panel_console);
         //endregion
 
+        this.panel_GUI.add(this.panel_split, BorderLayout.CENTER);
         this.setContentPane(this.panel_GUI);
     }
 
