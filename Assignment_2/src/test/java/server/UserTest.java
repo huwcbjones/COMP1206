@@ -3,6 +3,7 @@ package server;
 import server.objects.User;
 
 import java.security.MessageDigest;
+import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 
@@ -24,7 +25,7 @@ public class UserTest {
 
         byte[] pwd = User.generatePasswordHash(password.toCharArray(), salt);
 
-        User testUser = new User("TestUser", "Test", "User", pwd, salt);
+        User testUser = new User(UUID.randomUUID(), "TestUser", "Test", "User", pwd, salt);
         assertTrue("Passwords don't match", testUser.isAuthenticated(password.toCharArray()));
     }
 }
