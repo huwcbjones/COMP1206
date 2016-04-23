@@ -28,8 +28,17 @@ public class WorkerPool {
         this.workerPool.scheduleWithFixedDelay(new TaskCleanup(), 5, 5, TimeUnit.MINUTES);
     }
 
-    public void dispatchEvent(Runnable event){
-        if(this.workerPool.isShutdown()){
+    /**
+     * Returns the status of the WorkerPool.
+     *
+     * @return Boolean: True = running, false = shutdown
+     */
+    public boolean isRunning() {
+        return !this.workerPool.isShutdown();
+    }
+
+    public void dispatchEvent(Runnable event) {
+        if (this.workerPool.isShutdown()) {
             new Thread(event, "EventDispatch").start();
         } else {
             this.workerPool.submit(event);
@@ -42,7 +51,7 @@ public class WorkerPool {
      * @param task Task to run
      */
     public void queueTask(Runnable task) {
-        if(this.workerPool.isShutdown()){
+        if (this.workerPool.isShutdown()) {
             log.warn("Failed to queue task ({}). Worker Pool shutting down...", task.toString());
             return;
         }
@@ -56,7 +65,7 @@ public class WorkerPool {
      * @param task Task to run
      */
     public void queueTask(Callable task) {
-        if(this.workerPool.isShutdown()){
+        if (this.workerPool.isShutdown()) {
             log.warn("Failed to queue task ({}). Worker Pool shutting down...", task.toString());
             return;
         }
@@ -71,7 +80,7 @@ public class WorkerPool {
      * @param timeDelay Time to delay task (in milliseconds);
      */
     public void scheduleTask(Runnable task, long timeDelay) {
-        if(this.workerPool.isShutdown()){
+        if (this.workerPool.isShutdown()) {
             log.warn("Failed to schedule task ({}). Worker Pool shutting down...", task.toString());
             return;
         }
@@ -87,7 +96,7 @@ public class WorkerPool {
      * @param timeDelay Time to delay task (in milliseconds);
      */
     public void scheduleTask(Callable task, long timeDelay) {
-        if(this.workerPool.isShutdown()){
+        if (this.workerPool.isShutdown()) {
             log.warn("Failed to schedule task ({}). Worker Pool shutting down...", task.toString());
             return;
         }
@@ -103,8 +112,8 @@ public class WorkerPool {
             // Cancel queued tasks
             int cancelledTasks = 0;
             ArrayList<ScheduledFuture> tasks = new ArrayList<>(this.futureTasks);
-            for(ScheduledFuture task : tasks){
-                if(!task.isDone()){
+            for (ScheduledFuture task : tasks) {
+                if (!task.isDone()) {
                     task.cancel(false);
                     cancelledTasks++;
                 }
@@ -158,8 +167,8 @@ public class WorkerPool {
         public void run() {
             log.trace("Cleaning Scheduled Tasks...");
             ArrayList<ScheduledFuture> tasks = new ArrayList<>(WorkerPool.this.futureTasks);
-            for(ScheduledFuture task: tasks){
-                if(task.isDone()){
+            for (ScheduledFuture task : tasks) {
+                if (task.isDone()) {
                     WorkerPool.this.futureTasks.remove(task);
                 }
             }
