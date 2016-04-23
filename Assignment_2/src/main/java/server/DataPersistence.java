@@ -225,7 +225,7 @@ public final class DataPersistence {
                 );
                 this.users.put(newUser.getUniqueID(), newUser);
                 this.usernameToUUID.put(newUser.getUsername(), newUser.getUniqueID());
-                log.info("Loaded user to memory.");
+                log.info("Loaded User({}) to memory.", newUser.getUniqueID());
             }
             results.close();
         } catch (SQLException e) {

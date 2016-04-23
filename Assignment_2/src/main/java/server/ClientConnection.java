@@ -44,7 +44,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         this.clientID = clientID;
         this.isSecureConnection = isSecureConnection;
 
-        log.info("New {} client connection #{}, from {}:{}", (isSecureConnection ? "secure" : ""), this.clientID, socket.getInetAddress(), socket.getPort());
+        log.info("New {}client connection, from {}:{}", (isSecureConnection ? "secure " : ""), this.clientID, socket.getInetAddress(), socket.getPort());
 
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -67,7 +67,7 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     public void connect() throws ConnectionFailedException {
         ConnectHandler connectHandler = new ConnectHandler(this);
         connectHandler.connect();
-        log.info("Client #{} successfully connected!", this.clientID);
+        log.info("Client({}) successfully connected!", this.clientID);
         this.isConnected = true;
         this.comms.addMessageListener(this);
         this.comms.sendMessage(Packet.Ping());
@@ -109,6 +109,13 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         return this.user != null;
     }
 
+    @Override
+    public String toString() {
+        return this.clientID + " (" + this.comms.getConnectionDetails() +")";
+    }
+
+    //region Event Handling
+
     /**
      * Handle packet received from Comms class.
      * Fire ServerPacketReceived so action can be carried out in server worker thread.
@@ -125,8 +132,6 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
             }
         }
     }
-
-    //region Event Handling
 
     /**
      * Adds a PacketListener to this client
@@ -199,14 +204,14 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      */
     @Override
     public void connectionClosed(String reason) {
-        log.info("Client #{}, connection closed: {}", this.clientID, reason);
+        log.info("Client({}), connection closed: {}", this.clientID, reason);
         this.isConnected = false;
         Server.getServer().removeClient(this);
         this.closeConnection();
     }
 
     public void closeConnection() {
-        log.info("Closing client connection #{}", this.clientID);
+        log.info("Disconnecting Client({}).", this.clientID);
         this.comms.removeConnectionListener(this);
         this.comms.shutdown();
     }

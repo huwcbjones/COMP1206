@@ -25,7 +25,7 @@ class SecureServerListenThread extends ServerListenThread {
         try {
             sslSocket.startHandshake();
         } catch (IOException e) {
-            log.debug(e);
+            log.catching(e);
             throw new ConnectionFailedException(e.getMessage());
         }
         SSLSession session = (( SSLSocket) socket).getSession();
