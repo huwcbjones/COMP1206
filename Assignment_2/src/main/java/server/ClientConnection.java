@@ -3,10 +3,12 @@ package server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import server.events.ServerPacketListener;
+import server.objects.User;
 import server.utils.Comms;
 import server.utils.ConnectHandler;
 import shared.Packet;
 import shared.events.ConnectionAdapter;
+import shared.events.ConnectionListener;
 import shared.events.PacketListener;
 import shared.exceptions.ConnectionFailedException;
 
@@ -15,7 +17,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * Handles a client on the server
@@ -28,12 +29,12 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     private static final Logger log = LogManager.getLogger(ClientConnection.class);
 
     private final EventListenerList listenerList = new EventListenerList();
-    private final ArrayList<ServerPacketListener> serverPacketListeners;
 
     private final long clientID;
     private final Comms comms;
     private final boolean isSecureConnection;
     private boolean isConnected = false;
+    private User user = null;
 
     public ClientConnection(long clientID, Socket socket) throws ConnectionFailedException {
         this(clientID, socket, false);
@@ -42,7 +43,6 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     public ClientConnection(long clientID, Socket socket, boolean isSecureConnection) throws ConnectionFailedException {
         this.clientID = clientID;
         this.isSecureConnection = isSecureConnection;
-        this.serverPacketListeners = new ArrayList<>();
 
         log.info("New {} client connection #{}, from {}:{}", (isSecureConnection ? "secure" : ""), this.clientID, socket.getInetAddress(), socket.getPort());
 
@@ -101,6 +101,15 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     }
 
     /**
+     * Gets whether a user is logged in on this client
+     *
+     * @return True if a user is logged in on this client
+     */
+    public boolean isUserLoggedIn() {
+        return this.user != null;
+    }
+
+    /**
      * Handle packet received from Comms class.
      * Fire ServerPacketReceived so action can be carried out in server worker thread.
      * Fire PacketReceived so that action can be carried out internally (e.g.: ConnectHandler)
@@ -153,6 +162,24 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
      */
     public void removeServerPacketListener(ServerPacketListener listener) {
         this.listenerList.add(ServerPacketListener.class, listener);
+    }
+
+    /**
+     * Adds a ConnectionListener to this client
+     *
+     * @param listener Listener to add
+     */
+    public void addConnectionListener(ConnectionListener listener) {
+        this.comms.addConnectionListener(listener);
+    }
+
+    /**
+     * Removes a ConnectionListener from this client
+     *
+     * @param listener Listener to remove
+     */
+    public void removeConnectionListener(ConnectionListener listener) {
+        this.comms.addConnectionListener(listener);
     }
 
     /**

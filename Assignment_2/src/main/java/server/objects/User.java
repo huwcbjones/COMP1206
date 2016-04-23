@@ -1,12 +1,17 @@
 package server.objects;
 
+import server.ClientConnection;
+import server.Server;
+import server.events.LoginListener;
 import server.exceptions.OperationFailureException;
+import shared.events.ConnectionAdapter;
 import shared.exceptions.InvalidCredentialException;
 import shared.exceptions.PasswordsDoNotMatchException;
 import shared.exceptions.ValidationFailedException;
 import shared.utils.StringUtils;
 import shared.utils.ValidationUtils;
 
+import javax.swing.event.EventListenerList;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -24,18 +29,15 @@ import java.util.UUID;
 public final class User extends shared.User {
     private final byte[] passwordHash;
     private final byte[] salt;
-    private boolean isLoggedIn = false;
+    private final EventListenerList listenerList = new EventListenerList();
+    private final ConnectionHandler connectionHandler = new ConnectionHandler();
+    private ClientConnection client = null;
 
     public User(UUID uniqueID, String username, String firstName, String lastName, byte[] passwordHash, byte[] salt) {
         super(uniqueID, username, firstName, lastName);
         this.passwordHash = passwordHash;
         this.salt = salt;
-    }
-
-    public User(String username, String firstName, String lastName, byte[] passwordHash, byte[] salt) {
-        super(username, firstName, lastName);
-        this.passwordHash = passwordHash;
-        this.salt = salt;
+        this.addLoginListener(Server.getLoginEventHandler());
     }
 
     /**
@@ -44,7 +46,7 @@ public final class User extends shared.User {
      * @return True if user is logged in
      */
     public boolean isLoggedIn() {
-        return this.isLoggedIn;
+        return this.client != null;
     }
 
     /**
@@ -54,6 +56,16 @@ public final class User extends shared.User {
      */
     public shared.User getSharedUser() {
         return new shared.User(this.getUniqueID(), this.getUsername(), this.getFirstName(), this.getLastName());
+    }
+
+    /**
+     * Returns the client connection instance
+     * Will return client, or null if the user is not logged in.
+     *
+     * @return User, or null
+     */
+    public ClientConnection getClient() {
+        return this.client;
     }
 
     public boolean changePassword(char[] oldPassword, char[] newPassword, char[] confirm)
@@ -85,11 +97,66 @@ public final class User extends shared.User {
         return returnValue;
     }
 
-    public void login(char[] password) throws InvalidCredentialException, OperationFailureException {
+    public void login(char[] password, ClientConnection client) throws InvalidCredentialException, OperationFailureException {
+        if (this.isLoggedIn()) {
+            throw new OperationFailureException("User is already logged in.");
+        }
         if (!this.isAuthenticated(password)) {
             throw new InvalidCredentialException("Invalid username/password.");
         }
-        this.isLoggedIn = true;
+        this.client = client;
+        this.client.addConnectionListener(this.connectionHandler);
+        this.fireUserLoggedIn();
+    }
+
+    @Override
+    public String toString() {
+        return this.getFullName() + " (" + this.getUsername() + ") {" + this.getUniqueID() + "}";
+    }
+
+    /**
+     * Adds a LoginListener to this client
+     *
+     * @param listener Listener to add
+     */
+    public void addLoginListener(LoginListener listener) {
+        this.listenerList.add(LoginListener.class, listener);
+    }
+
+    /**
+     * Removes a LoginListener from this client
+     *
+     * @param listener Listener to remove
+     */
+    public void removeLoginListener(LoginListener listener) {
+        this.listenerList.add(LoginListener.class, listener);
+    }
+
+    private void fireUserLoggedIn() {
+        Server.dispatchEvent(() -> {
+            Object[] listeners = this.listenerList.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == LoginListener.class) {
+                    ((LoginListener) listeners[i + 1]).userLoggedIn(this);
+                }
+            }
+        });
+    }
+
+    private void fireUserLoggedOut() {
+        Server.dispatchEvent(() -> {
+            Object[] listeners = this.listenerList.getListenerList();
+            for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                if (listeners[i] == LoginListener.class) {
+                    ((LoginListener) listeners[i + 1]).userLoggedOut(this);
+                }
+            }
+        });
+    }
+
+    private void logout() {
+        this.client = null;
+        this.fireUserLoggedOut();
     }
 
     /**
@@ -150,5 +217,19 @@ public final class User extends shared.User {
         byte[] bytes = new byte[32];
         new Random().nextBytes(bytes);
         return bytes;
+    }
+
+    private class ConnectionHandler extends ConnectionAdapter {
+        /**
+         * Fires when the connection is closed
+         * Subclasses should override this method if they want to listen to this event.
+         *
+         * @param reason Reason why the connection is closed
+         */
+        @Override
+        public void connectionClosed(String reason) {
+            User.this.logout();
+            User.this.client.removeConnectionListener(User.this.connectionHandler);
+        }
     }
 }
