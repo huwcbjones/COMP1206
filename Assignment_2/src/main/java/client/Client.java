@@ -80,6 +80,7 @@ public final class Client implements ConnectionListener {
     private void shutdown() {
         log.info("Shutting down client...");
         if (Client.isConnected) {
+            Client.sendPacket(Packet.Logout());
             Client.comms.shutdown();
         }
     }
