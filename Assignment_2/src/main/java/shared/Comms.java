@@ -6,6 +6,7 @@ import shared.events.ConnectionListener;
 import shared.events.PacketListener;
 import shared.exceptions.PacketSendFailException;
 import shared.exceptions.VersionMismatchException;
+import shared.utils.RunnableAdapter;
 
 import javax.swing.*;
 import javax.swing.event.EventListenerList;
@@ -34,23 +35,21 @@ public class Comms implements PacketListener {
     protected static final Logger log = LogManager.getLogger(Comms.class);
     private static final DispatchThread dispatchThread = new DispatchThread();
 
-    private final EventListenerList listenerList = new EventListenerList();
+    static {
+        dispatchThread.start();
+    }
 
     protected final CommsReadThread readThread;
     protected final CommsWriteThread writeThread;
+    private final EventListenerList listenerList = new EventListenerList();
     private final ConcurrentLinkedQueue<Packet> packetQueue;
-
     private final Socket socket;
-
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
     protected Timer lastPingTimer;
     protected ActionListener pingListener;
     protected boolean shouldQuit = false;
 
-    static {
-        dispatchThread.start();
-    }
     public Comms(Socket socket, ObjectInputStream input, ObjectOutputStream output) {
         this.packetQueue = new ConcurrentLinkedQueue<>();
         this.socket = socket;
@@ -59,7 +58,7 @@ public class Comms implements PacketListener {
 
         readThread = new CommsReadThread();
         writeThread = new CommsWriteThread();
-        this.pingListener =  e -> {
+        this.pingListener = e -> {
             log.info("Ping not received in timeout period.");
             this.shutdown();
             fireConnectionClosed("Lost connection to server");
@@ -76,18 +75,22 @@ public class Comms implements PacketListener {
         writeThread.start();
     }
 
+    public String getConnectionDetails(){
+        return socket.getInetAddress() + ":" + socket.getPort();
+    }
+
 
     /**
      * Shuts down this Comms class
      */
     public void shutdown() {
-        if(Comms.this.shouldQuit) return;
+        if (Comms.this.shouldQuit) return;
         this.shouldQuit = true;
 
         log.debug("Comms shutdown initiated...");
 
         new Thread(() -> {
-            final Logger log = LogManager.getLogger(Thread.currentThread().getClass());
+            //final Logger log = LogManager.getLogger(Thread.currentThread().getClass());
             this.lastPingTimer.stop();
             this.lastPingTimer.removeActionListener(this.pingListener);
 
@@ -119,7 +122,7 @@ public class Comms implements PacketListener {
      *
      * @param event Event to dispatch
      */
-    protected void dispatchEvent(Runnable event){
+    protected void dispatchEvent(RunnableAdapter event) {
         dispatchThread.dispatchEvent(event);
     }
 
@@ -132,24 +135,30 @@ public class Comms implements PacketListener {
     }
 
     private void firePacketReceived(Packet packet) {
-        this.dispatchEvent(() -> {
-            log.trace("fired->PacketReceived");
-            Object[] listeners = this.listenerList.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == PacketListener.class) {
-                    ((PacketListener) listeners[i + 1]).packetReceived(packet);
+        this.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                log.trace("fired->PacketReceived");
+                Object[] listeners = Comms.this.listenerList.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == PacketListener.class) {
+                        ((PacketListener) listeners[i + 1]).packetReceived(packet);
+                    }
                 }
             }
         });
     }
 
     protected final void fireConnectionClosed(String reason) {
-        this.dispatchEvent(() -> {
-            log.trace("fired->ConnectionClosed");
-            Object[] listeners = this.listenerList.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == ConnectionListener.class) {
-                    ((ConnectionListener) listeners[i + 1]).connectionClosed(reason);
+        this.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                log.trace("fired->ConnectionClosed");
+                Object[] listeners = Comms.this.listenerList.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == ConnectionListener.class) {
+                        ((ConnectionListener) listeners[i + 1]).connectionClosed(reason);
+                    }
                 }
             }
         });
@@ -193,6 +202,7 @@ public class Comms implements PacketListener {
     //endregion
 
     //region Mandatory Spec methods
+
     /**
      * Sends a message
      *
@@ -234,6 +244,45 @@ public class Comms implements PacketListener {
     }
     //endregion
 
+    private static class DispatchThread extends Thread {
+        private ConcurrentLinkedQueue<Runnable> events = new ConcurrentLinkedQueue<>();
+        private boolean shouldStop = false;
+
+        public DispatchThread() {
+            super("DispatchThread");
+        }
+
+        public void dispatchEvent(Runnable event) {
+            this.events.add(event);
+            synchronized (this) {
+                this.notify();
+            }
+        }
+
+        @Override
+        public void run() {
+            Runnable event;
+            while (!shouldStop) {
+                log.trace("Running events");
+                while ((event = this.events.poll()) != null) {
+                    event.run();
+                }
+                synchronized (this) {
+                    try {
+                        this.wait();
+                    } catch (InterruptedException shouldQuitNotification) {
+                    }
+                }
+            }
+        }
+
+        public void quit() {
+            this.shouldStop = true;
+            this.interrupt();
+        }
+
+
+    }
 
     public class CommsWriteThread extends Thread {
 
@@ -259,14 +308,14 @@ public class Comms implements PacketListener {
                     try {
                         this.wait();
                     } catch (InterruptedException threadQuitNotice) {
-                        if(shouldQuit){
+                        if (shouldQuit) {
                             break;
                         }
                     }
                 }
             }
 
-            if(!Comms.this.socket.isClosed()) {
+            if (!Comms.this.socket.isClosed()) {
                 try {
                     Comms.this.output.flush();
                     log.trace("Flushed output stream.");
@@ -334,44 +383,6 @@ public class Comms implements PacketListener {
             }
 
             log.debug("Read thread shut down.");
-        }
-    }
-
-    private static class DispatchThread extends Thread {
-        private ConcurrentLinkedQueue<Runnable> events = new ConcurrentLinkedQueue<>();
-        private boolean shouldStop = false;
-
-        public DispatchThread(){
-            super("DispatchThread");
-        }
-
-        @Override
-        public void run() {
-            Runnable event;
-            while(!shouldStop){
-                log.trace("Running events");
-                while((event = this.events.poll()) != null){
-                    event.run();
-                }
-                synchronized (this){
-                    try {
-                        this.wait();
-                    } catch (InterruptedException shouldQuitNotification) {
-                    }
-                }
-            }
-        }
-
-        public void dispatchEvent(Runnable event){
-            this.events.add(event);
-            synchronized (this){
-                this.notify();
-            }
-        }
-
-        public void quit(){
-            this.shouldStop = true;
-            this.interrupt();
         }
     }
 }

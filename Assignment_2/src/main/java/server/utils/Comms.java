@@ -3,6 +3,7 @@ package server.utils;
 import server.Server;
 import shared.Packet;
 import shared.exceptions.PacketSendFailException;
+import shared.utils.RunnableAdapter;
 
 import javax.swing.*;
 import java.io.ObjectInputStream;
@@ -63,7 +64,7 @@ public final class Comms extends shared.Comms {
      * @param event Event to dispatch
      */
     @Override
-    protected void dispatchEvent(Runnable event) {
+    protected void dispatchEvent(RunnableAdapter event) {
         Server.dispatchEvent(event);
     }
 }

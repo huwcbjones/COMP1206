@@ -1,5 +1,6 @@
 package server.events;
 
+import server.ClientConnection;
 import server.objects.User;
 
 import java.util.EventListener;
@@ -22,7 +23,8 @@ public interface LoginListener extends EventListener {
     /**
      * Occurs when a user logs out
      *
-     * @param user User that logged in
+     * @param user         User that logged in
+     * @param clientNumber Client number of client where user was logged in
      */
-    void userLoggedOut(User user);
+    void userLoggedOut(User user, ClientConnection clientNumber);
 }

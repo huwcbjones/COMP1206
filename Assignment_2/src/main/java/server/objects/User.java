@@ -8,6 +8,7 @@ import shared.events.ConnectionAdapter;
 import shared.exceptions.InvalidCredentialException;
 import shared.exceptions.PasswordsDoNotMatchException;
 import shared.exceptions.ValidationFailedException;
+import shared.utils.RunnableAdapter;
 import shared.utils.StringUtils;
 import shared.utils.ValidationUtils;
 
@@ -111,7 +112,7 @@ public final class User extends shared.User {
 
     @Override
     public String toString() {
-        return this.getFullName() + " (" + this.getUsername() + ") {" + this.getUniqueID() + "}";
+        return this.getFullName();
     }
 
     /**
@@ -129,34 +130,40 @@ public final class User extends shared.User {
      * @param listener Listener to remove
      */
     public void removeLoginListener(LoginListener listener) {
-        this.listenerList.add(LoginListener.class, listener);
+        this.listenerList.remove(LoginListener.class, listener);
     }
 
     private void fireUserLoggedIn() {
-        Server.dispatchEvent(() -> {
-            Object[] listeners = this.listenerList.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == LoginListener.class) {
-                    ((LoginListener) listeners[i + 1]).userLoggedIn(this);
+        Server.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                Object[] listeners = User.this.listenerList.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == LoginListener.class) {
+                        ((LoginListener) listeners[i + 1]).userLoggedIn(User.this);
+                    }
                 }
             }
         });
     }
 
-    private void fireUserLoggedOut() {
-        Server.dispatchEvent(() -> {
-            Object[] listeners = this.listenerList.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == LoginListener.class) {
-                    ((LoginListener) listeners[i + 1]).userLoggedOut(this);
+    private void fireUserLoggedOut(ClientConnection client) {
+        Server.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                Object[] listeners = User.this.listenerList.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == LoginListener.class) {
+                        ((LoginListener) listeners[i + 1]).userLoggedOut(User.this, client);
+                    }
                 }
             }
         });
     }
 
     private void logout() {
+        this.fireUserLoggedOut(this.client);
         this.client = null;
-        this.fireUserLoggedOut();
     }
 
     /**
@@ -228,8 +235,8 @@ public final class User extends shared.User {
          */
         @Override
         public void connectionClosed(String reason) {
-            User.this.logout();
             User.this.client.removeConnectionListener(User.this.connectionHandler);
+            User.this.logout();
         }
     }
 }

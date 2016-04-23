@@ -1,8 +1,7 @@
 package server.tasks;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import server.ClientConnection;
+import shared.utils.RunnableAdapter;
 
 /**
  * A template abstract task
@@ -10,9 +9,8 @@ import server.ClientConnection;
  * @author Huw Jones
  * @since 08/04/2016
  */
-abstract class Task implements Runnable {
+abstract class Task extends RunnableAdapter {
 
-    protected static final Logger log = LogManager.getLogger(Task.class);
     protected final ClientConnection client;
     protected final String name;
 
@@ -29,17 +27,13 @@ abstract class Task implements Runnable {
     @Override
     public final void run() {
         try {
-            this.doTask();
+            this.runSafe();
         } catch (Exception e){
-            log.error("An Exception occurred whilst executing {}.", this.name, e);
+            log.error("An Exception occurred whilst executing {}.", this.name);
+            log.catching(e);
             this.failureAction();
         }
     }
-
-    /**
-     * Performs the Worker Task
-     */
-    protected abstract void doTask();
 
     /**
      * Executed on task failure

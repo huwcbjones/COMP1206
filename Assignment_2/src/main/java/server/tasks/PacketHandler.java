@@ -3,9 +3,11 @@ package server.tasks;
 import server.ClientConnection;
 import server.Server;
 import server.utils.Comms;
+import shared.Item;
 import shared.Packet;
 import shared.PacketType;
 import shared.RegisterUser;
+import shared.utils.RunnableAdapter;
 
 /**
  * Handles Packets
@@ -13,7 +15,7 @@ import shared.RegisterUser;
  * @author Huw Jones
  * @since 27/03/2016
  */
-public final class PacketHandler implements Runnable {
+public final class PacketHandler extends RunnableAdapter {
 
     private final ClientConnection client;
     private final Packet packet;
@@ -24,7 +26,7 @@ public final class PacketHandler implements Runnable {
     }
 
     @Override
-    public void run () {
+    public void runSafe () {
         switch(this.packet.getType()){
             case HELLO:
                 this.client.sendPacket(new Packet<>(PacketType.HELLO, "hello"));
@@ -39,6 +41,9 @@ public final class PacketHandler implements Runnable {
                 break;
             case REGISTER:
                 Server.getWorkerPool().queueTask(new RegisterTask(this.client, (RegisterUser)packet.getPayload()));
+                break;
+            case CREATE_ITEM:
+                Server.getWorkerPool().queueTask(new NewItemTask(this.client, (Item)packet.getPayload()));
                 break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));

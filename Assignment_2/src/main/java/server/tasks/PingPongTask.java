@@ -19,7 +19,7 @@ public class PingPongTask extends Task {
      * Performs the Worker Task
      */
     @Override
-    protected void doTask() {
+    public void runSafe() {
         if(!this.client.isConnected()) return;
         this.client.sendPacket(Packet.Ping());
     }

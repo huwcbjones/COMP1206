@@ -2,6 +2,7 @@ package server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import shared.utils.RunnableAdapter;
 
 import java.util.ArrayList;
 import java.util.concurrent.*;
@@ -37,7 +38,7 @@ public class WorkerPool {
         return !this.workerPool.isShutdown();
     }
 
-    public void dispatchEvent(Runnable event) {
+    public void dispatchEvent(RunnableAdapter event) {
         if (this.workerPool.isShutdown()) {
             new Thread(event, "EventDispatch").start();
         } else {
@@ -50,7 +51,7 @@ public class WorkerPool {
      *
      * @param task Task to run
      */
-    public void queueTask(Runnable task) {
+    public void queueTask(RunnableAdapter task) {
         if (this.workerPool.isShutdown()) {
             log.warn("Failed to queue task ({}). Worker Pool shutting down...", task.toString());
             return;
@@ -79,7 +80,7 @@ public class WorkerPool {
      * @param task      Task to run
      * @param timeDelay Time to delay task (in milliseconds);
      */
-    public void scheduleTask(Runnable task, long timeDelay) {
+    public void scheduleTask(RunnableAdapter task, long timeDelay) {
         if (this.workerPool.isShutdown()) {
             log.warn("Failed to schedule task ({}). Worker Pool shutting down...", task.toString());
             return;
@@ -128,7 +129,8 @@ public class WorkerPool {
 
                 this.workerPool.awaitTermination(5 * 1000, TimeUnit.MILLISECONDS);
             }
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException mayHappen) {
+            log.trace(mayHappen);
         }
         log.info("Worker pool shutdown!");
     }
@@ -161,17 +163,14 @@ public class WorkerPool {
     /**
      * Cleans up scheduled tasks ArrayList
      */
-    private class TaskCleanup implements Runnable {
+    private class TaskCleanup extends RunnableAdapter {
 
         @Override
-        public void run() {
+        public void runSafe() {
             log.trace("Cleaning Scheduled Tasks...");
             ArrayList<ScheduledFuture> tasks = new ArrayList<>(WorkerPool.this.futureTasks);
-            for (ScheduledFuture task : tasks) {
-                if (task.isDone()) {
-                    WorkerPool.this.futureTasks.remove(task);
-                }
-            }
+            // Removes the task from the futureTasks array if the task isDone.
+            tasks.stream().filter(Future::isDone).forEach(WorkerPool.this.futureTasks::remove);
             log.debug("There are {} scheduled tasks.", WorkerPool.this.futureTasks.size());
         }
     }

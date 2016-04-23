@@ -12,6 +12,7 @@ import server.objects.User;
 import server.tasks.PacketHandler;
 import shared.Packet;
 import shared.exceptions.ConfigLoadException;
+import shared.utils.RunnableAdapter;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -43,37 +44,32 @@ public final class Server {
      * Static instance of data persistence layer
      */
     private static final DataPersistence data = new DataPersistence();
-
+    private static final LoginHandler userLoginHandler = new LoginHandler();
     /**
      * Static instance of this
      */
     private static Server server;
-
     /**
      * Server WorkerPool for running tasks
      */
     private static WorkerPool workPool;
 
+    static {
+        System.setProperty("log4j.shutdownCallbackRegistry", "com.djdch.log4j.StaticShutdownCallbackRegistry");
+    }
+
     /**
      * Client HashMap
      */
     private final HashMap<Long, ClientConnection> clients;
-
-    private AtomicLong clientConnectionCounter = new AtomicLong(0);
-    private ServerListenThread plainSocket;
-    private ServerListenThread secureSocket;
-
     //region Event Management
     private final EventListenerList listeners = new EventListenerList();
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
-    private static final LoginHandler userLoginHandler = new LoginHandler();
+    private AtomicLong clientConnectionCounter = new AtomicLong(0);
+    private ServerListenThread plainSocket;
     //endregion
-
+    private ServerListenThread secureSocket;
     private boolean isRunning = false;
-
-    static {
-        System.setProperty("log4j.shutdownCallbackRegistry", "com.djdch.log4j.StaticShutdownCallbackRegistry");
-    }
 
     public Server() {
         clients = new HashMap<>();
@@ -110,9 +106,16 @@ public final class Server {
 
     /**
      * Runs the server
+     *
      * @param createDatabase Will create the database if it does not exist
      */
     public void run(boolean createDatabase) {
+        new Thread(() -> {
+            this.startServer(createDatabase);
+        }, "ServerStart").start();
+    }
+
+    private void startServer(boolean createDatabase) {
         this.fireServerStarting();
         log.info("Starting server...");
 
@@ -158,6 +161,7 @@ public final class Server {
 
     /**
      * Loads the data layer
+     *
      * @param createDatabase Will create the database if it doesn't exist
      * @throws OperationFailureException Thrown if there was an error loading data
      */
@@ -175,7 +179,8 @@ public final class Server {
 
     /**
      * Creates the server sockets to listen to connections
-     * @throws IOException On Socket Error
+     *
+     * @throws IOException               On Socket Error
      * @throws OperationFailureException On Server Error
      */
     private void createSockets() throws IOException, OperationFailureException {
@@ -229,14 +234,15 @@ public final class Server {
         }
         log.info("Secure socket started successfully!");
     }
+
     //endregion
     //region Shutting Server Down
     public void shutdownServer() {
-        new shutdownThread().run();
+        new shutdownThread().start();
     }
 
-    private void doShutdown(){
-        if(!this.isRunning) return;
+    private void doShutdown() {
+        if (!this.isRunning) return;
 
         log.info("Server shutting down...");
         this.fireServerShuttingDown();
@@ -246,7 +252,7 @@ public final class Server {
         if (this.clients.size() != 0) {
             log.info("Sending disconnect to clients...");
             ArrayList<ClientConnection> clients = new ArrayList<>(this.clients.values());
-            for(ClientConnection client : clients){
+            for (ClientConnection client : clients) {
                 client.closeConnection();
             }
         }
@@ -295,10 +301,79 @@ public final class Server {
 
     /**
      * Gets the next ClientID
+     *
      * @return Next ClientID
      */
     long getNextClientID() {
         return this.clientConnectionCounter.getAndIncrement();
+    }
+
+    /**
+     * Fires server starting event
+     */
+    private void fireServerStarting() {
+        Server.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                Object[] listeners = Server.this.listeners.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == ServerListener.class) {
+                        ((ServerListener) listeners[i + 1]).serverStarting();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Fires server started event
+     */
+    private void fireServerStarted() {
+        Server.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                Object[] listeners = Server.this.listeners.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == ServerListener.class) {
+                        ((ServerListener) listeners[i + 1]).serverStarted();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Fires server shutting down event
+     */
+    private void fireServerShuttingDown() {
+        Server.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                Object[] listeners = Server.this.listeners.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == ServerListener.class) {
+                        ((ServerListener) listeners[i + 1]).serverShuttingDown();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Fires server shutdown event
+     */
+    private void fireServerShutdown() {
+        Server.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                Object[] listeners = Server.this.listeners.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == ServerListener.class) {
+                        ((ServerListener) listeners[i + 1]).serverShutdown();
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -309,6 +384,9 @@ public final class Server {
     public static Server getServer() {
         return Server.server;
     }
+    //endregion
+
+    //region Event Handling and Dispatching
 
     /**
      * Gets the config instance from a static context
@@ -337,18 +415,18 @@ public final class Server {
         return Server.workPool;
     }
 
-    public static LoginHandler getLoginEventHandler() { return Server.userLoginHandler; }
-    //endregion
+    public static LoginHandler getLoginEventHandler() {
+        return Server.userLoginHandler;
+    }
 
-    //region Event Handling and Dispatching
     /**
      * Dispatches an event handler in the EDT (any worker pool thread).
      * Or, if the server isn't running, just run the event handler in the current thread.
      *
      * @param event Event to dispatch
      */
-    public static void dispatchEvent(Runnable event){
-        if(/*Server.getServer().isRunning &&*/ Server.workPool.isRunning()) {
+    public static void dispatchEvent(RunnableAdapter event) {
+        if (Server.getServer().isRunning && Server.workPool.isRunning()) {
             Server.workPool.dispatchEvent(event);
         } else {
             event.run();
@@ -360,7 +438,7 @@ public final class Server {
      *
      * @param listener LoginListener
      */
-    public static void addLoginListener(LoginListener listener){
+    public static void addLoginListener(LoginListener listener) {
         Server.getServer().listeners.add(LoginListener.class, listener);
     }
 
@@ -369,7 +447,7 @@ public final class Server {
      *
      * @param listener LoginListener
      */
-    public static void removeLoginListener(LoginListener listener){
+    public static void removeLoginListener(LoginListener listener) {
         Server.getServer().listeners.remove(LoginListener.class, listener);
     }
 
@@ -378,7 +456,7 @@ public final class Server {
      *
      * @param listener ServerListener
      */
-    public static void addServerListener(ServerListener listener){
+    public static void addServerListener(ServerListener listener) {
         Server.getServer().listeners.add(ServerListener.class, listener);
     }
 
@@ -387,69 +465,62 @@ public final class Server {
      *
      * @param listener ServerListener
      */
-    public static void removeServerListener(ServerListener listener){
+    public static void removeServerListener(ServerListener listener) {
         Server.getServer().listeners.remove(ServerListener.class, listener);
-    }
-
-    /**
-     * Fires server starting event
-     */
-    private void fireServerStarting(){
-        Server.dispatchEvent(() ->{
-            Object[] listeners = this.listeners.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == ServerListener.class) {
-                    ((ServerListener) listeners[i + 1]).serverStarting();
-                }
-            }
-        });
-    }
-
-    /**
-     * Fires server started event
-     */
-    private void fireServerStarted(){
-        Server.dispatchEvent(() ->{
-            Object[] listeners = this.listeners.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == ServerListener.class) {
-                    ((ServerListener) listeners[i + 1]).serverStarted();
-                }
-            }
-        });
-    }
-
-    /**
-     * Fires server shutting down event
-     */
-    private void fireServerShuttingDown(){
-        Server.dispatchEvent(() ->{
-            Object[] listeners = this.listeners.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == ServerListener.class) {
-                    ((ServerListener) listeners[i + 1]).serverShuttingDown();
-                }
-            }
-        });
-    }
-
-    /**
-     * Fires server shutdown event
-     */
-    private void fireServerShutdown(){
-        Server.dispatchEvent(() ->{
-            Object[] listeners = this.listeners.getListenerList();
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == ServerListener.class) {
-                    ((ServerListener) listeners[i + 1]).serverShutdown();
-                }
-            }
-        });
     }
 
     //endregion
 
     //region Event Handler Classes
+
+    /**
+     * Handles Users logging in and out
+     */
+    private static class LoginHandler implements LoginListener {
+
+        /**
+         * Occurs when a user logs in
+         *
+         * @param user User that logged in
+         */
+        @Override
+        public void userLoggedIn(User user) {
+            Server.dispatchEvent(new RunnableAdapter() {
+                @Override
+                public void runSafe() {
+                    Object[] listeners = Server.getServer().listeners.getListenerList();
+                    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                        if (listeners[i] == LoginListener.class) {
+                            ((LoginListener) listeners[i + 1]).userLoggedIn(user);
+                        }
+                    }
+                }
+
+            });
+        }
+
+        /**
+         * Occurs when a user logs out
+         *
+         * @param user User that logged in
+         */
+        @Override
+        public void userLoggedOut(User user, ClientConnection clientID) {
+            log.info("User ({}) logged out on Client({})", user.getUniqueID(), clientID.getClientID());
+            Server.dispatchEvent(new RunnableAdapter() {
+                @Override
+                public void runSafe() {
+                    Object[] listeners = Server.getServer().listeners.getListenerList();
+                    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                        if (listeners[i] == LoginListener.class) {
+                            ((LoginListener) listeners[i + 1]).userLoggedOut(user, clientID);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
     /**
      * Runs the server shutdown in its own thread
      */
@@ -473,47 +544,6 @@ public final class Server {
         @Override
         public void packetReceived(ClientConnection client, Packet packet) {
             Server.workPool.queueTask(new PacketHandler(client, packet));
-        }
-    }
-
-    /**
-     * Handles Users logging in and out
-     */
-    private static class LoginHandler implements LoginListener {
-
-        /**
-         * Occurs when a user logs in
-         *
-         * @param user User that logged in
-         */
-        @Override
-        public void userLoggedIn(User user) {
-            Server.dispatchEvent(() ->{
-                Object[] listeners = Server.getServer().listeners.getListenerList();
-                for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                    if (listeners[i] == LoginListener.class) {
-                        ((LoginListener) listeners[i + 1]).userLoggedIn(user);
-                    }
-                }
-            });
-        }
-
-        /**
-         * Occurs when a user logs out
-         *
-         * @param user User that logged in
-         */
-        @Override
-        public void userLoggedOut(User user) {
-            log.info("User ({}) logged out on Client #{}", user.getUniqueID());
-            Server.dispatchEvent(() ->{
-                Object[] listeners = Server.getServer().listeners.getListenerList();
-                for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                    if (listeners[i] == LoginListener.class) {
-                        ((LoginListener) listeners[i + 1]).userLoggedOut(user);
-                    }
-                }
-            });
         }
     }
 

@@ -28,7 +28,7 @@ public class LoginTask extends Task {
     }
 
     @Override
-    protected void doTask() {
+    public void runSafe() {
         if (this.details.length != 2) {
             this.client.sendPacket(new Packet<>(PacketType.LOGIN_FAIL, "A client/server error occurred during login."));
             return;
@@ -54,14 +54,14 @@ public class LoginTask extends Task {
             User user = Server.getData().getUser(username);
             if (user != null) {
                 log.debug("Authenticating user...");
-                user.login(password);
-                log.info("{} ({}) logged in on Client #{}", user.getUsername(), user.getUniqueID(), this.client.getClientID());
+                user.login(password, this.client);
+                log.info("User({}) logged in on Client({})", user.getUniqueID(), this.client.getClientID());
                 this.client.sendPacket(new Packet<>(PacketType.LOGIN_SUCCESS, user.getSharedUser()));
                 return;
             }
             log.warn("Failed to load user. Is something wrong?");
         } catch (NoSuchElementException | InvalidCredentialException | OperationFailureException e) {
-            log.warn("User ({}) failed to login. {}", username, e.getMessage());
+            log.warn("User({}) failed to login. {}", username, e.getMessage());
         }
         this.client.sendPacket(LoginTask.invalidCredentials());
     }
