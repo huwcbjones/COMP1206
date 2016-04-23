@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 /**
- * Represents an shared.Item for client.
+ * Represents an Item for client.
  *
  * @author Huw Jones
  * @since 24/03/2016
