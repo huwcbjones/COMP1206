@@ -1,5 +1,6 @@
 package server;
 
+import server.components.UserTableModel;
 import server.events.LoginListener;
 import server.events.ServerAdapter;
 import server.events.ServerListener;
@@ -11,12 +12,11 @@ import shared.utils.WindowTemplate;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 /**
  * Server GUI interface
@@ -37,8 +37,8 @@ public final class ServerGUI extends WindowTemplate {
     private JButton btn_start;
     private JButton btn_stop;
     private JButton btn_results;
-    private JList<User> list_users;
-    private DefaultListModel<User> lm_users;
+    private JTable table_users;
+    private UserTableModel model_users;
     private JList<Item> list_items;
     private DefaultListModel<Item> lm_items;
     private JTextArea text_console;
@@ -149,13 +149,17 @@ public final class ServerGUI extends WindowTemplate {
         this.panel_users.setPreferredSize(new Dimension(260, 240));
         this.panel_users.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Logged in Users"));
 
-        this.lm_users = new DefaultListModel<>();
-        this.list_users = new JList<>(this.lm_users);
-        this.list_users.setDragEnabled(false);
-        this.list_users.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        this.list_users.setLayoutOrientation(JList.VERTICAL);
-
-        this.panel_users.add(this.list_users, BorderLayout.CENTER);
+        this.model_users = new UserTableModel();
+        this.table_users = new JTable(this.model_users);
+        this.table_users.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        this.table_users.setShowGrid(false);
+        this.table_users.setShowHorizontalLines(false);
+        this.table_users.setShowVerticalLines(true);
+        this.table_users.setRowMargin(0);
+        this.table_users.setIntercellSpacing(new Dimension(1, 1));
+        this.table_users.setFillsViewportHeight(true);
+        this.table_users.setRowSorter(new TableRowSorter<>(this.model_users));
+        this.panel_users.add(new JScrollPane(this.table_users), BorderLayout.CENTER);
         c = new GridBagConstraints();
         c.gridx = 2;
         c.gridy = 1;
@@ -191,7 +195,7 @@ public final class ServerGUI extends WindowTemplate {
 
     private void initEventListeners() {
         this.btn_start.addActionListener(e -> {
-            this.text_console.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()) + "\n");
+            this.text_console.setText("");
             server.run();
         });
 
@@ -212,6 +216,7 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.setTitle(WINDOW_TITLE + " [STARTING]");
                 ServerGUI.this.btn_start.setEnabled(false);
                 ServerGUI.this.btn_stop.setEnabled(false);
+                ServerGUI.this.btn_results.setEnabled(false);
             });
         }
 
@@ -224,6 +229,7 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.setTitle(WINDOW_TITLE + " [RUNNING]");
                 ServerGUI.this.btn_start.setEnabled(false);
                 ServerGUI.this.btn_stop.setEnabled(true);
+                ServerGUI.this.btn_results.setEnabled(true);
             });
         }
 
@@ -236,6 +242,7 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.setTitle(WINDOW_TITLE + " [STOPPING]");
                 ServerGUI.this.btn_start.setEnabled(false);
                 ServerGUI.this.btn_stop.setEnabled(false);
+                ServerGUI.this.btn_results.setEnabled(false);
             });
         }
 
@@ -248,6 +255,7 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.setTitle(WINDOW_TITLE + " [STOPPED]");
                 ServerGUI.this.btn_start.setEnabled(true);
                 ServerGUI.this.btn_stop.setEnabled(false);
+                ServerGUI.this.btn_results.setEnabled(false);
             });
         }
     }
@@ -261,7 +269,7 @@ public final class ServerGUI extends WindowTemplate {
          */
         @Override
         public void userLoggedIn(User user) {
-            SwingUtilities.invokeLater(() -> ServerGUI.this.lm_users.addElement(user));
+            SwingUtilities.invokeLater(() -> ServerGUI.this.model_users.add(user));
         }
 
         /**
@@ -270,8 +278,9 @@ public final class ServerGUI extends WindowTemplate {
          * @param user User
          */
         @Override
-        public void userLoggedOut(User user) {
-            SwingUtilities.invokeLater(() -> ServerGUI.this.lm_users.removeElement(user));
+        public void userLoggedOut(User user, ClientConnection clientID) {
+            log.trace("User Logged Out.");
+            SwingUtilities.invokeLater(() -> ServerGUI.this.model_users.remove(user));
         }
     }
 
