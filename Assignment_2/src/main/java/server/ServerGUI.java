@@ -15,6 +15,8 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  * Server GUI interface
@@ -56,7 +58,7 @@ public final class ServerGUI extends WindowTemplate {
         this.initEventListeners();
     }
 
-    private void redirectConsole(){
+    private void redirectConsole() {
         PrintStream textStream = new PrintStream(new JTextAreaOutputStream(this.text_console));
         System.setOut(textStream);
         System.setErr(textStream);
@@ -188,7 +190,11 @@ public final class ServerGUI extends WindowTemplate {
     }
 
     private void initEventListeners() {
-        this.btn_start.addActionListener(e -> server.run());
+        this.btn_start.addActionListener(e -> {
+            this.text_console.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()) + "\n");
+            server.run();
+        });
+
         this.btn_stop.addActionListener(e -> server.shutdownServer());
         this.addWindowListener(new WindowHandler());
         Server.addServerListener(this.serverListener);
