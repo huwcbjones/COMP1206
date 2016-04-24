@@ -4,6 +4,7 @@ import server.ClientConnection;
 import server.Server;
 import server.events.LoginListener;
 import server.exceptions.OperationFailureException;
+import shared.Packet;
 import shared.events.ConnectionAdapter;
 import shared.exceptions.InvalidCredentialException;
 import shared.exceptions.PasswordsDoNotMatchException;
@@ -106,6 +107,7 @@ public final class User extends shared.User {
             throw new InvalidCredentialException("Invalid username/password.");
         }
         this.client = client;
+        this.client.setUser(this);
         this.client.addConnectionListener(this.connectionHandler);
         this.fireUserLoggedIn();
     }
@@ -161,9 +163,13 @@ public final class User extends shared.User {
         });
     }
 
-    private void logout() {
-        this.fireUserLoggedOut(this.client);
-        this.client = null;
+    public void logout() {
+        if(this.isLoggedIn() && this.client.isConnected()) {
+            this.client.sendPacket(Packet.Logout());
+            this.fireUserLoggedOut(this.client);
+            this.client.setUser(null);
+            this.client = null;
+        }
     }
 
     /**
@@ -235,7 +241,9 @@ public final class User extends shared.User {
          */
         @Override
         public void connectionClosed(String reason) {
-            User.this.client.removeConnectionListener(User.this.connectionHandler);
+            if(User.this.client != null) {
+                User.this.client.removeConnectionListener(User.this.connectionHandler);
+            }
             User.this.logout();
         }
     }

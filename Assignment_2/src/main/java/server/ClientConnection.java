@@ -101,17 +101,35 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
     }
 
     /**
-     * Gets whether a user is logged in on this client
+     * Gets whether a user is logged in or not.
      *
-     * @return True if a user is logged in on this client
+     * @return Returns true is user is logged in
      */
     public boolean isUserLoggedIn() {
         return this.user != null;
     }
 
+    /**
+     * Gets the user currently logged in on this connection, or null if no user is logged in
+     *
+     * @return User, or null if no user.
+     */
+    public User getUser() {
+        return this.user;
+    }
+
+    /**
+     * Sets the user logged in on this connection
+     *
+     * @param user User
+     */
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     @Override
     public String toString() {
-        return this.clientID + " (" + this.comms.getConnectionDetails() +")";
+        return this.clientID + " (" + this.comms.getConnectionDetails() + ")";
     }
 
     //region Event Handling
