@@ -49,6 +49,8 @@ public final class Client implements ConnectionListener {
 
     private static Comms comms;
     private static Client client;
+    private static Login loginWindow;
+    private static Main mainWindow;
 
     public Client() {
         Client.client = this;
@@ -61,20 +63,31 @@ public final class Client implements ConnectionListener {
         System.setProperty("javax.net.ssl.trustStore", "config/keys/biddr.jks");
         System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
+        SwingUtilities.invokeLater(() -> {
+            Client.loginWindow = new Login();
+            Client.loginWindow.setVisible(true);
+        });
         Client.addLoginListener(new LoginAdapter() {
             @Override
             public void loginSuccess(User user) {
+                // Set the client's user details
+                Client.user = user;
                 SwingUtilities.invokeLater(() -> {
-                    Main main = new Main();
-                    main.setVisible(true);
+                    Client.mainWindow = new Main();
+                    Client.mainWindow.setVisible(true);
+                });
+            }
+
+            @Override
+            public void logout() {
+                SwingUtilities.invokeLater(() -> {
+                    Client.mainWindow = null;
+                    Client.loginWindow = new Login();
+                    Client.loginWindow.setVisible(true);
                 });
             }
         });
 
-        SwingUtilities.invokeLater(() -> {
-            Login loginWindow = new Login();
-            loginWindow.setVisible(true);
-        });
     }
 
     private void shutdown() {
@@ -190,8 +203,6 @@ public final class Client implements ConnectionListener {
             public void packetReceived(Packet packet) {
                 switch (packet.getType()) {
                     case LOGIN_SUCCESS:
-                        // Set the client's user details
-                        Client.user = (User) packet.getPayload();
                         Client.fireLoginSuccessHandler((User) packet.getPayload());
                         break;
                     case LOGIN_FAIL:
@@ -215,7 +226,17 @@ public final class Client implements ConnectionListener {
             // Need to handle timeouts because the fail event only fires if we get a LOGIN_FAIL from the server
             fireLoginFailHandler("Request timed out.");
         }
+        Client.comms.removeMessageListener(handler);
         Arrays.fill(password, '\u0000'); // Clear password
+    }
+
+    /**
+     * Logs out the current user
+     */
+    public static void logout() {
+        Client.comms.sendMessage(Packet.Logout());
+        Client.user = null;
+        Client.fireLogoutHandler();
     }
 
     public static void register(User user, char[] password, char[] passwordConfirm) {
@@ -367,6 +388,18 @@ public final class Client implements ConnectionListener {
     }
 
     /**
+     * Fires Logout Event
+     */
+    private static void fireLogoutHandler() {
+        Object[] listeners = Client.listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == LoginListener.class) {
+                ((LoginListener) listeners[i + 1]).logout();
+            }
+        }
+    }
+
+    /**
      * Fires ConnectionSucceeded Event
      */
     private static void fireConnectionSucceeded() {
@@ -422,12 +455,6 @@ public final class Client implements ConnectionListener {
      */
     public static void removePacketListener(PacketListener listener) {
         Client.comms.removeMessageListener(listener);
-    }    /**
-     * Fires when the connection succeeds
-     */
-    @Override
-    public void connectionSucceeded() {
-        fireConnectionSucceeded();
     }
 
     /**
@@ -446,15 +473,6 @@ public final class Client implements ConnectionListener {
      */
     public static void removeRegisterListener(RegisterListener listener) {
         Client.listenerList.remove(RegisterListener.class, listener);
-    }    /**
-     * Fires when the connection fails
-     *
-     * @param reason Reason why connection failed
-     */
-    @Override
-    public void connectionFailed(String reason) {
-        Client.isConnected = false;
-        fireConnectionFailed(reason);
     }
 
     /**
@@ -467,26 +485,21 @@ public final class Client implements ConnectionListener {
     }
 
     /**
+     * Fires when the connection succeeds
+     */
+    @Override
+    public void connectionSucceeded() {
+        fireConnectionSucceeded();
+    }
+
+    /**
      * Removes a login listener to the Client
      *
      * @param listener Listener to remove
      */
     public static void removeLoginListener(LoginListener listener) {
         Client.listenerList.remove(LoginListener.class, listener);
-    }    /**
-     * Fires when the connection is closed
-     *
-     * @param reason Reason why the connection is closed
-     */
-    @Override
-    public void connectionClosed(String reason) {
-        Client.isConnected = false;
-        log.info("Connection to server closed. {}", reason);
-        fireConnectionClosed(reason);
     }
-    //endregion
-
-    //region Add/Remove Event Handlers
 
     /**
      * Adds a connection listener to the Client
@@ -508,7 +521,32 @@ public final class Client implements ConnectionListener {
 
 
 
+    /**
+     * Fires when the connection fails
+     *
+     * @param reason Reason why connection failed
+     */
+    @Override
+    public void connectionFailed(String reason) {
+        Client.isConnected = false;
+        fireConnectionFailed(reason);
+    }
 
+
+    /**
+     * Fires when the connection is closed
+     *
+     * @param reason Reason why the connection is closed
+     */
+    @Override
+    public void connectionClosed(String reason) {
+        Client.isConnected = false;
+        log.info("Connection to server closed. {}", reason);
+        fireConnectionClosed(reason);
+    }
+    //endregion
+
+    //region Add/Remove Event Handlers
 
 
     //endregion
