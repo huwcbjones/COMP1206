@@ -55,4 +55,17 @@ public abstract class WindowTemplate extends JFrame {
      * Initialises the GUI components
      */
     protected abstract void initComponents();
+
+    /**
+     * Sets the title for this frame to the specified string.
+     *
+     * @param title the title to be displayed in the frame's border.
+     *              A <code>null</code> value
+     *              is treated as an empty string, "".
+     * @see #getTitle
+     */
+    @Override
+    public void setTitle(String title) {
+        super.setTitle(title + " | Biddr");
+    }
 }
