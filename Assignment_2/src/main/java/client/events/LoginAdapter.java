@@ -28,4 +28,12 @@ public class LoginAdapter implements LoginListener {
     public void loginFail(String message) {
 
     }
+
+    /**
+     * Fired when a logout occurs
+     */
+    @Override
+    public void logout() {
+
+    }
 }

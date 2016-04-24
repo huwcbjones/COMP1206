@@ -20,9 +20,14 @@ public interface LoginListener extends EventListener {
     void loginSuccess (User user);
 
     /**
-     * Fire when an unsuccessful login occurs
+     * Fired when an unsuccessful login occurs
      *
      * @param message Reason why login failed
      */
     void loginFail(String message);
+
+    /**
+     * Fired when a logout occurs
+     */
+    void logout();
 }
