@@ -39,6 +39,9 @@ public final class PacketHandler extends RunnableAdapter {
             case LOGIN:
                 Server.getWorkerPool().queueTask(new LoginTask(this.client, (char[][])packet.getPayload()));
                 break;
+            case LOGOUT:
+                Server.getWorkerPool().queueTask(new LogoutTask(this.client));
+                break;
             case REGISTER:
                 Server.getWorkerPool().queueTask(new RegisterTask(this.client, (RegisterUser)packet.getPayload()));
                 break;
