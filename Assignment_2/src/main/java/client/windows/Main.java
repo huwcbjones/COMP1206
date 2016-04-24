@@ -1,12 +1,15 @@
 package client.windows;
 
+import client.Client;
 import client.components.WindowPanel;
+import client.events.LoginAdapter;
 import shared.utils.WindowTemplate;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 
@@ -22,6 +25,8 @@ public final class Main extends WindowTemplate {
     private final static String PANEL_NEWITEM = "NewItem";
     private final static String PANEL_VIEWITEM = "ViewItem";
     private final static String PANEL_VIEWUSER = "ViewUser";
+
+    private boolean promptExit = true;
 
     private JPanel panel_cards;
     private HashMap<String, WindowPanel> panels = new HashMap<>();
@@ -44,7 +49,7 @@ public final class Main extends WindowTemplate {
 
     public Main() {
         super("Home");
-        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.setMinimumSize(new Dimension(800, 600));
 
         this.panels.put(PANEL_SEARCH, this.panel_search);
@@ -147,6 +152,31 @@ public final class Main extends WindowTemplate {
     }
 
     private void initEventListeners() {
+        this.addWindowListener(new WindowClosingHandler());
+        Client.addLoginListener(new LoginAdapter(){
+            @Override
+            public void logout() {
+                Main.this.promptExit = false;
+                Main.this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                Main.this.dispatchEvent(new WindowEvent(Main.this, WindowEvent.WINDOW_CLOSING));
+                Client.removeLoginListener(this);
+            }
+        });
+
+
+        this.menu_file_logout.addActionListener(e ->
+            SwingUtilities.invokeLater(() -> {
+                int result = JOptionPane.showConfirmDialog(Main.this,
+                    "Are you sure you want to log out?",
+                    "Logout?",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+                );
+                if(result == JOptionPane.OK_OPTION){
+                    Client.logout();
+                }
+            })
+        );
         this.menu_file_exit.addActionListener(e -> this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
 
         this.menu_items_new.addActionListener(e -> this.changePanel(PANEL_NEWITEM));
@@ -167,5 +197,33 @@ public final class Main extends WindowTemplate {
     public static void main(String[] args) {
         Main main = new Main();
         main.setVisible(true);
+    }
+
+    private class WindowClosingHandler extends WindowAdapter{
+        /**
+         * Invoked when a window is in the process of being closed.
+         * The close operation can be overridden at this point.
+         *
+         * @param e
+         */
+        @Override
+        public void windowClosing(WindowEvent e) {
+            if(!promptExit) {
+                return;
+            }
+            int result = JOptionPane.showConfirmDialog(Main.this,
+                "Are you sure you want to exit Biddr?",
+                "Exit Biddr?",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            if(result == JOptionPane.OK_OPTION){
+                Main.this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                //Main.this.promptExit = false;
+            } else {
+                Main.this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+                //Main.this.promptExit = true;
+            }
+        }
     }
 }
