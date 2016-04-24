@@ -330,7 +330,6 @@ public final class Client implements ConnectionListener {
     //endregion
 
     //region Event Trigger Methods
-
     /**
      * Fires RegisterSuccess Event
      *
@@ -438,7 +437,9 @@ public final class Client implements ConnectionListener {
             }
         }
     }
+    //endregion
 
+    //region Add/Remove Event Handlers
     /**
      * Adds a packet listener to the communications handler
      *
@@ -518,9 +519,9 @@ public final class Client implements ConnectionListener {
     public static void removeConnectionListener(ConnectionListener listener) {
         Client.listenerList.remove(ConnectionListener.class, listener);
     }
+    //endregion
 
-
-
+    //region Respond to Events
     /**
      * Fires when the connection fails
      *
@@ -544,10 +545,5 @@ public final class Client implements ConnectionListener {
         log.info("Connection to server closed. {}", reason);
         fireConnectionClosed(reason);
     }
-    //endregion
-
-    //region Add/Remove Event Handlers
-
-
     //endregion
 }
