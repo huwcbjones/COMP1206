@@ -1,5 +1,6 @@
 package client.windows;
 
+import client.components.WindowPanel;
 import shared.utils.WindowTemplate;
 
 import javax.swing.*;
@@ -7,6 +8,7 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
+import java.util.HashMap;
 
 /**
  * Main Application Window
@@ -22,6 +24,7 @@ public final class Main extends WindowTemplate {
     private final static String PANEL_VIEWUSER = "ViewUser";
 
     private JPanel panel_cards;
+    private HashMap<String, WindowPanel> panels = new HashMap<>();
     private SearchItems panel_search;
     private NewItem panel_newItem;
     private ViewItem panel_viewItem;
@@ -39,16 +42,16 @@ public final class Main extends WindowTemplate {
     private JMenu menu_help;
     private JMenuItem menu_help_about;
 
-    public static void main(String[] args){
-        Main main = new Main();
-        main.setVisible(true);
-    }
-
     public Main() {
         super("Home");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setMinimumSize(new Dimension(800, 600));
 
+        this.panels.put(PANEL_SEARCH, this.panel_search);
+        this.panels.put(PANEL_NEWITEM, this.panel_newItem);
+        this.panels.put(PANEL_VIEWITEM, this.panel_viewItem);
+        this.panels.put(PANEL_VIEWUSER, this.panel_viewUser);
+        this.changePanel(PANEL_SEARCH);
     }
 
     /**
@@ -61,7 +64,7 @@ public final class Main extends WindowTemplate {
         initEventListeners();
     }
 
-    private void initPanels(){
+    private void initPanels() {
         this.panel_cards = new JPanel(new CardLayout());
 
         this.panel_search = new SearchItems();
@@ -75,9 +78,11 @@ public final class Main extends WindowTemplate {
 
         this.panel_viewUser = new ViewUser();
         this.panel_cards.add(panel_viewUser, PANEL_VIEWUSER);
+
+        this.setContentPane(this.panel_cards);
     }
 
-    private void initMainMenu(){
+    private void initMainMenu() {
         this.menuBar = new JMenuBar();
 
         //region File
@@ -150,18 +155,17 @@ public final class Main extends WindowTemplate {
 
     /**
      * Sets the displayed panel
+     *
      * @param panelID The panel that should be changed to
-     * @beaninfo
-     *   preferred: true
-     *       bound: true
-     *        enum: PANEL_SEARCH        Main.PANEL_SEARCH
-     *              PANEL_NEWITEM       Main.PANEL_NEWITEM
-     *              PANEL_VIEWITEM      Main.PANEL_VIEWITEM
-     *              PANEL_VIEWUSER      Main.PANEL_VIEWUSER
-     * description: The panel to switch to
      */
-    private void changePanel(String panelID){
-        CardLayout layout = (CardLayout)this.panel_cards.getLayout();
+    private void changePanel(String panelID) {
+        CardLayout layout = (CardLayout) this.panel_cards.getLayout();
+        this.setTitle(this.panels.get(panelID).getTitle());
         layout.show(this.panel_cards, panelID);
+    }
+
+    public static void main(String[] args) {
+        Main main = new Main();
+        main.setVisible(true);
     }
 }
