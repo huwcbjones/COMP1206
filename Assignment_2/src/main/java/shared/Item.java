@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
@@ -26,11 +27,11 @@ public class Item implements Serializable {
     private final Timestamp startTime;
     private final Timestamp endTime;
     private final BigDecimal reservePrice;
-    private final ArrayList<Bid> bids;
+    private final ArrayList<? extends Bid> bids;
     private final BufferedImage image;
     private Bid topBid;
 
-    public Item(UUID itemID, UUID userID, String title, String description, HashSet<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<Bid> bids, BufferedImage image) {
+    public Item(UUID itemID, UUID userID, String title, String description, HashSet<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
         this.itemID = itemID;
         this.userID = userID;
         this.title = title;
@@ -144,6 +145,40 @@ public class Item implements Serializable {
      */
     public BufferedImage getImage() {
         return this.image;
+    }
+
+    /**
+     * Gets the item's start time
+     *
+     * @return Start time
+     */
+    public Timestamp getStartTime() {
+        return this.startTime;
+    }
+
+    public String getStartTimeString() {
+        return getStartTimeString("HH:mm:ss dd/MM/yyyy");
+    }
+
+    public String getStartTimeString(String format) {
+        return new SimpleDateFormat(format).format(this.getEndTimeTime());
+    }
+
+    /**
+     * Gets the item's end time
+     *
+     * @return End time
+     */
+    public Timestamp getEndTimeTime() {
+        return this.endTime;
+    }
+
+    public String getEndTimeString() {
+        return getEndTimeString("HH:mm:ss dd/MM/yyyy");
+    }
+
+    public String getEndTimeString(String format) {
+        return new SimpleDateFormat(format).format(this.getEndTimeTime());
     }
 
     /**
