@@ -1,6 +1,7 @@
 package client.windows;
 
 import client.Client;
+import client.events.LoginAdapter;
 import client.events.LoginListener;
 import client.utils.ImagePanel;
 import client.utils.Server;
@@ -301,7 +302,7 @@ public final class Login extends WindowTemplate {
     /**
      * Handles LoginEvents
      */
-    private class loginHandler implements LoginListener {
+    private class loginHandler extends LoginAdapter {
 
         /**
          * Fired when a successful login occurs
@@ -385,6 +386,5 @@ public final class Login extends WindowTemplate {
 
 
     }
-
     //endregion
 }
