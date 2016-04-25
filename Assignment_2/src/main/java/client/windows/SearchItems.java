@@ -57,10 +57,6 @@ public class SearchItems extends WindowPanel {
 
     private void initComponents(){
         this.panel_split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        this.panel_split.setDividerSize(20);
-        this.panel_split.setContinuousLayout(true);
-        this.panel_split.setResizeWeight(0.3);
-        this.panel_split.setOneTouchExpandable(true);
 
         //region Search
         this.panel_search = new JPanel(new GridBagLayout());
@@ -82,6 +78,11 @@ public class SearchItems extends WindowPanel {
         this.panel_results.add(this.list_results, BorderLayout.CENTER);
 
         this.panel_split.add(this.panel_results);
+        this.panel_split.setDividerSize(20);
+        this.panel_split.setContinuousLayout(true);
+        this.panel_split.setResizeWeight(0);
+        this.panel_split.setDividerLocation(0.1d);
+        this.panel_split.setOneTouchExpandable(true);
         //endregion
     }
 
