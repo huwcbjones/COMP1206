@@ -1,39 +1,28 @@
 package client.windows;
 
 import client.Client;
+import client.components.WindowPanel;
 import client.events.RegisterListener;
-import client.utils.HintTextFieldUI;
-import client.utils.SpringUtilities;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import client.utils.Server;
 import shared.User;
-import shared.exceptions.ValidationFailedException;
-import shared.utils.ValidationUtils;
-import shared.utils.WindowTemplate;
+import shared.components.HintPasswordFieldUI;
+import shared.components.HintTextFieldUI;
+import shared.components.JLinkLabel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 /**
- * Register Window
+ * Registration Panel
  *
  * @author Huw Jones
- * @since 27/03/2016
+ * @since 25/04/2016
  */
-public final class Register extends WindowTemplate {
-
-    protected static final Logger log = LogManager.getLogger(Register.class);
-
-    private JPanel panel_form;
-    private JButton btn_cancel;
-    private JButton btn_register;
-
-    private JLabel label_server;
-    private JTextField text_server;
-    private JLabel label_validation_server;
+public class Register extends WindowPanel {
 
     private JLabel label_username;
     private JTextField text_username;
@@ -55,194 +44,149 @@ public final class Register extends WindowTemplate {
     private JPasswordField text_passwordConfirm;
     private JLabel label_validation_passwordConfirm;
 
-    private RegisterListener registerListener;
-    private boolean isRegistering = false;
+    private JLabel label_server;
+    private JComboBox<Server> combo_server;
+    private JLabel label_validation_server;
 
+    public JButton btn_register;
+    public JLinkLabel label_login;
+
+    private RegisterListener registerListener;
 
     public Register() {
-        this(null);
-    }
-
-    public Register(Window relativeTo) {
         super("Register");
-        // Set do nothing as we'll decide what to do when the WindowClosing listener is called
-        this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        this.setResizable(false);
-        this.setMinimumSize(new Dimension(380, 218));
-        this.setMaximumSize(new Dimension(380, 218));
-        this.setLocationRelativeTo(relativeTo);
-
+        this.initComponents();
         this.initEventListeners();
     }
 
-    /**
-     * Adds Event Listeners
-     */
-    private void initEventListeners() {
-        // Sets default button on enter press
-        this.getRootPane().setDefaultButton(this.btn_register);
-
-        // Triggers cancel button event handler when escape button pressed
-        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, true);
-        Action escapeAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Register.cancelBtnClickHandler handler = new Register.cancelBtnClickHandler();
-                handler.actionPerformed(e);
-            }
-        };
-        this.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
-        this.getRootPane().getActionMap().put("ESCAPE", escapeAction);
-
-        // Add cancel/register button listeners
-        this.btn_cancel.addActionListener(new cancelBtnClickHandler());
-        this.btn_register.addActionListener(new registerBtnClickHandler());
-
-        this.registerListener = new registerListener();
-
-        // Adds window closing listener
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                if (
-                    !(
-                        Register.this.text_username.getText().equals("")
-                            ^ Register.this.text_firstName.getText().equals("")
-                            ^ Register.this.text_lastName.getText().equals("")
-                            ^ Register.this.text_password.getPassword().length == 0
-                            ^ Register.this.text_passwordConfirm.getPassword().length == 0
-                    )
-                    ) {
-                    int result = JOptionPane.showConfirmDialog(
-                        Register.this,
-                        "Do you want to cancel registration?",
-                        "Cancel Registration?",
-                        JOptionPane.OK_CANCEL_OPTION,
-                        JOptionPane.QUESTION_MESSAGE
-                    );
-                    if (result == JOptionPane.CANCEL_OPTION) {
-                        Register.this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-                        return;
-                    }
-                }
-                Register.this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                Client.removeRegisterListener(Register.this.registerListener);
-            }
-        });
-
-        this.text_username.addFocusListener(new focusChangeListener());
-        this.text_firstName.addFocusListener(new focusChangeListener());
-        this.text_lastName.addFocusListener(new focusChangeListener());
-        this.text_password.addFocusListener(new focusChangeListener());
-        this.text_passwordConfirm.addFocusListener(new focusChangeListener());
-    }
-
-    @Override
-    protected void initComponents() {
-        GridBagConstraints c;
-        Container container = this.getContentPane();
-        container.setLayout(new GridBagLayout());
-
-        this.panel_form = new JPanel(new SpringLayout());
+    private void initComponents(){
+        this.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
         int row = 0;
 
-        this.label_server = new JLabel("Server", JLabel.LEADING);
-        this.panel_form.add(this.label_server);
-
-        this.text_server = new JTextField(Client.getConfig().getSelectedServer().getName());
-        this.text_server.setEnabled(false);
-        this.panel_form.add(this.text_server);
-
-        this.label_validation_server = ValidationUtils.createValidationLabel();
-        this.panel_form.add(this.label_validation_server);
+        //region Fields
+        this.label_username = new JLabel("Username", JLabel.LEADING);
+        this.label_username.setLabelFor(this.text_username);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.label_username, c);
         row++;
 
-        this.label_username = new JLabel("Username", JLabel.LEADING);
-        this.panel_form.add(this.label_username);
-
         this.text_username = new JTextField();
-        this.text_username.setName("Username");
         this.text_username.setUI(new HintTextFieldUI("Username", true));
-        this.panel_form.add(this.text_username);
-
-        this.label_validation_username = ValidationUtils.createValidationLabel();
-        this.panel_form.add(this.label_validation_username);
+        c.gridy = row;
+        c.insets = new Insets(0, 0, 6, 0);
+        this.add(this.text_username, c);
         row++;
 
         this.label_firstName = new JLabel("First Name", JLabel.LEADING);
-        this.panel_form.add(this.label_firstName);
+        this.label_firstName.setLabelFor(this.label_firstName);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.label_firstName, c);
+        row++;
 
         this.text_firstName = new JTextField();
-        this.text_firstName.setName("First Name");
-        this.text_firstName.setUI(new HintTextFieldUI("John", true));
-        this.panel_form.add(this.text_firstName);
-
-        this.label_validation_firstName = ValidationUtils.createValidationLabel();
-        this.panel_form.add(this.label_validation_firstName);
+        this.text_firstName.setUI(new HintTextFieldUI("First Name", true));
+        c.gridy = row;
+        c.insets = new Insets(0, 0, 6, 0);
+        this.add(this.text_firstName, c);
         row++;
 
         this.label_lastName = new JLabel("Last Name", JLabel.LEADING);
-        this.panel_form.add(this.label_lastName);
+        this.label_lastName.setLabelFor(this.label_lastName);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.label_lastName, c);
+        row++;
 
         this.text_lastName = new JTextField();
-        this.text_lastName.setName("Last Name");
-        this.text_lastName.setUI(new HintTextFieldUI("Smith", true));
-        this.panel_form.add(this.text_lastName);
-
-        this.label_validation_lastName = ValidationUtils.createValidationLabel();
-        this.panel_form.add(this.label_validation_lastName);
+        this.text_lastName.setUI(new HintTextFieldUI("Last Name", true));
+        c.gridy = row;
+        c.insets = new Insets(0, 0, 6, 0);
+        this.add(this.text_lastName, c);
         row++;
 
         this.label_password = new JLabel("Password", JLabel.LEADING);
-        this.panel_form.add(this.label_password);
+        this.label_password.setLabelFor(this.text_password);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.label_password, c);
+        row++;
 
         this.text_password = new JPasswordField();
-        this.text_password.setName("Password");
-        this.panel_form.add(this.text_password);
-
-        this.label_validation_password = ValidationUtils.createValidationLabel();
-        this.panel_form.add(this.label_validation_password);
+        this.text_password.setUI(new HintPasswordFieldUI("Password", true));
+        c.insets = new Insets(0, 0, 6, 0);
+        c.gridy = row;
+        this.add(this.text_password, c);
         row++;
 
         this.label_passwordConfirm = new JLabel("Confirm Password", JLabel.LEADING);
-        this.panel_form.add(this.label_passwordConfirm);
-
-        this.text_passwordConfirm = new JPasswordField();
-        this.text_passwordConfirm.setName("Password Confirmation");
-        this.panel_form.add(this.text_passwordConfirm);
-
-        this.label_validation_passwordConfirm = ValidationUtils.createValidationLabel();
-        this.panel_form.add(this.label_validation_passwordConfirm);
+        this.label_passwordConfirm.setLabelFor(this.label_passwordConfirm);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.label_passwordConfirm, c);
         row++;
 
-        SpringUtilities.makeCompactGrid(this.panel_form, row, 3, 0, 6, 6, 3);
+        this.text_passwordConfirm = new JPasswordField();
+        this.text_passwordConfirm.setUI(new HintPasswordFieldUI("Confirm Password", true));
+        c.insets = new Insets(0, 0, 6, 0);
+        c.gridy = row;
+        this.add(this.text_passwordConfirm, c);
+        row++;
 
-        c = new GridBagConstraints();
-        c.weightx = 1;
-        c.weighty = 1;
-        c.gridwidth = 2;
-        c.insets.set(3, 3, 3, 3);
-        c.fill = GridBagConstraints.BOTH;
-        container.add(this.panel_form, c);
+        this.label_server = new JLabel("Server", JLabel.LEADING);
+        this.label_server.setLabelFor(this.combo_server);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.label_server, c);
+        row++;
 
-        this.btn_cancel = new JButton("Cancel");
-        this.btn_cancel.setMnemonic('c');
-        c = new GridBagConstraints();
-        c.weightx = 0.5;
-        c.gridy = 1;
-        c.insets.set(3, 6, 3, 3);
-        c.fill = GridBagConstraints.BOTH;
-        container.add(this.btn_cancel, c);
+        this.combo_server = new JComboBox<>();
+        for (Server s : Client.getConfig().getServers()) {
+            this.combo_server.addItem(s);
+        }
+        c.insets = new Insets(0, 0, 6, 0);
+        c.gridy = row;
+        this.add(this.combo_server, c);
+        row++;
+        //endregion
+
+        //region Buttons
 
         this.btn_register = new JButton("Register");
         this.btn_register.setMnemonic('r');
-        c = new GridBagConstraints();
-        c.weightx = 0.5;
-        c.gridx = 1;
-        c.gridy = 1;
-        c.insets.set(3, 3, 3, 6);
-        c.fill = GridBagConstraints.BOTH;
-        container.add(this.btn_register, c);
+        c.insets = new Insets(6, 0, 6, 0);
+        c.gridy = row;
+        this.add(this.btn_register, c);
+        row++;
+
+        this.label_login = new JLinkLabel("Login", JLabel.LEADING);
+        this.label_login.setFont(this.label_login.getFont().deriveFont(this.label_login.getFont().getStyle() | Font.BOLD));
+        c.insets = new Insets(6, 0, 6, 0);
+        c.gridy = row;
+        c.fill = GridBagConstraints.NONE;
+        this.add(this.label_login, c);
+        row++;
+        //endregion
+    }
+
+    private void initEventListeners(){
+        this.addComponentListener(new ComponentHandler());
+        this.registerListener = new RegisterHandler();
+        this.btn_register.addActionListener(new RegisterBtnClickHandler());
+    }
+    /**
+     * Gets the default button for the panel
+     *
+     * @return
+     */
+    @Override
+    public JButton getDefaultButton() {
+        return this.btn_register;
     }
 
     //region Utility Methods
@@ -253,6 +197,7 @@ public final class Register extends WindowTemplate {
         this.text_password.setEnabled(state);
         this.text_passwordConfirm.setEnabled(state);
         this.btn_register.setEnabled(state);
+        this.label_login.setEnabled(state);
     }
 
     private void clearFields() {
@@ -262,99 +207,54 @@ public final class Register extends WindowTemplate {
         this.text_password.setText("");
         this.text_passwordConfirm.setText("");
     }
+
     //endregion
-
-    private ArrayList<String> validateForm() {
-        return validateForm(false);
-    }
-
-    private ArrayList<String> validateForm(boolean isFocusChangeValidation) {
-        ArrayList<String> errors = new ArrayList<>();
-        Component firstWrongField = null;
-
-        // Validate username
-        try {
-            ValidationUtils.validateUsername(this.text_username.getText());
-            ValidationUtils.setValidation(this.label_validation_username, null);
-        } catch (ValidationFailedException e) {
-            if (firstWrongField == null) firstWrongField = this.text_username;
-            errors.add(e.getMessage());
-            ValidationUtils.setValidation(this.label_validation_username, e.getMessage());
-        }
-
-        // Validate First Name
-        try {
-            ValidationUtils.validateName(this.text_firstName.getText());
-            ValidationUtils.setValidation(this.label_validation_firstName, null);
-        } catch (ValidationFailedException e) {
-            if (firstWrongField == null) firstWrongField = this.text_firstName;
-            errors.add(e.getMessage());
-            ValidationUtils.setValidation(this.label_validation_firstName, e.getMessage());
-        }
-
-        // Validate Last Name
-        try {
-            ValidationUtils.validateName(this.text_lastName.getText());
-            ValidationUtils.setValidation(this.label_validation_lastName, null);
-        } catch (ValidationFailedException e) {
-            if (firstWrongField == null) firstWrongField = this.text_lastName;
-            errors.add(e.getMessage());
-            ValidationUtils.setValidation(this.label_validation_lastName, e.getMessage());
-        }
-
-        // Validate Password
-        try {
-            ValidationUtils.validatePassword(this.text_password.getPassword());
-            ValidationUtils.setValidation(this.label_validation_password, null);
-        } catch (ValidationFailedException e) {
-            if (firstWrongField == null) firstWrongField = this.text_password;
-            errors.add(e.getMessage());
-            ValidationUtils.setValidation(this.label_validation_password, e.getMessage());
-        }
-
-        // Validate Password
-        if (Arrays.equals(this.text_password.getPassword(), this.text_passwordConfirm.getPassword())) {
-            ValidationUtils.setValidation(this.label_validation_passwordConfirm, true);
-        } else {
-            if (firstWrongField == null) firstWrongField = this.text_passwordConfirm;
-            errors.add("Passwords do not match.");
-            ValidationUtils.setValidation(this.label_validation_passwordConfirm, false);
-        }
-
-        if (firstWrongField != null && !isFocusChangeValidation) {
-            firstWrongField.requestFocus();
-        }
-
-        return errors;
-    }
-
-    /**
-     * Closes window when cancel button pressed
-     */
-    private class cancelBtnClickHandler implements ActionListener {
-
+    private class ComponentHandler extends ComponentAdapter {
+        /**
+         * Invoked when the component has been made invisible.
+         *
+         * @param e
+         */
         @Override
-        public void actionPerformed(ActionEvent e) {
-            if(isRegistering){
-                Register.this.isRegistering = false;
-                Client.removeRegisterListener(Register.this.registerListener);
-                Register.this.setFormEnabledState(true);
-            } else {
-                Register.this.dispatchEvent(new WindowEvent(Register.this, WindowEvent.WINDOW_CLOSING));
-            }
+        public void componentHidden(ComponentEvent e) {
+            Authenticate.setUsername(Register.this.text_username.getText());
+            Register.this.text_password.setText("");
+            Register.this.text_passwordConfirm.setText("");
         }
-    }
 
-    private class registerBtnClickHandler implements ActionListener {
-
+        /**
+         * Invoked when the component has been made visible.
+         *
+         * @param e
+         */
         @Override
-        public void actionPerformed(ActionEvent e) {
-            ArrayList<String> errors = Register.this.validateForm();
-            if (errors.size() != 0) {
-                ValidationUtils.showValidationMessage(Register.this, errors);
+        public void componentShown(ComponentEvent e) {
+            Register.this.text_username.setText(Authenticate.getUsername());
+            if(Register.this.text_username.getText().equals("")){
+                Register.this.text_username.requestFocus();
                 return;
             }
-            Register.this.isRegistering = true;
+            if(Register.this.text_firstName.getText().equals("")){
+                Register.this.text_firstName.requestFocus();
+                return;
+            }
+            if(Register.this.text_lastName.getText().equals("")){
+                Register.this.text_lastName.requestFocus();
+                return;
+            }
+            Register.this.text_password.requestFocus();
+        }
+    }
+
+    private class RegisterBtnClickHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            /*ArrayList<String> errors = RegisterPanel.this.validateForm();
+            if (errors.size() != 0) {
+                ValidationUtils.showValidationMessage(RegisterPanel.this, errors);
+                return;
+            }*/
             Register.this.setFormEnabledState(false);
             Client.addRegisterListener(Register.this.registerListener);
             Client.register(new User(
@@ -368,7 +268,7 @@ public final class Register extends WindowTemplate {
         }
     }
 
-    private class registerListener implements RegisterListener {
+    private class RegisterHandler implements RegisterListener {
 
         /**
          * Fired when a user successfully registers
@@ -377,11 +277,11 @@ public final class Register extends WindowTemplate {
          */
         @Override
         public void registerSuccess(User user) {
-            Register.this.isRegistering = false;
             Client.removeRegisterListener(Register.this.registerListener);
             Register.this.setFormEnabledState(true);
             Register.this.clearFields();
-            SwingUtilities.invokeLater(() -> {
+            Register.this.text_username.setText(user.getUsername());
+            SwingUtilities.invokeLater( () ->
                 JOptionPane.showMessageDialog(
                     Register.this,
                     "Hi " + user.getFullName() + ",\n" +
@@ -391,9 +291,8 @@ public final class Register extends WindowTemplate {
                         "\t- Username: " + user.getUsername() + "\n" +
                         "\t- Password: As Provided",
                     "Registration Succeeded!",
-                    JOptionPane.INFORMATION_MESSAGE);
-                Register.this.dispatchEvent(new WindowEvent(Register.this, WindowEvent.WINDOW_CLOSING));
-            });
+                    JOptionPane.INFORMATION_MESSAGE)
+            );
         }
 
         /**
@@ -403,7 +302,6 @@ public final class Register extends WindowTemplate {
          */
         @Override
         public void registerFail(String reason) {
-            Register.this.isRegistering = false;
             Client.removeRegisterListener(Register.this.registerListener);
             Register.this.setFormEnabledState(true);
             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
@@ -412,18 +310,6 @@ public final class Register extends WindowTemplate {
                 "Registration Failed",
                 JOptionPane.ERROR_MESSAGE
             ));
-        }
-    }
-
-    private class focusChangeListener extends FocusAdapter {
-        /**
-         * Invoked when a component loses the keyboard focus.
-         *
-         * @param e
-         */
-        @Override
-        public void focusLost(FocusEvent e) {
-            Register.this.validateForm(true);
         }
     }
 }

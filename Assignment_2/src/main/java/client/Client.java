@@ -6,7 +6,7 @@ import client.events.RegisterListener;
 import client.utils.ConnectHandler;
 import client.utils.NotificationWaiter;
 import client.utils.Server;
-import client.windows.Login;
+import client.windows.Authenticate;
 import client.windows.Main;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
@@ -49,7 +49,7 @@ public final class Client implements ConnectionListener {
 
     private static Comms comms;
     private static Client client;
-    private static Login loginWindow;
+    private static Authenticate authenticateWindow;
     private static Main mainWindow;
 
     public Client() {
@@ -64,8 +64,8 @@ public final class Client implements ConnectionListener {
         System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
         SwingUtilities.invokeLater(() -> {
-            Client.loginWindow = new Login();
-            Client.loginWindow.setVisible(true);
+            Client.authenticateWindow = new Authenticate();
+            Client.authenticateWindow.setVisible(true);
         });
         Client.addLoginListener(new LoginAdapter() {
             @Override
@@ -82,8 +82,8 @@ public final class Client implements ConnectionListener {
             public void logout() {
                 SwingUtilities.invokeLater(() -> {
                     Client.mainWindow = null;
-                    Client.loginWindow = new Login();
-                    Client.loginWindow.setVisible(true);
+                    Client.authenticateWindow = new Authenticate();
+                    Client.authenticateWindow.setVisible(true);
                 });
             }
         });
