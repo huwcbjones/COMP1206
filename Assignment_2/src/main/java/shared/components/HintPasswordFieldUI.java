@@ -1,6 +1,6 @@
-package client.utils;
+package shared.components;
 
-import javax.swing.plaf.basic.BasicTextFieldUI;
+import javax.swing.plaf.basic.BasicPasswordFieldUI;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.FocusEvent;
@@ -13,24 +13,24 @@ import java.awt.event.FocusListener;
  * @author Huw Jones
  * @since 01/03/2016
  */
-public class HintTextFieldUI extends BasicTextFieldUI implements FocusListener {
+public class HintPasswordFieldUI extends BasicPasswordFieldUI implements FocusListener {
 
     private String hint;
     private boolean hideOnFocus;
     private Color color;
 
-    public HintTextFieldUI(){
+    public HintPasswordFieldUI(){
         this("");
     }
-    public HintTextFieldUI(String hint) {
+    public HintPasswordFieldUI(String hint) {
         this(hint, false);
     }
 
-    public HintTextFieldUI(String hint, boolean hideOnFocus) {
+    public HintPasswordFieldUI(String hint, boolean hideOnFocus) {
         this(hint, hideOnFocus, Color.lightGray);
     }
 
-    public HintTextFieldUI(String hint, boolean hideOnFocus, Color color) {
+    public HintPasswordFieldUI(String hint, boolean hideOnFocus, Color color) {
         this.hint = hint;
         this.hideOnFocus = hideOnFocus;
         this.color = color;
