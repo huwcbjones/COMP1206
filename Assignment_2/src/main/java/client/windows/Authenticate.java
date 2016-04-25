@@ -78,6 +78,7 @@ public class Authenticate extends WindowTemplate {
         try {
             BufferedImage banner = ImageIO.read(Login.class.getResource("/img/biddr_banner_login2.png"));
             this.panel_banner.setImage(banner, true);
+            this.panel_banner.setHorizontalAlignment(SwingConstants.CENTER);
         } catch (IOException e) {
             log.error("Could not load banner image.");
         }
