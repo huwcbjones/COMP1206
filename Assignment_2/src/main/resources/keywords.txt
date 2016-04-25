@@ -1,0 +1,15 @@
+# Precompiled List of Keywords to start the server.
+# This list will be loaded into the database when the database is first created.
+# To add a new keyword without recreating the database, use the Biddr Client.
+# To comment lines, use the hash (#) symbol.
+# All non-blank lines that don't begin with a hash (#) will be added
+# The max length for keywords is 140 characters, any keywords over this length will be truncated.
+As New
+Unopened
+Refurbished
+Sports
+Home
+Garden
+Leisure
+Technology
+Device

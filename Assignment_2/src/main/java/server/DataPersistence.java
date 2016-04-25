@@ -12,8 +12,7 @@ import shared.Item;
 import shared.ItemBuilder;
 import shared.utils.UUIDUtils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -162,6 +161,26 @@ public final class DataPersistence {
             statement.execute("CREATE UNIQUE INDEX itemKeywordIndex ON item_keywords (itemID, keywordID)");
             log.info("Created indexes!");
 
+            try {
+                ArrayList<String> keywords = this.getKeywordsFromFile();
+                c.setAutoCommit(false);
+                PreparedStatement insert = c.prepareStatement("INSERT INTO keywords (keyword) VALUES (?)");
+                for(String keyword : keywords){
+                    insert.setString(1, keyword);
+                    insert.addBatch();
+                }
+                ArrayList<Integer> result = new ArrayList<>();
+                for(int r : insert.executeBatch()){
+                    result.add(r);
+                }
+                c.setAutoCommit(true);
+
+                long numInserts = result.size();
+                long numSuccess = numInserts - result.parallelStream().filter(i -> i == PreparedStatement.EXECUTE_FAILED).count();
+                log.info("Added {}/{} keyword(s) to the database.", numSuccess, numInserts);
+            } catch (OperationFailureException e){
+                log.warn("Failed to load keywords: {}", e.getMessage());
+            }
         } catch (SQLException e) {
             log.debug(e);
             throw new OperationFailureException("Failed to create initial database: " + e.getMessage());
@@ -177,7 +196,48 @@ public final class DataPersistence {
                 log.trace(suppress);
             }
         }
+    }
 
+    /**
+     * Loads the list of keywords into the database
+     *
+     * @return List of Keywords
+     */
+    private ArrayList<String> getKeywordsFromFile() throws OperationFailureException {
+        File keywordsFile = new File(this.getClass().getResource("/keywords.txt").getFile());
+        if (!keywordsFile.exists()) {
+            throw new OperationFailureException("Failed to open keywords.txt, file does not exist.");
+        }
+
+        if (!keywordsFile.isFile()) {
+            throw new OperationFailureException("Failed to open keywords.txt, keywords.txt provided is not a file. " + keywordsFile.getAbsolutePath());
+        }
+
+        if (!keywordsFile.canRead()) {
+            throw new OperationFailureException("Failed to open keywords.txt, cannot read file. " + keywordsFile.getAbsolutePath());
+        }
+        ArrayList<String> keywords = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(keywordsFile)));
+            String line;
+
+            while((line = reader.readLine()) != null){
+                // Ignore comments
+                if(line.substring(0, 1).equals("#")){
+                    continue;
+                }
+                // Truncate keywords longer than 140
+                if(line.length() > 140){
+                    keywords.add(line.substring(0, 140));
+                } else {
+                    keywords.add(line);
+                }
+            }
+        } catch (IOException e) {
+            log.catching(e);
+            throw new OperationFailureException(e.getMessage());
+        }
+        return keywords;
     }
 
     /**
