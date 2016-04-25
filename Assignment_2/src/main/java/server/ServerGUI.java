@@ -179,7 +179,7 @@ public final class ServerGUI extends WindowTemplate {
     private void initEventListeners() {
         this.btn_start.addActionListener(e -> {
             this.text_console.setText("");
-            server.run();
+            server.run(true);
         });
 
         this.btn_stop.addActionListener(e -> server.shutdownServer());
