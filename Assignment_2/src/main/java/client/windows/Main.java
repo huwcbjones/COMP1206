@@ -6,6 +6,7 @@ import client.events.LoginAdapter;
 import shared.utils.WindowTemplate;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -27,6 +28,9 @@ public final class Main extends WindowTemplate {
     private final static String PANEL_VIEWUSER = "ViewUser";
 
     private boolean promptExit = true;
+
+    private JPanel panel_title;
+    private JLabel label_title;
 
     private JPanel panel_cards;
     private HashMap<String, WindowPanel> panels = new HashMap<>();
@@ -70,6 +74,7 @@ public final class Main extends WindowTemplate {
     }
 
     private void initPanels() {
+        this.createTitlePanel();
         this.panel_cards = new JPanel(new CardLayout());
 
         this.panel_search = new SearchItems();
@@ -84,7 +89,7 @@ public final class Main extends WindowTemplate {
         this.panel_viewUser = new ViewUser();
         this.panel_cards.add(panel_viewUser, PANEL_VIEWUSER);
 
-        this.setContentPane(this.panel_cards);
+        this.add(this.panel_cards, BorderLayout.CENTER);
     }
 
     private void initMainMenu() {
@@ -151,6 +156,29 @@ public final class Main extends WindowTemplate {
         this.setJMenuBar(this.menuBar);
     }
 
+    private void createTitlePanel(){
+        this.panel_title = new JPanel(new BorderLayout());
+        this.panel_title.setBorder(new EmptyBorder(new Insets(6, 6, 6, 6)));
+        this.label_title = new JLabel(this.getTitle(), JLabel.LEADING);
+        this.label_title.setFont(this.label_title.getFont().deriveFont(18f));
+        this.panel_title.add(this.label_title, BorderLayout.CENTER);
+        this.add(this.panel_title, BorderLayout.PAGE_START);
+    }
+
+    /**
+     * Sets the title for this frame to the specified string.
+     *
+     * @param title the title to be displayed in the frame's border.
+     *              A <code>null</code> value
+     *              is treated as an empty string, "".
+     * @see #getTitle
+     */
+    @Override
+    public void setTitle(String title) {
+        super.setTitle(title);
+        this.label_title.setText(title);
+    }
+
     private void initEventListeners() {
         this.addWindowListener(new WindowClosingHandler());
         Client.addLoginListener(new LoginAdapter(){
@@ -162,7 +190,6 @@ public final class Main extends WindowTemplate {
                 Client.removeLoginListener(this);
             }
         });
-
 
         this.menu_file_logout.addActionListener(e ->
             SwingUtilities.invokeLater(() -> {
@@ -178,11 +205,9 @@ public final class Main extends WindowTemplate {
             })
         );
         this.menu_file_exit.addActionListener(e -> this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
-
         this.menu_items_new.addActionListener(e -> this.changePanel(PANEL_NEWITEM));
         this.menu_items_search.addActionListener(e -> this.changePanel(PANEL_SEARCH));
     }
-
     /**
      * Sets the displayed panel
      *
