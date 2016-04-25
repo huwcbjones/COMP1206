@@ -22,9 +22,9 @@ public abstract class WindowTemplate extends JFrame {
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            log.debug("Failed to set System Look and Feel. {}", ex.getMessage());
-            log.trace(ex);
+        } catch (Exception shouldNotHappenUnderAnyCircumstancesUnlessJavaInstallationIsBroken) {
+            log.debug("Failed to set System Look and Feel. {}", shouldNotHappenUnderAnyCircumstancesUnlessJavaInstallationIsBroken.getMessage());
+            log.trace(shouldNotHappenUnderAnyCircumstancesUnlessJavaInstallationIsBroken);
         }
         this.initComponents();
     }
@@ -34,9 +34,9 @@ public abstract class WindowTemplate extends JFrame {
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            log.debug("Failed to set System Look and Feel. {}", ex.getMessage());
-            log.trace(ex);
+        } catch (Exception shouldNotHappenUnderAnyCircumstancesUnlessJavaInstallationIsBroken) {
+            log.debug("Failed to set System Look and Feel. {}", shouldNotHappenUnderAnyCircumstancesUnlessJavaInstallationIsBroken.getMessage());
+            log.trace(shouldNotHappenUnderAnyCircumstancesUnlessJavaInstallationIsBroken);
         }
         this.initComponents();
     }
