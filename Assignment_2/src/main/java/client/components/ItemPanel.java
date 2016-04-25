@@ -1,7 +1,7 @@
 package client.components;
 
-import client.utils.ImagePanel;
 import shared.Item;
+import shared.components.ImagePanel;
 
 import javax.swing.*;
 import java.awt.*;

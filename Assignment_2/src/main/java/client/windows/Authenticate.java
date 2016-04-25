@@ -4,8 +4,9 @@ import client.Client;
 import client.components.WindowPanel;
 import client.events.LoginAdapter;
 import client.events.RegisterListener;
-import client.utils.ImagePanel;
 import shared.User;
+import shared.components.ImagePanel;
+import shared.components.RolloverImagePanel;
 import shared.utils.WindowTemplate;
 
 import javax.imageio.ImageIO;
@@ -30,6 +31,9 @@ public class Authenticate extends WindowTemplate {
     private final static String PANEL_SERVERS = "Servers";
 
     private JPanel panel_GUI;
+    private JPanel panel_header;
+    private JPanel panel_footer;
+    private RolloverImagePanel btn_config;
     private ImagePanel panel_banner;
     private JPanel panel_cards;
 
@@ -45,10 +49,10 @@ public class Authenticate extends WindowTemplate {
     public Authenticate() {
         super("Login");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.setMinimumSize(new Dimension(600, 550));
-        this.setMaximumSize(new Dimension(600, 550));
+        this.setMinimumSize(new Dimension(620, 550));
+        this.setMaximumSize(new Dimension(620, 550));
         this.setLocationRelativeTo(null);
-        this.setResizable(false);
+        //this.setResizable(false);
 
         this.panels.put(PANEL_LOGIN, this.panel_login);
         this.panels.put(PANEL_REGISTER, this.panel_register);
@@ -69,6 +73,7 @@ public class Authenticate extends WindowTemplate {
         this.panel_GUI = new JPanel(new BorderLayout());
         this.panel_GUI.setBackground(Color.WHITE);
 
+        this.panel_header = new JPanel(new BorderLayout());
         this.panel_banner = new ImagePanel();
         try {
             BufferedImage banner = ImageIO.read(Login.class.getResource("/img/biddr_banner_login2.png"));
@@ -76,11 +81,29 @@ public class Authenticate extends WindowTemplate {
         } catch (IOException e) {
             log.error("Could not load banner image.");
         }
-        this.panel_GUI.add(this.panel_banner, BorderLayout.PAGE_START);
+        this.panel_header.add(this.panel_banner, BorderLayout.CENTER);
+
+        this.panel_GUI.add(this.panel_header, BorderLayout.PAGE_START);
+
+        this.panel_footer = new JPanel(new BorderLayout());
+        this.panel_footer.setBackground(Color.WHITE);
+        this.panel_footer.setBorder(new EmptyBorder(8, 8, 8, 8));
+        try {
+            BufferedImage gear_default = ImageIO.read(Login.class.getResource("/img/gear_default.png"));
+            BufferedImage gear_hover = ImageIO.read(Login.class.getResource("/img/gear_hover.png"));
+            this.btn_config = new RolloverImagePanel(gear_default, gear_hover);
+            GridBagConstraints c = new GridBagConstraints();
+            c.anchor = GridBagConstraints.BELOW_BASELINE_TRAILING;
+            this.panel_footer.add(btn_config, BorderLayout.LINE_END);
+        } catch (IOException e) {
+            log.error("Could not load config images.");
+        }
+
+        this.panel_GUI.add(this.panel_footer, BorderLayout.PAGE_END);
 
         this.panel_cards = new JPanel(new CardLayout());
         this.panel_cards.setBackground(Color.WHITE);
-        this.panel_cards.setBorder(new EmptyBorder(32, 128, 32, 128));
+        this.panel_cards.setBorder(new EmptyBorder(32, 128, 0, 128));
 
         this.panel_login = new Login();
         this.panel_cards.add(panel_login, PANEL_LOGIN);
@@ -99,6 +122,7 @@ public class Authenticate extends WindowTemplate {
     private void initEventListeners() {
         this.panel_login.label_register.addActionListener(e -> this.changePanel(PANEL_REGISTER));
         this.panel_register.label_login.addActionListener(e -> this.changePanel(PANEL_LOGIN));
+        this.btn_config.addActionListener(e -> this.changePanel(PANEL_SERVERS));
         this.loginListener = new LoginHandler();
         Client.addLoginListener(this.loginListener);
 

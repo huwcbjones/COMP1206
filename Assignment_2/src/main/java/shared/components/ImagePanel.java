@@ -1,4 +1,4 @@
-package client.utils;
+package shared.components;
 
 import javax.swing.*;
 import java.awt.*;
