@@ -204,21 +204,13 @@ public final class DataPersistence {
      * @return List of Keywords
      */
     private ArrayList<String> getKeywordsFromFile() throws OperationFailureException {
-        File keywordsFile = new File(this.getClass().getResource("/keywords.txt").getFile());
-        if (!keywordsFile.exists()) {
-            throw new OperationFailureException("Failed to open keywords.txt, file does not exist.");
-        }
-
-        if (!keywordsFile.isFile()) {
-            throw new OperationFailureException("Failed to open keywords.txt, keywords.txt provided is not a file. " + keywordsFile.getAbsolutePath());
-        }
-
-        if (!keywordsFile.canRead()) {
-            throw new OperationFailureException("Failed to open keywords.txt, cannot read file. " + keywordsFile.getAbsolutePath());
+        InputStream inputStream = this.getClass().getResourceAsStream("/keywords.txt");
+        if(inputStream == null){
+            throw new OperationFailureException("File not could not be opened.");
         }
         ArrayList<String> keywords = new ArrayList<>();
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(keywordsFile)));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
 
             while((line = reader.readLine()) != null){
