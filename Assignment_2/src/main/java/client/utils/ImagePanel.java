@@ -15,8 +15,10 @@ public class ImagePanel extends JPanel {
     private BufferedImage image;
 
     public ImagePanel() {
+        this.setBackground(Color.WHITE);
     }
     public ImagePanel(BufferedImage image){
+        super();
         this.image = image;
     }
 
@@ -25,6 +27,7 @@ public class ImagePanel extends JPanel {
     }
     public void setImage (BufferedImage image, boolean repaint) {
         this.image = image;
+        this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         if (repaint) this.repaint();
     }
     @Override
