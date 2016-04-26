@@ -128,7 +128,7 @@ public final class Config {
      * @return list of servers
      */
     public ArrayList<Server> getServers () {
-        return this.servers;
+        return new ArrayList<>(this.servers);
     }
 
     /**
