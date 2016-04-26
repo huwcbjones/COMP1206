@@ -35,7 +35,7 @@ public class Login extends WindowPanel {
     private JComboBox<Server> combo_server;
     //endregion
 
-    public JLinkLabel label_register;
+    public JLinkLabel btn_register;
     public JButton btn_login;
 
     private LoginHandler loginListener = new LoginHandler();
@@ -109,12 +109,12 @@ public class Login extends WindowPanel {
         this.add(this.btn_login, c);
         row++;
 
-        this.label_register = new JLinkLabel("Register", JLabel.LEADING);
-        this.label_register.setFont(this.label_register.getFont().deriveFont(this.label_register.getFont().getStyle() | Font.BOLD));
+        this.btn_register = new JLinkLabel("Register for Biddr", JLabel.LEADING);
+        this.btn_register.setFont(this.btn_register.getFont().deriveFont(this.btn_register.getFont().getStyle() | Font.BOLD));
         c.insets = new Insets(6, 0, 6, 0);
         c.gridy = row;
         c.fill = GridBagConstraints.NONE;
-        this.add(this.label_register, c);
+        this.add(this.btn_register, c);
         row++;
         //endregion
     }
@@ -157,6 +157,12 @@ public class Login extends WindowPanel {
             if(!Login.this.text_username.getText().equals("")){
                 Login.this.text_password.requestFocus();
             }
+
+            // Refresh list of servers
+            Login.this.combo_server.removeAllItems();
+            for (Server s : Client.getConfig().getServers()) {
+                Login.this.combo_server.addItem(s);
+            }
         }
     }
 
@@ -166,7 +172,7 @@ public class Login extends WindowPanel {
         this.text_password.setEnabled(state);
         this.combo_server.setEnabled(state);
         this.btn_login.setEnabled(state);
-        this.label_register.setEnabled(state);
+        this.btn_register.setEnabled(state);
     }
 
     private void clearFields() {
@@ -232,6 +238,7 @@ public class Login extends WindowPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             Server selectedServer = (Server) Login.this.combo_server.getSelectedItem();
+            if(selectedServer == null) return;
             if (selectedServer.equals(Client.getConfig().getSelectedServer())) return;
             if (Client.isConnected()) {
                 Client.disconnect();

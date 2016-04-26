@@ -49,7 +49,7 @@ public class Register extends WindowPanel {
     private JLabel label_validation_server;
 
     public JButton btn_register;
-    public JLinkLabel label_login;
+    public JLinkLabel btn_back;
 
     private RegisterListener registerListener;
 
@@ -164,12 +164,12 @@ public class Register extends WindowPanel {
         this.add(this.btn_register, c);
         row++;
 
-        this.label_login = new JLinkLabel("Login", JLabel.LEADING);
-        this.label_login.setFont(this.label_login.getFont().deriveFont(this.label_login.getFont().getStyle() | Font.BOLD));
+        this.btn_back = new JLinkLabel("Back to Login", JLabel.LEADING);
+        this.btn_back.setFont(this.btn_back.getFont().deriveFont(this.btn_back.getFont().getStyle() | Font.BOLD));
         c.insets = new Insets(6, 0, 6, 0);
         c.gridy = row;
         c.fill = GridBagConstraints.NONE;
-        this.add(this.label_login, c);
+        this.add(this.btn_back, c);
         row++;
         //endregion
     }
@@ -197,7 +197,7 @@ public class Register extends WindowPanel {
         this.text_password.setEnabled(state);
         this.text_passwordConfirm.setEnabled(state);
         this.btn_register.setEnabled(state);
-        this.label_login.setEnabled(state);
+        this.btn_back.setEnabled(state);
     }
 
     private void clearFields() {
@@ -243,6 +243,12 @@ public class Register extends WindowPanel {
                 return;
             }
             Register.this.text_password.requestFocus();
+
+            // Refresh list of servers
+            Register.this.combo_server.removeAllItems();
+            for (Server s : Client.getConfig().getServers()) {
+                Register.this.combo_server.addItem(s);
+            }
         }
     }
 
