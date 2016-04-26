@@ -28,35 +28,35 @@ public class Authenticate extends WindowTemplate {
 
     private final static String PANEL_LOGIN = "Login";
     private final static String PANEL_REGISTER = "Register";
-    private final static String PANEL_SERVERS = "Servers";
-
+    private final static String PANEL_VIEWSERVERS = "Servers";
+    private final static String PANEL_SERVER = "ServerPanel";
+    private static String username;
     private JPanel panel_GUI;
     private JPanel panel_header;
     private JPanel panel_footer;
     private RolloverImagePanel btn_config;
     private ImagePanel panel_banner;
     private JPanel panel_cards;
-
     private HashMap<String, WindowPanel> panels = new HashMap<>();
     private Login panel_login;
     private Register panel_register;
-    private ServerPanel panel_servers;
-
-    private static String username;
+    private ViewServers panel_servers;
+    private ServerPanel panel_serverpanel;
     private LoginHandler loginListener;
     private RegisterHandler registerListener;
 
     public Authenticate() {
         super("Login");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.setMinimumSize(new Dimension(620, 550));
-        this.setMaximumSize(new Dimension(620, 550));
+        this.setMinimumSize(new Dimension(600, 550));
+        this.setMaximumSize(new Dimension(600, 550));
         this.setLocationRelativeTo(null);
-        //this.setResizable(false);
+        this.setResizable(false);
 
         this.panels.put(PANEL_LOGIN, this.panel_login);
         this.panels.put(PANEL_REGISTER, this.panel_register);
-        this.panels.put(PANEL_SERVERS, this.panel_servers);
+        this.panels.put(PANEL_VIEWSERVERS, this.panel_servers);
+        this.panels.put(PANEL_SERVER, this.panel_serverpanel);
         this.changePanel(PANEL_LOGIN);
     }
 
@@ -76,7 +76,7 @@ public class Authenticate extends WindowTemplate {
         this.panel_header = new JPanel(new BorderLayout());
         this.panel_banner = new ImagePanel();
         try {
-            BufferedImage banner = ImageIO.read(Login.class.getResource("/img/biddr_banner_login2.png"));
+            BufferedImage banner = ImageIO.read(Login.class.getResource("/img/biddr_banner_login.png"));
             this.panel_banner.setImage(banner, true);
             this.panel_banner.setHorizontalAlignment(SwingConstants.CENTER);
         } catch (IOException e) {
@@ -104,7 +104,7 @@ public class Authenticate extends WindowTemplate {
 
         this.panel_cards = new JPanel(new CardLayout());
         this.panel_cards.setBackground(Color.WHITE);
-        this.panel_cards.setBorder(new EmptyBorder(32, 128, 0, 128));
+        this.panel_cards.setBorder(new EmptyBorder(32, 96, 0, 96));
 
         this.panel_login = new Login();
         this.panel_cards.add(panel_login, PANEL_LOGIN);
@@ -112,8 +112,11 @@ public class Authenticate extends WindowTemplate {
         this.panel_register = new Register();
         this.panel_cards.add(panel_register, PANEL_REGISTER);
 
-        this.panel_servers = new ServerPanel();
-        this.panel_cards.add(panel_servers, PANEL_SERVERS);
+        this.panel_servers = new ViewServers();
+        this.panel_cards.add(panel_servers, PANEL_VIEWSERVERS);
+
+        this.panel_serverpanel = new ServerPanel();
+        this.panel_cards.add(panel_serverpanel, PANEL_SERVER);
 
         this.panel_GUI.add(this.panel_cards, BorderLayout.CENTER);
 
@@ -121,9 +124,21 @@ public class Authenticate extends WindowTemplate {
     }
 
     private void initEventListeners() {
-        this.panel_login.label_register.addActionListener(e -> this.changePanel(PANEL_REGISTER));
-        this.panel_register.label_login.addActionListener(e -> this.changePanel(PANEL_LOGIN));
-        this.btn_config.addActionListener(e -> this.changePanel(PANEL_SERVERS));
+        this.panel_login.btn_register.addActionListener(e -> this.changePanel(PANEL_REGISTER));
+        this.panel_register.btn_back.addActionListener(e -> this.changePanel(PANEL_LOGIN));
+        this.panel_serverpanel.btn_do.addActionListener(e -> this.changePanel(PANEL_VIEWSERVERS));
+        this.panel_servers.btn_back.addActionListener(e -> this.changePanel(PANEL_LOGIN));
+        this.panel_servers.btn_new.addActionListener(e ->{
+            this.panel_serverpanel.setServer(null);
+            this.changePanel(PANEL_SERVER);
+        });
+        this.panel_servers.btn_edit.addActionListener(e -> {
+            this.panel_serverpanel.setServer(this.panel_servers.getSelectedServer());
+            this.changePanel(PANEL_SERVER);
+        });
+        this.panel_serverpanel.btn_back.addActionListener(e -> this.changePanel(PANEL_VIEWSERVERS));
+
+        this.btn_config.addActionListener(e -> this.changePanel(PANEL_VIEWSERVERS));
         this.loginListener = new LoginHandler();
         Client.addLoginListener(this.loginListener);
 
@@ -138,9 +153,9 @@ public class Authenticate extends WindowTemplate {
      */
     private void changePanel(String panelID) {
         CardLayout layout = (CardLayout) this.panel_cards.getLayout();
+        layout.show(this.panel_cards, panelID);
         WindowPanel panel = this.panels.get(panelID);
         this.setTitle(panel.getTitle());
-        layout.show(this.panel_cards, panelID);
         // Set default button on enter press
         this.getRootPane().setDefaultButton(panel.getDefaultButton());
     }
