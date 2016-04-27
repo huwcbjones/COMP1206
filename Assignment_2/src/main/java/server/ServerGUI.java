@@ -27,6 +27,7 @@ import java.io.PrintStream;
 public final class ServerGUI extends WindowTemplate {
 
     private static final String WINDOW_TITLE = "Biddr Server Control Panel";
+    private static final JTextAreaAppender J_TEXT_AREA_APPENDER = null;
     private final Server server = new Server();
     private JPanel panel_GUI;
     private JPanel panel_controls;
@@ -239,6 +240,26 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.btn_start.setEnabled(true);
                 ServerGUI.this.btn_stop.setEnabled(false);
                 ServerGUI.this.btn_results.setEnabled(false);
+            });
+        }
+
+        /**
+         * Fired when the server fails to start
+         *
+         * @param reason Why the server failed to start
+         */
+        @Override
+        public void serverStartFail(String reason) {
+            SwingUtilities.invokeLater(() -> {
+                ServerGUI.this.setTitle(WINDOW_TITLE + " [STOPPED]");
+                ServerGUI.this.btn_start.setEnabled(true);
+                ServerGUI.this.btn_stop.setEnabled(false);
+                ServerGUI.this.btn_results.setEnabled(false);
+                JOptionPane.showMessageDialog(ServerGUI.this,
+                    "Server failed to start.\n" + reason,
+                    "Server Failed to Start!",
+                    JOptionPane.ERROR_MESSAGE
+                    );
             });
         }
     }

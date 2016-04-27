@@ -115,16 +115,24 @@ public final class Server {
         }, "ServerStart").start();
     }
 
-    private void startServer(boolean createDatabase) {
+    private void startServer(boolean createDatabase){
         this.fireServerStarting();
         log.info("Starting server...");
 
-        this.loadConfig();
+        try {
+            this.loadConfig();
+        } catch (ConfigLoadException e) {
+            log.catching(e);
+            log.fatal(e.getMessage());
+            this.fireServerFailedStart(e.getMessage());
+            return;
+        }
         try {
             this.loadData(createDatabase);
         } catch (OperationFailureException e) {
+            log.catching(e);
             log.fatal(e.getMessage());
-            this.fireServerShutdown();
+            this.fireServerFailedStart(e.getMessage());
             return;
         }
         this.startWorkers();
@@ -132,8 +140,9 @@ public final class Server {
         try {
             this.createSockets();
         } catch (IOException | OperationFailureException e) {
-            log.error("Failed to create socket: {}", e.getMessage());
-            this.fireServerShutdown();
+            log.catching(e);
+            log.fatal("Failed to create socket: {}", e.getMessage());
+            this.fireServerFailedStart(e.getMessage());
             return;
         }
 
@@ -148,15 +157,9 @@ public final class Server {
     /**
      * Loads the server config
      */
-    private void loadConfig() {
+    private void loadConfig() throws ConfigLoadException {
         log.info("Loading config...");
-
-        try {
-            config.loadConfig();
-        } catch (ConfigLoadException e) {
-            log.error("Failed to load config. Quitting!");
-            System.exit(1);
-        }
+        config.loadConfig();
     }
 
     /**
@@ -265,8 +268,6 @@ public final class Server {
             if (config.isSecureConnectionEnabled() && this.secureSocket != null) {
                 this.secureSocket.shutdown();
             }
-
-
         }
 
         if (Server.workPool != null) {
@@ -319,6 +320,23 @@ public final class Server {
                 for (int i = listeners.length - 2; i >= 0; i -= 2) {
                     if (listeners[i] == ServerListener.class) {
                         ((ServerListener) listeners[i + 1]).serverStarting();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Fires server failed to start event
+     */
+    private void fireServerFailedStart(String reason) {
+        Server.dispatchEvent(new RunnableAdapter() {
+            @Override
+            public void runSafe() {
+                Object[] listeners = Server.this.listeners.getListenerList();
+                for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                    if (listeners[i] == ServerListener.class) {
+                        ((ServerListener) listeners[i + 1]).serverStartFail(reason);
                     }
                 }
             }

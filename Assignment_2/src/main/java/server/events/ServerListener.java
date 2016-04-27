@@ -29,4 +29,11 @@ public interface ServerListener extends EventListener {
      * Fired when server shuts down
      */
     void serverShutdown();
+
+    /**
+     * Fired when the server fails to start
+     *
+     * @param reason Why the server failed to start
+     */
+    void serverStartFail(String reason);
 }

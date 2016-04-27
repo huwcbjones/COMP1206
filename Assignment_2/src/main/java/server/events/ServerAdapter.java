@@ -38,4 +38,14 @@ public abstract class ServerAdapter implements ServerListener {
     public void serverShutdown() {
 
     }
+
+    /**
+     * Fired when the server fails to start
+     *
+     * @param reason Why the server failed to start
+     */
+    @Override
+    public void serverStartFail(String reason) {
+
+    }
 }
