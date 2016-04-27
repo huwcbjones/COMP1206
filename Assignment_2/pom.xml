@@ -95,6 +95,7 @@
                                 <exclude>ServerGUI.java</exclude>
                                 <exclude>BiddrClient.java</exclude>
                                 <exclude>**/client/**</exclude>
+                                <exclude>**/img/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -136,6 +137,7 @@
                                 </manifest>
                             </archive>
                             <excludes>
+                                <exclude>log4j2.xml</exclude>
                                 <exclude>**/server/**</exclude>
                                 <exclude>BiddrServer.java</exclude>
                             </excludes>
