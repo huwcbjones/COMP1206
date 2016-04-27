@@ -18,8 +18,8 @@
     <loggers>
         <root level="all">
             <appender-ref ref="stdout" level="ALL"/>
-            <appender-ref ref="jtextarea" level="INFO"/>
             <appender-ref ref="logfile" level="INFO"/>
+            <appender-ref ref="jtextarea" level="INFO"/>
         </root>
     </loggers>
 </Configuration>
