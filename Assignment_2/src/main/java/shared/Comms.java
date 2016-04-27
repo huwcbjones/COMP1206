@@ -250,6 +250,7 @@ public class Comms implements PacketListener {
 
         public DispatchThread() {
             super("DispatchThread");
+            this.setDaemon(true);
         }
 
         public void dispatchEvent(Runnable event) {
@@ -346,7 +347,7 @@ public class Comms implements PacketListener {
             log.debug("Read thread started!");
             while (!shouldQuit) {
                 try {
-                    packet = (Packet) input.readObject();
+                    packet = Comms.this.receiveMessage();
 
                     log.trace("Received packet. Type: {}", packet.getType().toString());
                     if (packet.getType() == PacketType.DISCONNECT) {
@@ -363,7 +364,7 @@ public class Comms implements PacketListener {
                 } catch (EOFException e) {
                     Comms.this.fireConnectionClosed("Connection lost.");
                     Comms.this.shutdown();
-                } catch (IOException | ClassNotFoundException | ClassCastException e) {
+                } catch (IOException | VersionMismatchException | ClassCastException e) {
                     if (e.getMessage().toLowerCase().equals("socket closed")) {
                         Comms.this.fireConnectionClosed("Connection lost.");
                         Comms.this.shutdown();
