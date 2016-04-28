@@ -178,4 +178,13 @@ public class SearchItems extends WindowPanel {
         this.panel_search.add(new JPanel(), c);
     }
 
+    /**
+     * Gets the default button for the panel
+     *
+     * @return Default button
+     */
+    @Override
+    public JButton getDefaultButton() {
+        return null;
+    }
 }
