@@ -5,6 +5,7 @@ import shared.Item;
 import shared.ItemBuilder;
 
 import javax.swing.*;
+import java.awt.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -25,7 +26,7 @@ public class ItemPanelTest {
     }
     @Test
     public void ItemPanelTest(){
-        if(System.getProperty("java.awt.headless") != null){
+        if(GraphicsEnvironment.isHeadless()){
             return;
         }
         Calendar endTime = Calendar.getInstance();
