@@ -1,0 +1,2 @@
+before_script: cd Assignment_2
+language: java
