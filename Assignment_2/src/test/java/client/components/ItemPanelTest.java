@@ -25,6 +25,9 @@ public class ItemPanelTest {
     }
     @Test
     public void ItemPanelTest(){
+        if(System.getProperty("java.awt.headless").equals("true")){
+            return;
+        }
         Calendar endTime = Calendar.getInstance();
         endTime.add(Calendar.DAY_OF_WEEK, 14);
 
