@@ -116,6 +116,13 @@ public class Login extends WindowPanel {
         c.fill = GridBagConstraints.NONE;
         this.add(this.btn_register, c);
         row++;
+
+        JPanel padder = new JPanel();
+        padder.setBackground(Color.WHITE);
+        c.gridy = row;
+        c.weighty = 1;
+        c.fill = GridBagConstraints.BOTH;
+        this.add(padder, c);
         //endregion
     }
 

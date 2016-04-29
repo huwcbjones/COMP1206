@@ -20,6 +20,7 @@ import java.awt.*;
  */
 public class ViewServers extends WindowPanel {
 
+    private JLabel label_servers;
     private JTable table_servers;
     private ServerTableModel model_servers;
     public JButton btn_edit;
@@ -40,6 +41,13 @@ public class ViewServers extends WindowPanel {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1;
         int row = 0;
+
+        this.label_servers = new JLabel("Servers", JLabel.LEADING);
+        this.label_servers.setLabelFor(this.label_servers);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.label_servers, c);
+        row++;
 
         this.model_servers = new ServerTableModel();
         this.table_servers = new JTable(this.model_servers);
