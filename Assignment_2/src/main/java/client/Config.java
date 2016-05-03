@@ -11,6 +11,7 @@ import shared.exceptions.ConfigLoadException;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -27,15 +28,15 @@ public final class Config {
 
     File configFileLocation = new File("config/biddr.json");
 
-    private ArrayList<Server> servers;
+    private HashMap<String, Server> servers;
     private Server selectedServer;
     private int timeoutTime = 5 * 1000;
 
-    public Config () {
-        this.servers = new ArrayList<>();
+    public Config() {
+        this.servers = new HashMap<>();
     }
 
-    public void loadConfig () throws ConfigLoadException {
+    public void loadConfig() throws ConfigLoadException {
         log.info("Loading config file...");
 
         if (!configFileLocation.exists()) {
@@ -76,7 +77,7 @@ public final class Config {
                             String serverAddress = (String) serverObject.get("address");
                             Number plainPort = (Number) serverObject.get("port");
 
-                            if(name == null) {
+                            if (name == null) {
                                 server = new Server(serverAddress, plainPort.intValue());
                             } else {
                                 server = new Server(name, serverAddress, plainPort.intValue());
@@ -88,7 +89,7 @@ public final class Config {
                         }
                     }
                     // If there are servers, set selected server to 0.
-                    if(this.servers.size() != 0){
+                    if (this.servers.size() != 0) {
                         this.selectedServer = this.servers.get(0);
                     }
                 }
@@ -102,14 +103,49 @@ public final class Config {
         }
     }
 
+    @SuppressWarnings("unchecked")              // Suppress warning because of the 3rd party library
+    public void saveConfig() {
+        log.info("Saving config...");
+        try {
+            PrintWriter writer = new PrintWriter(configFileLocation);
+
+            JSONObject client = new JSONObject();
+            JSONObject servers = new JSONObject();
+            JSONObject server;
+            JSONArray serversArray = new JSONArray();
+
+            for (Server s : this.servers.values()) {
+                server = new JSONObject();
+                server.put("name", s.getName());
+                server.put("address", s.getAddress());
+                server.put("port", s.getPort());
+                serversArray.add(server);
+            }
+            servers.put("servers", serversArray);
+
+            client.put("client", servers);
+
+            StringWriter output = new StringWriter();
+            client.writeJSONString(output);
+            writer.write(output.toString());
+            writer.close();
+            log.info("Config saved!");
+        } catch (FileNotFoundException e) {
+            log.error("Failed to find file to write to.");
+        } catch (IOException e) {
+            log.catching(e);
+            log.fatal("Failed to write config file. {}", e.getMessage());
+        }
+    }
+
     /**
      * Adds a server to the list of servers
      *
      * @param server Server to add
      */
-    public void addServer (Server server) {
+    public void addServer(Server server) {
         log.info("Adding server '{}'.", server.getName());
-        this.servers.add(server);
+        this.servers.put(server.getName(), server);
     }
 
     /**
@@ -117,9 +153,9 @@ public final class Config {
      *
      * @param server Server to remove
      */
-    public void removeServer (Server server) {
+    public void removeServer(Server server) {
         log.info("Removing server '{}'.", server.getName());
-        this.servers.remove(server);
+        this.servers.remove(server.getName());
     }
 
     /**
@@ -127,8 +163,8 @@ public final class Config {
      *
      * @return list of servers
      */
-    public ArrayList<Server> getServers () {
-        return new ArrayList<>(this.servers);
+    public ArrayList<Server> getServers() {
+        return new ArrayList<>(this.servers.values());
     }
 
     /**
@@ -136,7 +172,7 @@ public final class Config {
      *
      * @return Server
      */
-    public Server getSelectedServer () {
+    public Server getSelectedServer() {
         return this.selectedServer;
     }
 
@@ -145,7 +181,7 @@ public final class Config {
      *
      * @param server
      */
-    public void setSelectedServer (Server server) {
+    public void setSelectedServer(Server server) {
         log.info("Selected server is '{}'.", server.getName());
         this.selectedServer = server;
     }
