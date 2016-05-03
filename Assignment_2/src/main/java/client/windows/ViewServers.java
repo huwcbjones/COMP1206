@@ -11,6 +11,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 /**
  * Panel for viewing list of servers
@@ -20,21 +24,24 @@ import java.awt.*;
  */
 public class ViewServers extends WindowPanel {
 
-    private JLabel label_servers;
-    private JTable table_servers;
-    private ServerTableModel model_servers;
+    public JButton btn_delete;
     public JButton btn_edit;
     public JButton btn_new;
     public JLinkLabel btn_back;
+    private JLabel label_servers;
+    private JTable table_servers;
+    private ServerTableModel model_servers;
     private Server selectedServer = null;
 
     public ViewServers() {
         super("View Servers");
         this.initComponents();
         this.table_servers.getSelectionModel().addListSelectionListener(new SelectionChangedHandler());
+        this.btn_delete.addActionListener(new DeleteHandler());
+        this.addComponentListener(new ComponentHandler());
     }
 
-    private void initComponents(){
+    private void initComponents() {
         this.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.FIRST_LINE_START;
@@ -70,6 +77,14 @@ public class ViewServers extends WindowPanel {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weighty = 0;
 
+        this.btn_delete = new JButton("Delete Selected Server");
+        this.btn_delete.setMnemonic('e');
+        this.btn_delete.setEnabled(false);
+        c.insets = new Insets(6, 0, 3, 0);
+        c.gridy = row;
+        this.add(this.btn_delete, c);
+        row++;
+
         this.btn_edit = new JButton("Edit Selected Server");
         this.btn_edit.setMnemonic('e');
         this.btn_edit.setEnabled(false);
@@ -104,6 +119,17 @@ public class ViewServers extends WindowPanel {
         return this.btn_new;
     }
 
+    public Server getSelectedServer() {
+        return this.selectedServer;
+    }
+
+    private void updateServerTable() {
+        // Refresh list of servers
+        ViewServers.this.selectedServer = null;
+        this.model_servers.removeAll();
+        this.model_servers.add(Client.getConfig().getServers());
+    }
+
     private class SelectionChangedHandler implements ListSelectionListener {
 
         /**
@@ -114,16 +140,47 @@ public class ViewServers extends WindowPanel {
         @Override
         public void valueChanged(ListSelectionEvent e) {
             ViewServers.this.btn_edit.setEnabled(!ViewServers.this.table_servers.getSelectionModel().isSelectionEmpty());
-            if(ViewServers.this.table_servers.getSelectionModel().isSelectionEmpty()){
+            ViewServers.this.btn_delete.setEnabled(!ViewServers.this.table_servers.getSelectionModel().isSelectionEmpty());
+            if (ViewServers.this.table_servers.getSelectionModel().isSelectionEmpty()) {
                 ViewServers.this.selectedServer = null;
                 return;
             }
-            int selectedRowIndex =  ViewServers.this.table_servers.getSelectedRow();
+            int selectedRowIndex = ViewServers.this.table_servers.getSelectedRow();
             ViewServers.this.selectedServer = ViewServers.this.model_servers.getServerAt(selectedRowIndex);
         }
     }
 
-    public Server getSelectedServer(){
-        return this.selectedServer;
+    private class ComponentHandler extends ComponentAdapter {
+
+        /**
+         * Invoked when the component has been made visible.
+         *
+         * @param e
+         */
+        @Override
+        public void componentShown(ComponentEvent e) {
+            updateServerTable();
+        }
+    }
+
+    private class DeleteHandler implements ActionListener {
+        /**
+         * Invoked when an action occurs.
+         *
+         * @param e
+         */
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            int result = JOptionPane.showConfirmDialog(ViewServers.this,
+                "Are you sure you wish to remove \"" + ViewServers.this.selectedServer.getName() + "\"?",
+                "Delete Server?",
+                JOptionPane.YES_NO_OPTION
+            );
+            if (result != JOptionPane.YES_OPTION) return;
+
+            Client.getConfig().removeServer(ViewServers.this.selectedServer);
+            Client.getConfig().saveConfig();
+            updateServerTable();
+        }
     }
 }

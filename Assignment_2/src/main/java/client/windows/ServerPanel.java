@@ -1,5 +1,6 @@
 package client.windows;
 
+import client.Client;
 import client.components.WindowPanel;
 import client.utils.Server;
 import shared.components.HintTextFieldUI;
@@ -7,6 +8,8 @@ import shared.components.JLinkLabel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Panel for Adding/Editing Servers
@@ -16,25 +19,23 @@ import java.awt.*;
  */
 public class ServerPanel extends WindowPanel {
 
+    public JButton btn_do;
+    public JLinkLabel btn_back;
     private JLabel label_name;
     private JTextField text_name;
-
     private JLabel label_address;
     private JTextField text_address;
-
     private JLabel label_port;
     private JTextField text_port;
 
-    public JButton btn_do;
-    public JLinkLabel btn_back;
-
-    public ServerPanel(){
+    public ServerPanel() {
         super("New Server");
         this.initComponents();
+        this.btn_do.addActionListener(new SaveServer());
     }
 
-    public void setServer(Server server){
-        if(server != null){
+    public void setServer(Server server) {
+        if (server != null) {
             this.setTitle("Edit Server");
             this.text_name.setText(server.getName());
             this.text_address.setText(server.getAddress());
@@ -50,8 +51,6 @@ public class ServerPanel extends WindowPanel {
             this.btn_do.setMnemonic('a');
         }
     }
-
-    // TODO: 26/04/2016 Make this work and save servers
 
     private void initComponents() {
         this.setLayout(new GridBagLayout());
@@ -139,5 +138,25 @@ public class ServerPanel extends WindowPanel {
     @Override
     public JButton getDefaultButton() {
         return this.btn_do;
+    }
+
+    private class SaveServer implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String name = ServerPanel.this.text_name.getText();
+            String address = ServerPanel.this.text_address.getText();
+            String portStr = ServerPanel.this.text_port.getText();
+            try {
+                int port = Integer.parseInt(portStr);
+                if(port < 0 || port > 65536){
+                    throw new NumberFormatException("Invalid port range.");
+                }
+                Server server = new Server(name, address, port);
+                Client.getConfig().addServer(server);
+                Client.getConfig().saveConfig();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(ServerPanel.this, "Failed to add server, port invalid.\nPort must be between 0 and 65536.", "Port Invalid", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 }
