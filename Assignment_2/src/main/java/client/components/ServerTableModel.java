@@ -47,6 +47,11 @@ public class ServerTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    public void removeAll(){
+        rowData = new ArrayList<>();
+        fireTableDataChanged();
+    }
+
     public void remove(Server... user) {
         remove(Arrays.asList(user));
     }
