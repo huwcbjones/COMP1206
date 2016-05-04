@@ -33,7 +33,7 @@ public class JButtonLabel extends JLabel {
      */
     public JButtonLabel(String text, Icon icon, int horizontalAlignment) {
         super(text, icon, horizontalAlignment);
-        this.addMouseListener(new MouseHandler());
+        this.init();
     }
 
     /**
@@ -51,7 +51,7 @@ public class JButtonLabel extends JLabel {
      */
     public JButtonLabel(String text, int horizontalAlignment) {
         super(text, horizontalAlignment);
-        this.addMouseListener(new MouseHandler());
+        this.init();
     }
 
     /**
@@ -63,7 +63,7 @@ public class JButtonLabel extends JLabel {
      */
     public JButtonLabel(String text) {
         super(text);
-        this.addMouseListener(new MouseHandler());
+        this.init();
     }
 
     /**
@@ -81,7 +81,7 @@ public class JButtonLabel extends JLabel {
      */
     public JButtonLabel(Icon image, int horizontalAlignment) {
         super(image, horizontalAlignment);
-        this.addMouseListener(new MouseHandler());
+        this.init();
     }
 
     /**
@@ -93,7 +93,12 @@ public class JButtonLabel extends JLabel {
      */
     public JButtonLabel(Icon image) {
         super(image);
+        this.init();
+    }
+
+    private void init(){
         this.addMouseListener(new MouseHandler());
+        this.setFocusable(true);
     }
 
     /**
