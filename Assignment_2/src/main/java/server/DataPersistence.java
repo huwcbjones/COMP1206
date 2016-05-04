@@ -6,9 +6,11 @@ import org.sqlite.SQLiteConfig;
 import org.sqlite.javax.SQLiteConnectionPoolDataSource;
 import org.sqlite.javax.SQLitePooledConnection;
 import server.exceptions.OperationFailureException;
+import server.objects.Item;
 import server.objects.User;
+import server.tasks.AuctionEndTask;
+import server.tasks.AuctionStartTask;
 import shared.Bid;
-import shared.Item;
 import shared.ItemBuilder;
 import shared.utils.UUIDUtils;
 
@@ -157,7 +159,7 @@ public final class DataPersistence {
             log.info("Created item-keyword map table!");
 
             statement.execute("CREATE UNIQUE INDEX username ON users (username)");
-            statement.execute("CREATE UNIQUE INDEX userID ON items (userID)");
+            statement.execute("CREATE INDEX userID ON items (userID)");
             statement.execute("CREATE UNIQUE INDEX itemKeywordIndex ON item_keywords (itemID, keywordID)");
             log.info("Created indexes!");
 
@@ -165,12 +167,12 @@ public final class DataPersistence {
                 ArrayList<String> keywords = this.getKeywordsFromFile();
                 c.setAutoCommit(false);
                 PreparedStatement insert = c.prepareStatement("INSERT INTO keywords (keyword) VALUES (?)");
-                for(String keyword : keywords){
+                for (String keyword : keywords) {
                     insert.setString(1, keyword);
                     insert.addBatch();
                 }
                 ArrayList<Integer> result = new ArrayList<>();
-                for(int r : insert.executeBatch()){
+                for (int r : insert.executeBatch()) {
                     result.add(r);
                 }
                 c.setAutoCommit(true);
@@ -178,7 +180,7 @@ public final class DataPersistence {
                 long numInserts = result.size();
                 long numSuccess = numInserts - result.parallelStream().filter(i -> i == PreparedStatement.EXECUTE_FAILED).count();
                 log.info("Added {}/{} keyword(s) to the database.", numSuccess, numInserts);
-            } catch (OperationFailureException e){
+            } catch (OperationFailureException e) {
                 log.warn("Failed to load keywords: {}", e.getMessage());
             }
         } catch (SQLException e) {
@@ -205,7 +207,7 @@ public final class DataPersistence {
      */
     private ArrayList<String> getKeywordsFromFile() throws OperationFailureException {
         InputStream inputStream = this.getClass().getResourceAsStream("/keywords.txt");
-        if(inputStream == null){
+        if (inputStream == null) {
             throw new OperationFailureException("File not could not be opened.");
         }
         ArrayList<String> keywords = new ArrayList<>();
@@ -213,13 +215,13 @@ public final class DataPersistence {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
 
-            while((line = reader.readLine()) != null){
+            while ((line = reader.readLine()) != null) {
                 // Ignore comments
-                if(line.substring(0, 1).equals("#")){
+                if (line.substring(0, 1).equals("#")) {
                     continue;
                 }
                 // Truncate keywords longer than 140
-                if(line.length() > 140){
+                if (line.length() > 140) {
                     keywords.add(line.substring(0, 140));
                 } else {
                     keywords.add(line);
@@ -352,8 +354,14 @@ public final class DataPersistence {
                     ib.addBid(newBid);
                 }
 
-                newItem = ib.getItem();
+                newItem = Item.createServerItem(ib.getItem());
                 this.items.put(newItem.getID(), newItem);
+
+                // If auction hasn't ended, queue start/end tasks
+                if(!newItem.isAuctionEnded()) {
+                    Server.getWorkerPool().scheduleTask(new AuctionStartTask(null, newItem.getID()), newItem.getTimeUntilStart());
+                    Server.getWorkerPool().scheduleTask(new AuctionEndTask(null, newItem.getID()), newItem.getTimeUntilEnd());
+                }
                 log.info("Loaded item to memory.");
             }
             itemResults.close();
@@ -387,7 +395,8 @@ public final class DataPersistence {
      */
     private void loadServer() throws OperationFailureException {
         ArrayList<UUID> itemIDs = getCurrentItems(true);
-        for(UUID itemID: itemIDs){
+        log.info("Processing {} items...", itemIDs.size());
+        for (UUID itemID : itemIDs) {
             this.loadItem(itemID);
         }
     }
@@ -402,10 +411,10 @@ public final class DataPersistence {
     private ArrayList<UUID> getCurrentItems(boolean includePreAuction) throws OperationFailureException {
         log.debug("Querying database for all 'in-auction' items");
         String selectItemSql;
-        if(includePreAuction) {
-            selectItemSql = "SELECT itemID FROM items WHERE DATE('now') < endTime";
+        if (includePreAuction) {
+            selectItemSql = "SELECT itemID, endTime FROM items WHERE CAST(strftime('%s', 'now') AS INT) < endTime";
         } else {
-            selectItemSql = "SELECT itemID FROM items WHERE DATE('now') BETWEEN startTime AND endTime";
+            selectItemSql = "SELECT itemID FROM items WHERE CAST(strftime('%s', 'now') AS INT) BETWEEN startTime AND endTime";
         }
         Connection c = null;
         PreparedStatement selectItemQuery = null;
@@ -559,8 +568,8 @@ public final class DataPersistence {
      * @param itemID UUID of item
      * @return true if item exists
      */
-    public boolean itemExists(UUID itemID){
-        if(this.items.containsKey(itemID)){
+    public boolean itemExists(UUID itemID) {
+        if (this.items.containsKey(itemID)) {
             return true;
         }
         try {
@@ -569,5 +578,29 @@ public final class DataPersistence {
             return false;
         }
         return this.items.containsKey(itemID);
+    }
+
+    /**
+     * Retrieves an item with the given itemID
+     *
+     * @param itemID ID of the Item
+     * @return Item
+     * @throws NoSuchElementException If the item does not exist
+     */
+    public Item getItem(UUID itemID) throws NoSuchElementException {
+        if (this.items.containsKey(itemID)) {
+            return this.items.get(itemID);
+        } else {
+            try {
+                this.loadItem(itemID);
+                Item item = this.items.get(itemID);
+                if (item == null) {
+                    throw new NoSuchElementException();
+                }
+                return item;
+            } catch (OperationFailureException e) {
+                throw new NoSuchElementException();
+            }
+        }
     }
 }
