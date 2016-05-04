@@ -37,7 +37,6 @@ public class RegisterTask extends Task {
 
     @Override
     public void runSafe() {
-        log.trace("password: {} {}", user.getPassword(), user.getPasswordConfirm());
         if (Server.getData().userExists(this.user.getUsername())) {
             log.warn("User tried to register with an in-use username.");
             this.client.sendPacket(new Packet<>(PacketType.REGISTER_FAIL, "A user with that username already exists."));
