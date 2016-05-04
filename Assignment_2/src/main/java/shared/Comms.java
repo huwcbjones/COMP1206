@@ -90,7 +90,6 @@ public class Comms implements PacketListener {
         log.debug("Comms shutdown initiated...");
 
         new Thread(() -> {
-            //final Logger log = LogManager.getLogger(Thread.currentThread().getClass());
             this.lastPingTimer.stop();
             this.lastPingTimer.removeActionListener(this.pingListener);
 
@@ -128,9 +127,19 @@ public class Comms implements PacketListener {
 
     @Override
     public void packetReceived(Packet packet) {
-        if (packet.getType() == PacketType.PING) {
-            this.lastPingTimer.restart();
-            this.sendMessage(Packet.Ping());
+        switch(packet.getType()){
+            case DISCONNECT:
+                if(packet.getPayload() == null) {
+                    this.fireConnectionClosed("Server terminated connection.");
+                } else {
+                    this.fireConnectionClosed((String)packet.getPayload());
+                }
+                this.shutdown();
+                break;
+            case PING:
+                this.lastPingTimer.restart();
+                this.sendMessage(Packet.Ping());
+                break;
         }
     }
 
@@ -350,12 +359,7 @@ public class Comms implements PacketListener {
                     packet = Comms.this.receiveMessage();
 
                     log.trace("Received packet. Type: {}", packet.getType().toString());
-                    if (packet.getType() == PacketType.DISCONNECT) {
-                        Comms.this.fireConnectionClosed("Disconnect received.");
-                        Comms.this.shutdown();
-                    } else {
-                        Comms.this.firePacketReceived(packet);
-                    }
+                    Comms.this.firePacketReceived(packet);
 
                 } catch (SocketException e) {
                     log.debug("Socket was closed.");
