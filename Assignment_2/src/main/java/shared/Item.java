@@ -6,10 +6,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Represents an Item for client.
@@ -19,24 +16,24 @@ import java.util.UUID;
  */
 public class Item implements Serializable {
 
-    private final UUID itemID;
-    private final UUID userID;
-    private final String title;
-    private final String description;
-    private final HashSet<String> keywords;
-    private final Timestamp startTime;
-    private final Timestamp endTime;
-    private final BigDecimal reservePrice;
-    private final ArrayList<? extends Bid> bids;
-    private final BufferedImage image;
-    private Bid topBid;
+    protected final UUID itemID;
+    protected final UUID userID;
+    protected final String title;
+    protected final String description;
+    protected final HashSet<String> keywords;
+    protected final Timestamp startTime;
+    protected final Timestamp endTime;
+    protected final BigDecimal reservePrice;
+    protected final ArrayList<? extends Bid> bids;
+    protected final BufferedImage image;
+    protected Bid topBid;
 
-    public Item(UUID itemID, UUID userID, String title, String description, HashSet<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
+    public Item(UUID itemID, UUID userID, String title, String description, Set<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
         this.itemID = itemID;
         this.userID = userID;
         this.title = title;
         this.description = description;
-        this.keywords = keywords;
+        this.keywords = new HashSet<>(keywords);
         this.startTime = startTime;
         this.endTime = endTime;
         this.reservePrice = reservePrice;
@@ -88,9 +85,8 @@ public class Item implements Serializable {
      *
      * @return Keywords
      */
-    public ArrayList<String> getKeywords() {
-        // Maintain immutability by returning a separate ArrayList instance
-        return new ArrayList<>(keywords);
+    public Set<String> getKeywords() {
+        return this.keywords;
     }
 
     /**
@@ -110,6 +106,8 @@ public class Item implements Serializable {
     public Bid getTopBid() {
         return this.topBid;
     }
+
+    public ArrayList<? extends Bid> getBids() { return this.bids; }
 
     /**
      * Gets the number of bids on an item
@@ -188,6 +186,45 @@ public class Item implements Serializable {
 
     public String getEndTimeString(String format) {
         return new SimpleDateFormat(format).format(this.getEndTime());
+    }
+
+    /**
+     * Returns the number of seconds until the auction is due to start.
+     * Or 0, if the auction should have already started
+     *
+     * @return Number of seconds
+     */
+    public long getTimeUntilStart() {
+        // Get difference between now and start time
+        Timestamp now = new Timestamp(new Date().getTime());
+        long difference = this.startTime.getTime() - now.getTime();
+
+        // return difference, or 0 if difference < 0
+        return (difference < 0) ? 0 : difference;
+    }
+
+    /**
+     * Returns the number of seconds until the auction is due to end.
+     * Or 0, if the auction should have already ended
+     *
+     * @return Number of seconds
+     */
+    public long getTimeUntilEnd() {
+        // Get difference between now and start time
+        Timestamp now = new Timestamp(new Date().getTime());
+        long difference = this.endTime.getTime() - now.getTime();
+
+        // return difference, or 0 if difference < 0
+        return (difference < 0) ? 0 : difference;
+    }
+
+    /**
+     * Returns whether the auction has ended or not
+     *
+     * @return True if the auction has ended
+     */
+    public boolean isAuctionEnded() {
+        return this.getTimeUntilStart() == 0 && this.getTimeUntilEnd() == 0;
     }
 
     /**
