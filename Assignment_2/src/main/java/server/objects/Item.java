@@ -20,7 +20,22 @@ public class Item extends shared.Item {
         super(itemID, userID, title, description, keywords, startTime, endTime, reservePrice, bids, image);
     }
 
-    public User getUser(){
+    private Item(shared.Item item) {
+        super(
+            item.getID(),
+            item.getUserID(),
+            item.getTitle(),
+            item.getDescription(),
+            item.getKeywords(),
+            item.getStartTime(),
+            item.getEndTime(),
+            item.getReserve(),
+            item.getBids(),
+            item.getImage()
+        );
+    }
+
+    public User getUser() {
         return Server.getData().getUser(this.getUserID());
     }
 
@@ -31,6 +46,10 @@ public class Item extends shared.Item {
      */
     @Override
     public Bid getTopBid() {
-        return (Bid)super.getTopBid();
+        return (Bid) super.getTopBid();
+    }
+
+    public static Item createServerItem(shared.Item item){
+        return new Item(item);
     }
 }
