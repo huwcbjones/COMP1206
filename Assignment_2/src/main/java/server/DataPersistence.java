@@ -306,7 +306,7 @@ public final class DataPersistence {
      * @param query_itemID ItemID of item
      * @throws OperationFailureException If the operation failed
      */
-    private void loadItem(UUID query_itemID) throws OperationFailureException {
+    public void loadItem(UUID query_itemID) throws OperationFailureException {
         log.debug("Querying database for Item({})", query_itemID);
         String selectItemSql = "SELECT itemID, userID, title, description, startTime, endTime, reservePrice FROM items WHERE itemID=?";
         String selectBidSql = "SELECT bidID, userID, price, time FROM bids WHERE itemID=?";
@@ -447,7 +447,7 @@ public final class DataPersistence {
     /**
      * Saves user data to disk
      */
-    private void saveData() {
+    public void saveData() {
         log.info("Saving data...");
         try {
             this.dataSource.close();
@@ -551,5 +551,23 @@ public final class DataPersistence {
             return false;
         }
         return this.usernameToUUID.containsKey(username);
+    }
+
+    /**
+     * Returns whether an item exists or not
+     *
+     * @param itemID UUID of item
+     * @return true if item exists
+     */
+    public boolean itemExists(UUID itemID){
+        if(this.items.containsKey(itemID)){
+            return true;
+        }
+        try {
+            this.loadItem(itemID);
+        } catch (OperationFailureException e) {
+            return false;
+        }
+        return this.items.containsKey(itemID);
     }
 }
