@@ -11,6 +11,7 @@ import server.exceptions.OperationFailureException;
 import server.objects.User;
 import server.tasks.PacketHandler;
 import shared.Packet;
+import shared.PacketType;
 import shared.exceptions.ConfigLoadException;
 import shared.utils.RunnableAdapter;
 
@@ -21,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -115,7 +115,7 @@ public final class Server {
         }, "ServerStart").start();
     }
 
-    private void startServer(boolean createDatabase){
+    private void startServer(boolean createDatabase) {
         this.fireServerStarting();
         log.info("Starting server...");
 
@@ -252,13 +252,8 @@ public final class Server {
 
 
         // Only send disconnects if there are clients connected
-        if (this.clients.size() != 0) {
-            log.info("Sending disconnect to clients...");
-            ArrayList<ClientConnection> clients = new ArrayList<>(this.clients.values());
-            for (ClientConnection client : clients) {
-                client.closeConnection();
-            }
-        }
+        log.info("Sending disconnect to clients...");
+        this.broadcastPacket(new Packet<>(PacketType.DISCONNECT, "Server shutting down."));
 
         if (this.plainSocket != null || this.secureSocket != null) {
             log.info("Closing sockets...");
@@ -284,7 +279,7 @@ public final class Server {
     }
 
     public void saveState() {
-
+        Server.getData().saveData();
     }
     //endregion
 
@@ -296,6 +291,29 @@ public final class Server {
     void removeClient(ClientConnection clientConnection) {
         this.clients.remove(clientConnection.getClientID());
         clientConnection.removeServerPacketListener(this.packetTaskHandler);
+    }
+
+    /**
+     * Broadcasts a Packet to all client connections.
+     *
+     * @param packet Packet to broadcast
+     */
+    public void broadcastPacket(Packet packet) {
+        this.broadcastPacket(packet, false);
+    }
+
+    /**
+     * Broadcasts a Packet to all client connections.
+     *
+     * @param packet       Packet to broadcast
+     * @param loggedInOnly If true, packet will only be broadcast to logged in users
+     */
+    public void broadcastPacket(Packet packet, boolean loggedInOnly) {
+        // Stream the client connections, filter logged in clients, then send the packet to each of them
+        this.clients.values().stream().
+            // Filter not(loggedInOnly) OR Client.isLoggedIn
+                filter(client -> !loggedInOnly || client.isUserLoggedIn()).
+            forEach(client -> client.sendPacket(packet));
     }
 
     //region Get Methods
