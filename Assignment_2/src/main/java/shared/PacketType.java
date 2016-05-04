@@ -53,6 +53,10 @@ public enum PacketType {
     REGISTER_SUCCESS,
     //endregion
 
+    AUCTION_START,
+    AUCTION_END,
+    NEW_BID,
+
     CREATE_ITEM,
     CREATE_ITEM_FAIL,
     CREATE_ITEM_SUCCESS,
@@ -63,6 +67,19 @@ public enum PacketType {
 
     BID,
     FETCH_BIDS,
+
+    /**
+     * Sent to the client that wins the auction
+     * Payload: UUID -> ItemID
+     */
+    AUCTION_WIN,
+
+    /**
+     * Sent to a client if an auction completes with no winner
+     * Payload: UUID -> ItemID
+     */
+    AUCTION_NO_WINNER,
+
 
     //region User
 
