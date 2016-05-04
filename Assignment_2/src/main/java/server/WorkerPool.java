@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Huw Jones
  * @since 28/03/2016
  */
-public class WorkerPool {
+public final class WorkerPool {
 
     private static final Logger log = LogManager.getLogger(WorkerPool.class);
 
@@ -38,6 +38,11 @@ public class WorkerPool {
         return !this.workerPool.isShutdown();
     }
 
+    /**
+     * Dispatches an event to run in the worker pool
+     *
+     * @param event Event to Dispatch
+     */
     public void dispatchEvent(RunnableAdapter event) {
         if (this.workerPool.isShutdown()) {
             new Thread(event, "EventDispatch").start();
