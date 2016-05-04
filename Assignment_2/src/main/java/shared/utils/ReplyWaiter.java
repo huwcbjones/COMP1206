@@ -11,6 +11,19 @@ import shared.events.PacketListener;
 public abstract class ReplyWaiter implements PacketListener {
     protected final NotificationWaiter waiter;
 
+    public ReplyWaiter(int timeout){
+        this.waiter = new NotificationWaiter(){
+            @Override
+            public void waitForReply() {
+                super.waitForReply(timeout);
+            }
+        };
+    }
+
+    public NotificationWaiter getWaiter(){
+        return this.waiter;
+    }
+
     public ReplyWaiter(NotificationWaiter waiter){
         this.waiter = waiter;
     }
