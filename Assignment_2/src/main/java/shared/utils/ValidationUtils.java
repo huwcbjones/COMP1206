@@ -3,6 +3,9 @@ package shared.utils;
 import shared.exceptions.ValidationFailedException;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -15,8 +18,15 @@ import java.util.Iterator;
  */
 public final class ValidationUtils {
 
+    public static final int VALIDATION_CLEAR = 0;
+    public static final int VALIDATION_SUCCESS = 1;
+    public static final int VALIDATION_FAIL = 2;
     public static final String REGEXP_USERNAME = "[\\w]*";
     public static final String REGEXP_NAME = "^[a-zA-Z]+[a-zA-Z\\-]*$";
+
+    private static final Border BORDER_DEFAULT = UIManager.getBorder("TextField.border");
+    private static final Border BORDER_SUCCESS = new CompoundBorder(BorderFactory.createLineBorder(new Color(0, 128, 0), 1), new EmptyBorder(2,2,2,2));
+    private static final Border BORDER_FAIL = new CompoundBorder(BorderFactory.createLineBorder(new Color(128, 0, 0), 1), new EmptyBorder(2,2,2,2));
 
     public static JLabel createValidationLabel() {
         JLabel label = new JLabel("", JLabel.CENTER);
@@ -41,6 +51,21 @@ public final class ValidationUtils {
             validationLabel.setText("X");
             validationLabel.setToolTipText("There are errors here.");
             validationLabel.setForeground(Color.RED);
+        }
+    }
+
+    public static void setValidation(JComponent field, int validationState) {
+        //field.getBorder()
+        switch(validationState) {
+            case VALIDATION_SUCCESS:
+                field.setBorder(BORDER_SUCCESS);
+                break;
+            case VALIDATION_FAIL:
+                field.setBorder(BORDER_FAIL);
+                break;
+            case VALIDATION_CLEAR:
+            default:
+                field.setBorder(BORDER_DEFAULT);
         }
     }
 
