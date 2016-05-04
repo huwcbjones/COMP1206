@@ -46,7 +46,7 @@ public final class PacketHandler extends RunnableAdapter {
                 Server.getWorkerPool().queueTask(new RegisterTask(this.client, (RegisterUser)packet.getPayload()));
                 break;
             case CREATE_ITEM:
-                Server.getWorkerPool().queueTask(new NewItemTask(this.client, (Item)packet.getPayload()));
+                Server.getWorkerPool().queueTask(new NewAuctionTask(this.client, (Item)packet.getPayload()));
                 break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));
