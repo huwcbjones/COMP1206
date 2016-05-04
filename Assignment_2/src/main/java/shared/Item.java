@@ -121,6 +121,15 @@ public class Item implements Serializable {
     }
 
     /**
+     * Gets the reserve price
+     *
+     * @return Reserve Price
+     */
+    public BigDecimal getReserve() {
+        return this.reservePrice;
+    }
+
+    /**
      * Gets the reserve price formatted as a currency
      *
      * @return String, reserve price in format £x.xx
@@ -161,7 +170,7 @@ public class Item implements Serializable {
     }
 
     public String getStartTimeString(String format) {
-        return new SimpleDateFormat(format).format(this.getEndTimeTime());
+        return new SimpleDateFormat(format).format(this.getStartTime());
     }
 
     /**
@@ -169,7 +178,7 @@ public class Item implements Serializable {
      *
      * @return End time
      */
-    public Timestamp getEndTimeTime() {
+    public Timestamp getEndTime() {
         return this.endTime;
     }
 
@@ -178,7 +187,7 @@ public class Item implements Serializable {
     }
 
     public String getEndTimeString(String format) {
-        return new SimpleDateFormat(format).format(this.getEndTimeTime());
+        return new SimpleDateFormat(format).format(this.getEndTime());
     }
 
     /**

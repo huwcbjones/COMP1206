@@ -3,6 +3,7 @@ package client.windows;
 import client.Client;
 import client.components.WindowPanel;
 import client.events.LoginAdapter;
+import shared.events.ConnectionAdapter;
 import shared.utils.WindowTemplate;
 
 import javax.swing.*;
@@ -23,7 +24,7 @@ import java.util.HashMap;
 public final class Main extends WindowTemplate {
 
     private final static String PANEL_SEARCH = "SearchItems";
-    private final static String PANEL_NEWITEM = "NewItem";
+    private final static String PANEL_NEWITEM = "NewAuction";
     private final static String PANEL_VIEWITEM = "ViewItem";
     private final static String PANEL_VIEWUSER = "ViewUser";
 
@@ -35,7 +36,7 @@ public final class Main extends WindowTemplate {
     private JPanel panel_cards;
     private HashMap<String, WindowPanel> panels = new HashMap<>();
     private SearchItems panel_search;
-    private NewItem panel_newItem;
+    private NewAuction panel_newAuction;
     private ViewItem panel_viewItem;
     private ViewUser panel_viewUser;
 
@@ -57,7 +58,7 @@ public final class Main extends WindowTemplate {
         this.setMinimumSize(new Dimension(800, 600));
 
         this.panels.put(PANEL_SEARCH, this.panel_search);
-        this.panels.put(PANEL_NEWITEM, this.panel_newItem);
+        this.panels.put(PANEL_NEWITEM, this.panel_newAuction);
         this.panels.put(PANEL_VIEWITEM, this.panel_viewItem);
         this.panels.put(PANEL_VIEWUSER, this.panel_viewUser);
         this.changePanel(PANEL_SEARCH);
@@ -80,8 +81,8 @@ public final class Main extends WindowTemplate {
         this.panel_search = new SearchItems();
         this.panel_cards.add(panel_search, PANEL_SEARCH);
 
-        this.panel_newItem = new NewItem();
-        this.panel_cards.add(panel_newItem, PANEL_NEWITEM);
+        this.panel_newAuction = new NewAuction();
+        this.panel_cards.add(panel_newAuction, PANEL_NEWITEM);
 
         this.panel_viewItem = new ViewItem();
         this.panel_cards.add(panel_viewItem, PANEL_VIEWITEM);
@@ -190,6 +191,14 @@ public final class Main extends WindowTemplate {
                 Client.removeLoginListener(this);
             }
         });
+        Client.addConnectionListener(new ConnectionAdapter() {
+            @Override
+            public void connectionClosed(String reason) {
+                Main.this.promptExit = false;
+                Main.this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                Main.this.dispatchEvent(new WindowEvent(Main.this, WindowEvent.WINDOW_CLOSING));
+            }
+        });
 
         this.menu_file_logout.addActionListener(e ->
             SwingUtilities.invokeLater(() -> {
@@ -215,13 +224,16 @@ public final class Main extends WindowTemplate {
      */
     private void changePanel(String panelID) {
         CardLayout layout = (CardLayout) this.panel_cards.getLayout();
-        this.setTitle(this.panels.get(panelID).getTitle());
         layout.show(this.panel_cards, panelID);
+        WindowPanel panel = this.panels.get(panelID);
+        this.setTitle(panel.getTitle());
+        this.getRootPane().setDefaultButton(panel.getDefaultButton());
     }
 
     public static void main(String[] args) {
         Main main = new Main();
         main.setVisible(true);
+        main.changePanel(PANEL_NEWITEM);
     }
 
     private class WindowClosingHandler extends WindowAdapter{
