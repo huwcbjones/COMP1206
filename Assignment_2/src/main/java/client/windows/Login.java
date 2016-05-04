@@ -170,6 +170,7 @@ public class Login extends WindowPanel {
             for (Server s : Client.getConfig().getServers()) {
                 Login.this.combo_server.addItem(s);
             }
+            Login.this.combo_server.setSelectedIndex(0);
         }
     }
 
@@ -199,6 +200,9 @@ public class Login extends WindowPanel {
             Login.this.setFormEnabledState(false);
 
             Client.addLoginListener(Login.this.loginListener);
+            if(Client.getConfig().getSelectedServer() == null){
+                Login.this.combo_server.setSelectedIndex(0);
+            }
             Client.login(Login.this.text_username.getText(), Login.this.text_password.getPassword());
         }
     }
