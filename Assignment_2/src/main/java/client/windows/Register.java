@@ -8,13 +8,17 @@ import shared.User;
 import shared.components.HintPasswordFieldUI;
 import shared.components.HintTextFieldUI;
 import shared.components.JLinkLabel;
+import shared.exceptions.ValidationFailedException;
+import shared.utils.ValidationUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import static shared.utils.ValidationUtils.VALIDATION_FAIL;
+import static shared.utils.ValidationUtils.VALIDATION_SUCCESS;
 
 /**
  * Registration Panel
@@ -26,27 +30,21 @@ public class Register extends WindowPanel {
 
     private JLabel label_username;
     private JTextField text_username;
-    private JLabel label_validation_username;
 
     private JLabel label_firstName;
     private JTextField text_firstName;
-    private JLabel label_validation_firstName;
 
     private JLabel label_lastName;
     private JTextField text_lastName;
-    private JLabel label_validation_lastName;
 
     private JLabel label_password;
     private JPasswordField text_password;
-    private JLabel label_validation_password;
 
     private JLabel label_passwordConfirm;
     private JPasswordField text_passwordConfirm;
-    private JLabel label_validation_passwordConfirm;
 
     private JLabel label_server;
     private JComboBox<Server> combo_server;
-    private JLabel label_validation_server;
 
     public JButton btn_register;
     public JLinkLabel btn_back;
@@ -185,6 +183,13 @@ public class Register extends WindowPanel {
         this.addComponentListener(new ComponentHandler());
         this.registerListener = new RegisterHandler();
         this.btn_register.addActionListener(new RegisterBtnClickHandler());
+
+        this.text_username.addFocusListener(new FocusChangeHander());
+        this.text_firstName.addFocusListener(new FocusChangeHander());
+        this.text_lastName.addFocusListener(new FocusChangeHander());
+        this.text_password.addFocusListener(new FocusChangeHander());
+        this.text_passwordConfirm.addFocusListener(new FocusChangeHander());
+        this.combo_server.addActionListener(new ComboServerChangeHandler());
     }
     /**
      * Gets the default button for the panel
@@ -207,6 +212,65 @@ public class Register extends WindowPanel {
         this.btn_back.setEnabled(state);
     }
 
+    private ArrayList<String> validateFields(boolean isFocusChangeValidation) {
+        ArrayList<String> errors = new ArrayList<>();
+        Component firstWrongField = null;
+
+        // Validate username
+        try {
+            ValidationUtils.validateUsername(this.text_username.getText());
+            ValidationUtils.setValidation(this.text_username, VALIDATION_SUCCESS);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_username;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.text_username, VALIDATION_FAIL);
+        }
+
+        // Validate First Name
+        try {
+            ValidationUtils.validateName(this.text_firstName.getText());
+            ValidationUtils.setValidation(this.text_firstName, VALIDATION_SUCCESS);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_firstName;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.text_firstName, VALIDATION_FAIL);
+        }
+
+        // Validate Last Name
+        try {
+            ValidationUtils.validateName(this.text_lastName.getText());
+            ValidationUtils.setValidation(this.text_lastName, VALIDATION_SUCCESS);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_lastName;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.text_lastName, VALIDATION_FAIL);
+        }
+
+        // Validate Password
+        try {
+            ValidationUtils.validatePassword(this.text_password.getPassword());
+            ValidationUtils.setValidation(this.text_password, VALIDATION_SUCCESS);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_password;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.text_password, VALIDATION_FAIL);
+        }
+
+        // Validate Password
+        if (Arrays.equals(this.text_password.getPassword(), this.text_passwordConfirm.getPassword())) {
+            ValidationUtils.setValidation(this.text_passwordConfirm, VALIDATION_SUCCESS);
+        } else {
+            if (firstWrongField == null) firstWrongField = this.text_passwordConfirm;
+            errors.add("Passwords do not match.");
+            ValidationUtils.setValidation(this.text_passwordConfirm, VALIDATION_FAIL);
+        }
+
+        if (firstWrongField != null && !isFocusChangeValidation) {
+            firstWrongField.requestFocus();
+        }
+
+        return errors;
+    }
     private void clearFields() {
         this.text_username.setText("");
         this.text_firstName.setText("");
@@ -256,6 +320,7 @@ public class Register extends WindowPanel {
             for (Server s : Client.getConfig().getServers()) {
                 Register.this.combo_server.addItem(s);
             }
+            Register.this.combo_server.setSelectedIndex(0);
         }
     }
 
@@ -263,13 +328,18 @@ public class Register extends WindowPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            /*ArrayList<String> errors = RegisterPanel.this.validateForm();
+            ArrayList<String> errors = Register.this.validateFields(false);
             if (errors.size() != 0) {
-                ValidationUtils.showValidationMessage(RegisterPanel.this, errors);
+                ValidationUtils.showValidationMessage(Register.this, errors);
                 return;
-            }*/
+            }
             Register.this.setFormEnabledState(false);
             Client.addRegisterListener(Register.this.registerListener);
+
+            if(Client.getConfig().getSelectedServer() == null){
+                Register.this.combo_server.setSelectedIndex(0);
+            }
+
             Client.register(new User(
                     Register.this.text_username.getText(),
                     Register.this.text_firstName.getText(),
@@ -323,6 +393,30 @@ public class Register extends WindowPanel {
                 "Registration Failed",
                 JOptionPane.ERROR_MESSAGE
             ));
+        }
+    }
+
+    private class FocusChangeHander extends FocusAdapter {
+        @Override
+        public void focusLost(FocusEvent e) {
+            Register.this.validateFields(true);
+        }
+    }
+
+    /**
+     * Sets the selected server
+     */
+    private class ComboServerChangeHandler implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Server selectedServer = (Server) Register.this.combo_server.getSelectedItem();
+            if(selectedServer == null) return;
+            if (selectedServer.equals(Client.getConfig().getSelectedServer())) return;
+            if (Client.isConnected()) {
+                Client.disconnect();
+            }
+
+            Client.getConfig().setSelectedServer(selectedServer);
         }
     }
 }
