@@ -40,6 +40,7 @@ public class NewAuctionTask extends Task {
             this.client.sendPacket(new Packet<>(PacketType.CREATE_ITEM_SUCCESS, itemID));
             Server.getData().loadItem(itemID);
         } catch (ValidationFailedException | OperationFailureException e) {
+            log.error(e.getMessage());
             this.client.sendPacket(new Packet<>(PacketType.CREATE_ITEM_FAIL, e.getMessage()));
         }
     }
@@ -71,8 +72,8 @@ public class NewAuctionTask extends Task {
             insertItem.setBytes(2, UUIDUtils.UUIDToBytes(this.item.getUserID()));
             insertItem.setString(3, this.item.getTitle());
             insertItem.setString(4, this.item.getDescription());
-            insertItem.setTimestamp(5, this.item.getStartTime());
-            insertItem.setTimestamp(6, this.item.getEndTime());
+            insertItem.setLong(5, this.item.getStartTime().getTime() / 1000L);
+            insertItem.setLong(6, this.item.getEndTime().getTime() / 1000L);
             insertItem.setBigDecimal(7, this.item.getReserve());
             insertItem.executeUpdate();
             c.commit();
@@ -83,7 +84,6 @@ public class NewAuctionTask extends Task {
             log.debug("Error Code: {}", e.getErrorCode());
             log.debug("Message: {}", e.getMessage());
             log.debug("Cause: {}", e.getCause());
-            log.error("Failed to add user.");
             wasSuccess = false;
         } finally {
             try {
