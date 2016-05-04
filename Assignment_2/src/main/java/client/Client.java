@@ -11,10 +11,7 @@ import client.windows.Main;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import shared.Packet;
-import shared.PacketType;
-import shared.RegisterUser;
-import shared.User;
+import shared.*;
 import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;
 import shared.events.PacketListener;
@@ -73,6 +70,7 @@ public final class Client implements ConnectionListener {
                 // Set the client's user details
                 Client.user = user;
                 SwingUtilities.invokeLater(() -> {
+                    Client.authenticateWindow = null;
                     Client.mainWindow = new Main();
                     Client.mainWindow.setVisible(true);
                 });
@@ -85,6 +83,22 @@ public final class Client implements ConnectionListener {
                     Client.authenticateWindow = new Authenticate();
                     Client.authenticateWindow.setVisible(true);
                 });
+            }
+        });
+        Client.addConnectionListener(new ConnectionAdapter(){
+            @Override
+            public void connectionClosed(String reason) {
+                if(Client.authenticateWindow == null){
+                    Client.mainWindow = null;
+                    Client.authenticateWindow = new Authenticate();
+                    Client.authenticateWindow.setVisible(true);
+                    SwingUtilities.invokeLater(()-> JOptionPane.showMessageDialog(
+                        Client.authenticateWindow,
+                        "Connection to server was lost.\nReason: " + reason,
+                        "Connection lost!",
+                        JOptionPane.WARNING_MESSAGE
+                    ));
+                }
             }
         });
 
@@ -315,6 +329,8 @@ public final class Client implements ConnectionListener {
     public static boolean isConnected() {
         return Client.isConnected;
     }
+
+    public static User getUser() { return Client.user; }
     //endregion
 
     //region Send/Receive Packets
