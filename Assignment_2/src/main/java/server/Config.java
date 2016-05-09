@@ -37,7 +37,7 @@ public final class Config {
 
     public Config() {
         this.configFileLocation = new File("config/biddrd.json").getAbsoluteFile();
-        this.dataStore = new File(configFileLocation.getAbsoluteFile().getParent() + File.pathSeparator + "biddr.jks");
+        this.keyStore = new File(configFileLocation.getAbsoluteFile().getParent() + File.pathSeparator + "biddr.jks");
     }
 
     public void setConfigFile(String fileLocation) {
