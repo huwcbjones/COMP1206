@@ -111,7 +111,7 @@ public class Item extends shared.Item {
             public void runSafe() {
                 Object[] listeners = Item.this.listenerList.getListenerList();
                 for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                    if (listeners[i] == LoginListener.class) {
+                    if (listeners[i] == AuctionListener.class) {
                         ((AuctionListener) listeners[i + 1]).auctionEnd(Item.this.itemID, wasWon);
                     }
                 }
