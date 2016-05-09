@@ -5,32 +5,31 @@ import client.components.WindowPanel;
 import client.utils.ImageFilter;
 import org.jdatepicker.JDateComponentFactory;
 import org.jdatepicker.JDatePicker;
-import shared.Item;
-import shared.ItemBuilder;
-import shared.Packet;
-import shared.PacketType;
-import shared.components.HintTextAreaUI;
+import shared.*;
 import shared.components.HintTextFieldUI;
+import shared.events.PacketListener;
+import shared.exceptions.ValidationFailedException;
 import shared.utils.NumberUtils;
 import shared.utils.ReplyWaiter;
 import shared.utils.TimeUtils;
+import shared.utils.ValidationUtils;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.text.Format;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
+
+import static shared.utils.ValidationUtils.*;
 
 /**
  * New Item Panel
@@ -46,8 +45,8 @@ public class NewAuction extends WindowPanel {
     private JLabel label_description;
     private JTextArea text_description;
     private JLabel label_keywords;
-    private DefaultListModel<String> lm_keywords;
-    private JList<String> list_keywords;
+    private DefaultListModel<Keyword> lm_keywords;
+    private JList<Keyword> list_keywords;
     private JLabel label_start;
     private JDatePicker date_start;
     private JSpinner time_start;
@@ -58,6 +57,7 @@ public class NewAuction extends WindowPanel {
     private JFormattedTextField text_reserve;
     private JLabel label_image;
     private JTextField text_image;
+    private File file_image = null;
     private JButton btn_image;
 
     public NewAuction() {
@@ -96,14 +96,20 @@ public class NewAuction extends WindowPanel {
         this.add(this.label_description, c);
         row++;
 
-        this.text_description = new JTextArea(4, 2);
+        this.text_description = new JTextArea(4, 20);
         this.text_description.setLineWrap(true);
-        this.text_description.setUI(new HintTextAreaUI("Item Title", true));
         this.text_description.setBorder(UIManager.getBorder("TextField.border"));
         this.text_description.setFont(UIManager.getFont("TextField.font"));
+        JScrollPane description_scroller = new JScrollPane(this.text_description);
+        description_scroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        description_scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         c.gridy = row;
+        c.weighty = 0.5;
         c.insets = new Insets(0, 0, 6, 0);
-        this.add(this.text_description, c);
+        c.fill = GridBagConstraints.BOTH;
+        this.add(description_scroller, c);
+        c.weighty = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
         row++;
 
         this.label_keywords = new JLabel("Keywords", JLabel.LEADING);
@@ -117,11 +123,16 @@ public class NewAuction extends WindowPanel {
         this.list_keywords = new JList<>(this.lm_keywords);
         this.list_keywords.setLayoutOrientation(JList.VERTICAL);
         this.list_keywords.setBorder(UIManager.getBorder("TextField.border"));
+        JScrollPane scroller = new JScrollPane(this.list_keywords);
+        scroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         c.gridy = row;
         c.weighty = 0.5;
         c.insets = new Insets(0, 0, 6, 0);
-        this.add(this.list_keywords, c);
+        c.fill = GridBagConstraints.BOTH;
+        this.add(scroller, c);
         c.weighty = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
         row++;
 
         this.label_start = new JLabel("Auction Start Date", JLabel.LEADING);
@@ -138,7 +149,7 @@ public class NewAuction extends WindowPanel {
         start_dateTimePanel.add((JComponent) this.date_start);
 
         this.time_start = new JSpinner(new SpinnerDateModel());
-        this.time_start.setEditor(new JSpinner.DateEditor(this.time_start, "hh:mm"));
+        this.time_start.setEditor(new JSpinner.DateEditor(this.time_start, "HH:mm"));
         start_dateTimePanel.add(this.time_start);
 
         c.gridy = row;
@@ -160,7 +171,7 @@ public class NewAuction extends WindowPanel {
         end_dateTimePanel.add((JComponent) this.date_end);
 
         this.time_end = new JSpinner(new SpinnerDateModel());
-        this.time_end.setEditor(new JSpinner.DateEditor(this.time_end, "hh:mm"));
+        this.time_end.setEditor(new JSpinner.DateEditor(this.time_end, "HH:mm"));
         end_dateTimePanel.add(this.time_end);
 
         c.gridy = row;
@@ -175,8 +186,10 @@ public class NewAuction extends WindowPanel {
         this.add(this.label_reserve, c);
         row++;
 
-        Format currency = NumberFormat.getCurrencyInstance(Locale.UK);
-        this.text_reserve = new JFormattedTextField(currency);
+        NumberFormatter currencyFormat = new NumberFormatter(NumberFormat.getCurrencyInstance(Locale.UK));
+        currencyFormat.setAllowsInvalid(false);
+
+        this.text_reserve = new JFormattedTextField(currencyFormat);
         this.text_reserve.setValue(0.0);
         this.text_reserve.setUI(new HintTextFieldUI("Reserve Price", true));
         c.gridy = row;
@@ -193,7 +206,7 @@ public class NewAuction extends WindowPanel {
 
         JPanel image_panel = new JPanel(new BorderLayout());
         this.text_image = new JTextField();
-        this.text_image.setUI(new HintTextFieldUI("Path to Image", true));
+        this.text_image.setUI(new HintTextFieldUI("Path to Image", false));
         this.text_image.setEditable(false);
         image_panel.add(this.text_image, BorderLayout.CENTER);
 
@@ -212,19 +225,22 @@ public class NewAuction extends WindowPanel {
         c.gridy = row;
         this.add(this.btn_add, c);
         row++;
-
-        JPanel padder = new JPanel();
-        padder.setBackground(Color.WHITE);
-        c.gridy = row;
-        c.weighty = 1;
-        c.fill = GridBagConstraints.BOTH;
-        this.add(padder, c);
     }
 
     private void initEventHandlers() {
         this.addComponentListener(new ComponentHandler());
         this.btn_image.addActionListener(new ImageBrowser());
         this.btn_add.addActionListener(new AddHandler());
+        Client.addPacketListener(new KeywordHandler());
+
+        this.text_title.addFocusListener(new FocusChangeHandler());
+        this.text_description.addFocusListener(new FocusChangeHandler());
+        this.list_keywords.addFocusListener(new FocusChangeHandler());
+        ((JComponent)this.date_start).addFocusListener(new FocusChangeHandler());
+        this.time_start.addFocusListener(new FocusChangeHandler());
+        ((JComponent)this.date_end).addFocusListener(new FocusChangeHandler());
+        this.time_end.addFocusListener(new FocusChangeHandler());
+        this.text_reserve.addFocusListener(new FocusChangeHandler());
     }
 
     /**
@@ -237,6 +253,29 @@ public class NewAuction extends WindowPanel {
         return this.btn_add;
     }
 
+    private void clearForm(){
+        this.text_title.setText("");
+        ValidationUtils.setValidation(this.text_title, VALIDATION_CLEAR);
+
+        this.text_description.setText("");
+        ValidationUtils.setValidation(this.text_description, VALIDATION_CLEAR);
+
+        this.list_keywords.setSelectedIndices(new int[0]);
+        ValidationUtils.setValidation(this.list_keywords, VALIDATION_CLEAR);
+
+        ValidationUtils.setValidation((JComponent) this.date_start, VALIDATION_CLEAR);
+        ValidationUtils.setValidation(this.time_start, VALIDATION_CLEAR);
+        ValidationUtils.setValidation((JComponent) this.date_end, VALIDATION_CLEAR);
+        ValidationUtils.setValidation(this.time_end, VALIDATION_CLEAR);
+
+        this.text_reserve.setValue(0);
+        ValidationUtils.setValidation(this.text_reserve, VALIDATION_CLEAR);
+
+        this.text_image.setText("");
+        ValidationUtils.setValidation(this.text_image, VALIDATION_CLEAR);
+
+        this.file_image = null;
+    }
     private void setFormState(boolean enabled) {
         this.text_title.setEnabled(enabled);
         this.text_description.setEnabled(enabled);
@@ -260,7 +299,7 @@ public class NewAuction extends WindowPanel {
     }
 
     private void itemCreationFail(String reason) {
-        this.setFormState(false);
+        this.setFormState(true);
         SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this,
             "Item was not added for auction.\nReason: " + reason,
             "Failed to add Item!",
@@ -303,14 +342,97 @@ public class NewAuction extends WindowPanel {
                 .setID(new UUID(0L, 0L))
                 .setUserID(Client.getUser().getUniqueID())
                 .setTitle(this.text_title.getText())
+                .addAllKeywords(this.list_keywords.getSelectedValuesList())
                 .setDescription(this.text_description.getText())
                 .setReservePrice(NumberUtils.currencyToBigDecimal(this.text_reserve.getText(), NumberFormat.getCurrencyInstance(Locale.UK)))
                 .setStartTime(this.getStartTime())
                 .setEndTime(this.getEndTime());
+
+            if(this.file_image != null) {
+                BufferedImage image = null;
+                image = ImageIO.read(this.file_image);
+                ib.setImage(image);
+            }
         } catch (ParseException e) {
             throw new IllegalArgumentException("Failed to parse reserve price.");
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to load image.");
         }
         return ib.getItem();
+    }
+
+    private ArrayList<String> validateFields(boolean isFocusChangeValidation){
+        ArrayList<String> errors = new ArrayList<>();
+        Component firstWrongField = null;
+
+        // Validate title
+        try {
+            ValidationUtils.validateTitle(this.text_title.getText());
+            ValidationUtils.setValidation(this.text_title, VALIDATION_SUCCESS);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_title;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.text_title, VALIDATION_FAIL);
+        }
+
+        // Validate description
+        try {
+            ValidationUtils.validateDescription(this.text_description.getText());
+            ValidationUtils.setValidation(this.text_description, VALIDATION_SUCCESS);
+        } catch (ValidationFailedException e) {
+            if (firstWrongField == null) firstWrongField = this.text_description;
+            errors.add(e.getMessage());
+            ValidationUtils.setValidation(this.text_description, VALIDATION_FAIL);
+        }
+
+        // Validate keywords
+        if(this.list_keywords.getSelectedValuesList().size() == 0){
+            if (firstWrongField == null) firstWrongField = this.list_keywords;
+            errors.add("Please select some keywords.");
+            ValidationUtils.setValidation(this.list_keywords, VALIDATION_FAIL);
+        } else {
+            ValidationUtils.setValidation(this.list_keywords, VALIDATION_SUCCESS);
+        }
+
+        // Validate start date
+        if(getStartTime().before(new Timestamp(new Date().getTime()))){
+            if (firstWrongField == null) firstWrongField = (Component) this.date_start;
+            errors.add("Start date is in the past.");
+            ValidationUtils.setValidation((JComponent) this.date_start, VALIDATION_FAIL);
+            ValidationUtils.setValidation(this.time_start, VALIDATION_FAIL);
+        } else {
+            ValidationUtils.setValidation((JComponent) this.date_start, VALIDATION_SUCCESS);
+            ValidationUtils.setValidation(this.time_start, VALIDATION_SUCCESS);
+        }
+
+        // Validate end date
+        if(getEndTime().before(getStartTime()) || getEndTime().equals(getStartTime()) ){
+            if (firstWrongField == null) firstWrongField = (Component) this.date_end;
+            ValidationUtils.setValidation((JComponent) this.date_end, VALIDATION_FAIL);
+            ValidationUtils.setValidation(this.time_end, VALIDATION_FAIL);
+            if(getEndTime().before(getStartTime())) {
+                errors.add("End date is before start date.");
+            } else {
+                errors.add("End date is the same as the start date.");
+            }
+        } else {
+            ValidationUtils.setValidation((JComponent) this.date_end, VALIDATION_SUCCESS);
+            ValidationUtils.setValidation(this.time_end, VALIDATION_SUCCESS);
+        }
+
+        // Validate reserve price
+        if(new BigDecimal(this.text_reserve.getValue().toString()).compareTo(BigDecimal.ZERO) < 0) {
+            ValidationUtils.setValidation(this.text_reserve, VALIDATION_FAIL);
+            errors.add("Reserve price cannot be negative.");
+        } else {
+            ValidationUtils.setValidation(this.text_reserve, VALIDATION_SUCCESS);
+        }
+
+        if (firstWrongField != null && !isFocusChangeValidation) {
+            firstWrongField.requestFocus();
+        }
+
+        return errors;
     }
 
     /**
@@ -326,12 +448,15 @@ public class NewAuction extends WindowPanel {
             imageChooser.setMultiSelectionEnabled(false);
             imageChooser.setFileFilter(new ImageFilter());
             if (imageChooser.showOpenDialog(NewAuction.this) == JFileChooser.APPROVE_OPTION) {
-                File image = imageChooser.getSelectedFile();
-                NewAuction.this.text_image.setText(image.getAbsolutePath());
+                NewAuction.this.file_image = imageChooser.getSelectedFile();
+                NewAuction.this.text_image.setText(NewAuction.this.file_image.getAbsolutePath());
             }
         }
     }
 
+    /**
+     * Class to add Item
+     */
     private class AddHandler implements ActionListener {
         /**
          * Invoked when an action occurs.
@@ -340,6 +465,12 @@ public class NewAuction extends WindowPanel {
          */
         @Override
         public void actionPerformed(ActionEvent e) {
+            ArrayList<String> errors = NewAuction.this.validateFields(false);
+            if (errors.size() != 0) {
+                ValidationUtils.showValidationMessage(NewAuction.this, errors);
+                return;
+            }
+            NewAuction.this.setFormState(false);
             new Thread(() -> {
                 NewAuction.this.setFormState(false);
 
@@ -349,6 +480,7 @@ public class NewAuction extends WindowPanel {
                         switch (packet.getType()) {
                             case CREATE_ITEM_SUCCESS:
                                 itemCreationSuccess((UUID) packet.getPayload());
+                                NewAuction.this.clearForm();
                                 break;
                             case CREATE_ITEM_FAIL:
                                 itemCreationFail((String) packet.getPayload());
@@ -372,6 +504,9 @@ public class NewAuction extends WindowPanel {
         }
     }
 
+    /**
+     * Class to handle card changing
+     */
     private class ComponentHandler extends ComponentAdapter {
         /**
          * Invoked when the component has been made visible.
@@ -380,7 +515,9 @@ public class NewAuction extends WindowPanel {
          */
         @Override
         public void componentShown(ComponentEvent e) {
+            NewAuction.this.clearForm();
             NewAuction.this.text_title.requestFocus();
+            Client.sendPacket(new Packet<>(PacketType.GET_KEYWORDS));
         }
 
         /**
@@ -391,6 +528,38 @@ public class NewAuction extends WindowPanel {
         @Override
         public void componentHidden(ComponentEvent e) {
             super.componentHidden(e);
+        }
+    }
+
+    /**
+     * Card to handle keywords
+     */
+    private class KeywordHandler implements PacketListener {
+        @Override
+        public void packetReceived(Packet packet) {
+            switch(packet.getType()){
+                case KEYWORDS:
+                    Keyword[] keywords = (Keyword[])packet.getPayload();
+                    SwingUtilities.invokeLater(() -> {
+                        NewAuction.this.lm_keywords.removeAllElements();
+                        for(int i = 0; i < keywords.length; i++){
+                            NewAuction.this.lm_keywords.add(i, keywords[i]);
+                        }
+                    });
+                    break;
+                case NOK:
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Validate fields on focus change
+     */
+    private class FocusChangeHandler extends FocusAdapter {
+        @Override
+        public void focusLost(FocusEvent e) {
+            NewAuction.this.validateFields(true);
         }
     }
 }
