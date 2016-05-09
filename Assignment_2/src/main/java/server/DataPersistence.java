@@ -12,14 +12,12 @@ import server.tasks.AuctionEndTask;
 import server.tasks.AuctionStartTask;
 import shared.Bid;
 import shared.ItemBuilder;
+import shared.Keyword;
 import shared.utils.UUIDUtils;
 
 import java.io.*;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -36,6 +34,7 @@ public final class DataPersistence {
     private final ConcurrentHashMap<String, UUID> usernameToUUID = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<UUID, Item> items = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Keyword> keywords = new ConcurrentHashMap<>();
 
     private SQLitePooledConnection dataSource;
 
@@ -108,7 +107,7 @@ public final class DataPersistence {
             statement = c.createStatement();
 
             String usersTable = "CREATE TABLE users (" +
-                "  userID BLOB PRIMARY KEY," +
+                "  userID BLOB PRIMARY KEY NOT NULL," +
                 "  username VARCHAR(255) NOT NULL UNIQUE," +
                 "  firstName VARCHAR(255) NOT NULL," +
                 "  lastName VARCHAR(255) NOT NULL," +
@@ -118,14 +117,14 @@ public final class DataPersistence {
             log.info("Created users table!");
 
             String keywordsTable = "CREATE TABLE keywords (" +
-                "  keywordID INT PRIMARY KEY," +
+                "  keywordID INTEGER PRIMARY KEY NOT NULL," +
                 "  keyword VARCHAR(140) NOT NULL UNIQUE" +
                 ")";
             statement.execute(keywordsTable);
             log.info("Created keywords table!");
 
             String itemsTable = "CREATE TABLE items (" +
-                "  itemID BLOB PRIMARY KEY," +
+                "  itemID BLOB PRIMARY KEY NOT NULL," +
                 "  userID BLOB NOT NULL," +
                 "  title VARCHAR(140) NOT NULL," +
                 "  description TEXT NOT NULL," +
@@ -138,10 +137,10 @@ public final class DataPersistence {
             log.info("Created items table!");
 
             String bidsTable = "CREATE TABLE bids (" +
-                "  bidID BLOB PRIMARY KEY, " +
+                "  bidID BLOB PRIMARY KEY NOT NULL, " +
                 "  itemID BLOB NOT NULL," +
                 "  userID BLOB NOT NULL," +
-                "  price INT NOT NULL," +
+                "  price INTEGER NOT NULL," +
                 "  time DATETIME NOT NULL," +
                 "  FOREIGN KEY (itemID) REFERENCES items(itemID)," +
                 "  FOREIGN KEY (userID) REFERENCES users(userID)" +
@@ -151,20 +150,21 @@ public final class DataPersistence {
 
             String itemKeywordMap = "CREATE TABLE item_keywords (" +
                 "  itemID BLOB NOT NULL," +
-                "  keywordID INT NOT NULL," +
+                "  keywordID INTEGER NOT NULL," +
                 "  FOREIGN KEY (itemID) REFERENCES items(itemID)," +
                 "  FOREIGN KEY (keywordID) REFERENCES keywords(keywordID)" +
                 ")";
             statement.execute(itemKeywordMap);
             log.info("Created item-keyword map table!");
 
-            statement.execute("CREATE UNIQUE INDEX username ON users (username)");
-            statement.execute("CREATE INDEX userID ON items (userID)");
+            statement.execute("CREATE UNIQUE INDEX user_username ON users (username)");
+            statement.execute("CREATE INDEX item_userID ON items (userID)");
             statement.execute("CREATE UNIQUE INDEX itemKeywordIndex ON item_keywords (itemID, keywordID)");
             log.info("Created indexes!");
 
             try {
-                ArrayList<String> keywords = this.getKeywordsFromFile();
+                log.info("Adding initial keywords...");
+                Set<String> keywords = this.getKeywordsFromFile();
                 c.setAutoCommit(false);
                 PreparedStatement insert = c.prepareStatement("INSERT INTO keywords (keyword) VALUES (?)");
                 for (String keyword : keywords) {
@@ -175,8 +175,7 @@ public final class DataPersistence {
                 for (int r : insert.executeBatch()) {
                     result.add(r);
                 }
-                c.setAutoCommit(true);
-
+                c.commit();
                 long numInserts = result.size();
                 long numSuccess = numInserts - result.parallelStream().filter(i -> i == PreparedStatement.EXECUTE_FAILED).count();
                 log.info("Added {}/{} keyword(s) to the database.", numSuccess, numInserts);
@@ -184,7 +183,7 @@ public final class DataPersistence {
                 log.warn("Failed to load keywords: {}", e.getMessage());
             }
         } catch (SQLException e) {
-            log.debug(e);
+            log.catching(e);
             throw new OperationFailureException("Failed to create initial database: " + e.getMessage());
         } finally {
             try {
@@ -192,6 +191,7 @@ public final class DataPersistence {
                     statement.close();
                 }
                 if (c != null) {
+                    c.setAutoCommit(true);
                     c.close();
                 }
             } catch (SQLException suppress) {
@@ -205,12 +205,12 @@ public final class DataPersistence {
      *
      * @return List of Keywords
      */
-    private ArrayList<String> getKeywordsFromFile() throws OperationFailureException {
+    private Set<String> getKeywordsFromFile() throws OperationFailureException {
         InputStream inputStream = this.getClass().getResourceAsStream("/keywords.txt");
         if (inputStream == null) {
             throw new OperationFailureException("File not could not be opened.");
         }
-        ArrayList<String> keywords = new ArrayList<>();
+        HashSet<String> keywords = new HashSet<>();
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
@@ -388,6 +388,46 @@ public final class DataPersistence {
         }
     }
 
+    private void loadKeywords() {
+        log.debug("Loading keywords...");
+        int initialSize = this.keywords.size();
+        String selectKeywordSql = "SELECT keywordID, keyword FROM keywords";
+        Connection c = null;
+        PreparedStatement selectKeyword = null;
+        try {
+            c = this.getConnection();
+
+            selectKeyword = c.prepareStatement(selectKeywordSql);
+
+            ResultSet keywordResults = selectKeyword.executeQuery();
+            Keyword newKeyword;
+            while (keywordResults.next()) {
+                newKeyword = new Keyword(keywordResults.getInt("keywordID"), keywordResults.getString("keyword"));
+                this.keywords.put(newKeyword.getKeywordID(), newKeyword);
+            }
+            keywordResults.close();
+        } catch (SQLException e) {
+            log.debug("SQLState: {}", e.getSQLState());
+            log.debug("Error Code: {}", e.getErrorCode());
+            log.debug("Message: {}", e.getMessage());
+            log.debug("Cause: {}", e.getCause());
+            log.error("Failed to load user.", e);
+        } finally {
+            try {
+                if (selectKeyword != null) {
+                    selectKeyword.close();
+                }
+                if (c != null) {
+                    c.close();
+                }
+            } catch (SQLException suppress) {
+                log.trace(suppress);
+            }
+        }
+
+        log.info("Loaded {} keyword(s).", (this.keywords.size() - initialSize));
+    }
+
     /**
      * Loads all the data into the server and starts tasks
      *
@@ -399,6 +439,7 @@ public final class DataPersistence {
         for (UUID itemID : itemIDs) {
             this.loadItem(itemID);
         }
+        this.loadKeywords();
     }
 
     /**
@@ -475,6 +516,14 @@ public final class DataPersistence {
     }
 
     /**
+     * Retrieves a set of keywords
+     * @return HashSet of keywords
+     */
+    public HashSet<Keyword> getKeywords() {
+        return new HashSet<>(this.keywords.values());
+    }
+
+    /**
      * Retrieves a user with the given username
      *
      * @param username Username of user
@@ -482,6 +531,7 @@ public final class DataPersistence {
      * @throws NoSuchElementException If the user does not exist
      */
     public User getUser(String username) throws NoSuchElementException {
+        username = username.toLowerCase();
         if (this.usernameToUUID.containsKey(username)) {
             return this.users.get(this.usernameToUUID.get(username));
         }
@@ -551,6 +601,7 @@ public final class DataPersistence {
      * @return true if user exists
      */
     public boolean userExists(String username) {
+        username = username.toLowerCase();
         if (this.usernameToUUID.containsKey(username)) {
             return true;
         }
