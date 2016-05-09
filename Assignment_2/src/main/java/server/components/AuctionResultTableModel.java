@@ -93,7 +93,11 @@ public class AuctionResultTableModel extends AbstractTableModel {
                 value = item.getUser().getUsername();
                 break;
             case 2:
-                value = item.getTopBid().getPriceString();
+                if(item.getNumberOfBids() != 0) {
+                    value = item.getTopBid().getPriceString();
+                } else {
+                    value = "-";
+                }
                 break;
             case 3:
                 User winner = item.getTopBid().getUser();
