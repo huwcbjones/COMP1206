@@ -4,6 +4,7 @@ import server.ClientConnection;
 import server.Server;
 import server.exceptions.OperationFailureException;
 import shared.Item;
+import shared.Keyword;
 import shared.Packet;
 import shared.PacketType;
 import shared.exceptions.ValidationFailedException;
@@ -12,6 +13,7 @@ import shared.utils.UUIDUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -36,6 +38,7 @@ public class NewAuctionTask extends Task {
         try {
             validateFields();
             UUID itemID = this.addItemToDatabase();
+            Server.getData().processItemImage(itemID, this.item.getImage());
             log.info("New item ({}) added to database!", itemID);
             this.client.sendPacket(new Packet<>(PacketType.CREATE_ITEM_SUCCESS, itemID));
             Server.getData().loadItem(itemID);
@@ -62,12 +65,15 @@ public class NewAuctionTask extends Task {
 
         Connection c = null;
         PreparedStatement insertItem = null;
+        PreparedStatement insertKeywords = null;
         String insertSql = "INSERT INTO items (itemID, userID, title, description, startTime, endTime, reservePrice) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertKeywordsSql = "INSERT INTO item_keywords (itemID, keywordID) VALUES (?, ?)";
         boolean wasSuccess = false;
         try {
             c = Server.getData().getConnection();
             c.setAutoCommit(false);
             insertItem = c.prepareStatement(insertSql);
+            insertKeywords = c.prepareStatement(insertKeywordsSql);
             insertItem.setBytes(1, UUIDUtils.UUIDToBytes(uniqueID));
             insertItem.setBytes(2, UUIDUtils.UUIDToBytes(this.item.getUserID()));
             insertItem.setString(3, this.item.getTitle());
@@ -76,8 +82,23 @@ public class NewAuctionTask extends Task {
             insertItem.setLong(6, this.item.getEndTime().getTime() / 1000L);
             insertItem.setBigDecimal(7, this.item.getReserve());
             insertItem.executeUpdate();
-            c.commit();
-            wasSuccess = true;
+
+            insertKeywords.setBytes(1, UUIDUtils.UUIDToBytes(uniqueID));
+            for (Keyword k : item.getKeywords()) {
+                insertKeywords.setInt(2, k.getKeywordID());
+                insertKeywords.addBatch();
+            }
+            ArrayList<Integer> result = new ArrayList<>();
+            for (int r : insertKeywords.executeBatch()) {
+                result.add(r);
+            }
+            if(result.parallelStream().filter(i -> i == PreparedStatement.EXECUTE_FAILED).count() != 0){
+                log.error("Failed to link keywords.");
+                c.rollback();
+            } else {
+                c.commit();
+                wasSuccess = true;
+            }
         } catch (SQLException e) {
             log.debug(e);
             log.debug("SQLState: {}", e.getSQLState());
@@ -87,6 +108,9 @@ public class NewAuctionTask extends Task {
             wasSuccess = false;
         } finally {
             try {
+                if (insertKeywords != null) {
+                    insertKeywords.close();
+                }
                 if (insertItem != null) {
                     insertItem.close();
                 }
