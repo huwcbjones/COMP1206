@@ -309,6 +309,10 @@ public final class DataPersistence {
      * @throws OperationFailureException If the operation failed
      */
     public void loadItem(UUID query_itemID) throws OperationFailureException {
+        if(this.items.containsKey(query_itemID)){
+            log.debug("Item({}) already in memory.", query_itemID);
+            return;
+        }
         log.debug("Querying database for Item({})", query_itemID);
         String selectItemSql = "SELECT itemID, userID, title, description, startTime, endTime, reservePrice FROM items WHERE itemID=?";
         String selectBidSql = "SELECT bidID, userID, price, time FROM bids WHERE itemID=?";
@@ -336,8 +340,8 @@ public final class DataPersistence {
                     .setUserID(UUIDUtils.BytesToUUID(itemResults.getBytes("userID")))
                     .setTitle(itemResults.getString("title"))
                     .setDescription(itemResults.getString("description"))
-                    .setStartTime(itemResults.getTimestamp("startTime"))
-                    .setEndTime(itemResults.getTimestamp("endTime"))
+                    .setStartTime(new Timestamp(itemResults.getLong("startTime") * 1000L))
+                    .setEndTime(new Timestamp(itemResults.getLong("endTime") * 1000L))
                     .setReservePrice(itemResults.getBigDecimal("reservePrice"));
 
                 selectBidQuery.setBytes(1, UUIDUtils.UUIDToBytes(query_itemID));
@@ -362,7 +366,7 @@ public final class DataPersistence {
                     Server.getWorkerPool().scheduleTask(new AuctionStartTask(null, newItem.getID()), newItem.getTimeUntilStart());
                     Server.getWorkerPool().scheduleTask(new AuctionEndTask(null, newItem.getID()), newItem.getTimeUntilEnd());
                 }
-                log.info("Loaded item to memory.");
+                log.info("Loaded Item({}) to memory.", newItem.getID());
             }
             itemResults.close();
         } catch (SQLException e) {
