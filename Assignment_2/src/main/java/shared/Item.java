@@ -1,6 +1,10 @@
 package shared;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -17,6 +21,11 @@ import java.util.stream.Collectors;
  */
 public class Item implements Serializable {
 
+    public static final int AUCTION_NOT_STARTED = 0;
+    public static final int AUCTION_STARTED = 1;
+    public static final int AUCTION_WON = 2;
+    public static final int AUCTION_NO_WINNER = 2;
+
     protected final UUID itemID;
     protected final UUID userID;
     protected final String title;
@@ -26,7 +35,7 @@ public class Item implements Serializable {
     protected final Timestamp endTime;
     protected final BigDecimal reservePrice;
     protected final ArrayList<? extends Bid> bids;
-    protected final BufferedImage image;
+    protected final byte[] image;
     protected Bid topBid;
 
     public Item(UUID itemID, UUID userID, String title, String description, Set<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
@@ -39,7 +48,7 @@ public class Item implements Serializable {
         this.endTime = endTime;
         this.reservePrice = reservePrice;
         this.bids = bids;
-        this.image = image;
+        this.image = this.imageToBytes(image);
         this.setTopBid();
     }
 
@@ -50,6 +59,41 @@ public class Item implements Serializable {
             } else if (this.topBid.compareTo(b) > 0) {
                 this.topBid = b;
             }
+        }
+    }
+
+    /**
+     * Converts a BufferedImage (not serializable) to a byte array (serializable)
+     *
+     * @param image Buffered Image
+     * @return byte array
+     */
+    private byte[] imageToBytes(BufferedImage image) {
+        if (image == null) {
+            return new byte[0];
+        }
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            ImageIO.write(image, "png", output);
+            output.flush();
+            return output.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0];
+        }
+    }
+
+    /**
+     * Converts a byte array (serializable) to a BufferedImage (not serializable)
+     *
+     * @param bytes byte array
+     * @return Buffered Image
+     */
+    private BufferedImage bytesToImage(byte[] bytes) {
+        try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+            return ImageIO.read(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -157,7 +201,7 @@ public class Item implements Serializable {
      * @return BufferedImage, item image
      */
     public BufferedImage getImage() {
-        return this.image;
+        return this.bytesToImage(this.image);
     }
 
     /**
@@ -231,6 +275,25 @@ public class Item implements Serializable {
      */
     public boolean isAuctionEnded() {
         return this.getTimeUntilStart() == 0 && this.getTimeUntilEnd() == 0;
+    }
+
+    /**
+     * Returns an int representing auction status
+     *
+     * @return Int
+     */
+    public int getAuctionStatus() {
+        if (this.getTimeUntilStart() != 0) {
+            return AUCTION_NOT_STARTED;
+        } else if (this.getTimeUntilStart() == 0 && this.getTimeUntilEnd() != 0) {
+            return AUCTION_STARTED;
+        } else {
+            if (this.bids.size() == 0 || this.getTopBid().getPrice().compareTo(this.getReserve()) < 0) {
+                return AUCTION_NO_WINNER;
+            } else {
+                return AUCTION_WON;
+            }
+        }
     }
 
     /**
