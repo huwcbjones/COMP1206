@@ -20,6 +20,8 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.UUID;
 
 /**
@@ -45,6 +47,7 @@ public final class ServerGUI extends WindowTemplate {
     private JButton btn_start;
     private JButton btn_stop;
     private JButton btn_results;
+    private JLabel label_time;
     private JTable table_users;
     private UserTableModel model_users;
     private JTable table_items;
@@ -52,6 +55,8 @@ public final class ServerGUI extends WindowTemplate {
     private AuctionResultTableModel model_results;
     private JTable table_results;
     private JTextArea text_console;
+
+    private Timer clock;
 
     private ServerListener serverListener = new ServerHandler();
     private LoginListener userListener = new UserHandler();
@@ -94,7 +99,7 @@ public final class ServerGUI extends WindowTemplate {
         this.panel_controls = new JPanel(borderLayout);
         this.panel_controls.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Controls"));
 
-        JPanel panel_controls_inner = new JPanel(new GridLayout(1, 3));
+        JPanel panel_controls_inner = new JPanel(new GridLayout(1, 4));
 
         this.btn_start = new JButton("Start");
         this.btn_start.setMnemonic('s');
@@ -109,6 +114,11 @@ public final class ServerGUI extends WindowTemplate {
         this.btn_results.setMnemonic('r');
         this.btn_results.setEnabled(false);
         panel_controls_inner.add(this.btn_results);
+
+        this.label_time = new JLabel("", JLabel.CENTER);
+        this.label_time.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+        this.setTime();
+        panel_controls_inner.add(this.label_time);
 
         this.panel_controls.add(panel_controls_inner, BorderLayout.CENTER);
 
@@ -208,6 +218,14 @@ public final class ServerGUI extends WindowTemplate {
         Server.addServerListener(this.serverListener);
         Server.addLoginListener(this.userListener);
         Server.addAuctionListener(this.auctionListener);
+
+        this.clock = new Timer(1000, e -> SwingUtilities.invokeLater(this::setTime));
+        this.clock.setRepeats(true);
+        this.clock.start();
+    }
+
+    private void setTime() {
+        this.label_time.setText(new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(Calendar.getInstance().getTime()));
     }
 
     private class ServerHandler extends ServerAdapter {
@@ -261,6 +279,9 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.btn_start.setEnabled(true);
                 ServerGUI.this.btn_stop.setEnabled(false);
                 ServerGUI.this.btn_results.setEnabled(false);
+                ServerGUI.this.table_results.removeAll();
+                ServerGUI.this.table_items.removeAll();
+                ServerGUI.this.table_users.removeAll();
             });
         }
 
@@ -330,7 +351,7 @@ public final class ServerGUI extends WindowTemplate {
             SwingUtilities.invokeLater(() -> {
                 Item item = Server.getData().getItem(itemID);
                 ServerGUI.this.model_items.remove(item);
-                if(wasWon){
+                if (wasWon) {
                     ServerGUI.this.model_results.add(item);
                 }
             });
