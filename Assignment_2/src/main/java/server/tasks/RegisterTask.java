@@ -83,7 +83,7 @@ public class RegisterTask extends Task {
             c.setAutoCommit(false);
             insertUser = c.prepareStatement(insertUserSql);
             insertUser.setBytes(1, UUIDUtils.UUIDToBytes(uniqueID));
-            insertUser.setString(2, user.getUsername());
+            insertUser.setString(2, user.getUsername().toLowerCase());
             insertUser.setString(3, user.getFirstName());
             insertUser.setString(4, user.getLastName());
             insertUser.setBytes(5, password_bytes);
