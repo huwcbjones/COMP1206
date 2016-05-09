@@ -39,19 +39,14 @@ public enum PacketType {
      */
     SECURE,
 
-    //region Login Types
     LOGIN,
     LOGIN_FAIL,
     LOGIN_SUCCESS,
 
     LOGOUT,
-    //endregion
-
-    //region Register Types
     REGISTER,
     REGISTER_FAIL,
     REGISTER_SUCCESS,
-    //endregion
 
     AUCTION_START,
     AUCTION_END,
@@ -66,10 +61,21 @@ public enum PacketType {
     SEARCH_ITEM,
 
     KEYWORDS,
-    GET_KEYWORDS,
+    FETCH_KEYWORDS,
 
     BID,
     FETCH_BIDS,
+
+    /**
+     * Gets the range of reserves for a search criteria
+     */
+    FETCH_RESERVE_RANGE,
+
+    /**
+     * Returns the range of reserves from the server
+     */
+    RESERVE_RANGE,
+
 
     /**
      * Sent to the client that wins the auction
@@ -84,15 +90,9 @@ public enum PacketType {
     AUCTION_NO_WINNER,
 
 
-    //region User
-
-    //endregion
-
-    //region Connection Maintenance
     // Let's create a game of ping pong to maintain connection
     /**
      * Server sends a ping to client to check client is alive, if client is alive, a ping is sent back
      */
     PING
-    //endregion
 }

@@ -517,7 +517,7 @@ public class NewAuction extends WindowPanel {
         public void componentShown(ComponentEvent e) {
             NewAuction.this.clearForm();
             NewAuction.this.text_title.requestFocus();
-            Client.sendPacket(new Packet<>(PacketType.GET_KEYWORDS));
+            Client.sendPacket(new Packet<>(PacketType.FETCH_KEYWORDS));
         }
 
         /**
