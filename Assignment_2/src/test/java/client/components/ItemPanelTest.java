@@ -3,6 +3,7 @@ package client.components;
 import org.junit.Test;
 import shared.Item;
 import shared.ItemBuilder;
+import shared.Keyword;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,7 +41,7 @@ public class ItemPanelTest {
             .setDescription("Brand new Test Item.<br /> Never opened before.<br /> Pristine condition.")
             .setReservePrice(new BigDecimal("2.50"))
             .setEndTime(new Timestamp(endTime.getTime().getTime()))
-            .addKeyword("test");
+            .addKeyword(new Keyword(1, "test"));
 
         JFrame frame = new JFrame("ItemPanel Test");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
