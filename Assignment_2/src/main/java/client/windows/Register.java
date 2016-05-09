@@ -184,11 +184,11 @@ public class Register extends WindowPanel {
         this.registerListener = new RegisterHandler();
         this.btn_register.addActionListener(new RegisterBtnClickHandler());
 
-        this.text_username.addFocusListener(new FocusChangeHander());
-        this.text_firstName.addFocusListener(new FocusChangeHander());
-        this.text_lastName.addFocusListener(new FocusChangeHander());
-        this.text_password.addFocusListener(new FocusChangeHander());
-        this.text_passwordConfirm.addFocusListener(new FocusChangeHander());
+        this.text_username.addFocusListener(new FocusChangeHandler());
+        this.text_firstName.addFocusListener(new FocusChangeHandler());
+        this.text_lastName.addFocusListener(new FocusChangeHandler());
+        this.text_password.addFocusListener(new FocusChangeHandler());
+        this.text_passwordConfirm.addFocusListener(new FocusChangeHandler());
         this.combo_server.addActionListener(new ComboServerChangeHandler());
     }
     /**
@@ -396,7 +396,7 @@ public class Register extends WindowPanel {
         }
     }
 
-    private class FocusChangeHander extends FocusAdapter {
+    private class FocusChangeHandler extends FocusAdapter {
         @Override
         public void focusLost(FocusEvent e) {
             Register.this.validateFields(true);
