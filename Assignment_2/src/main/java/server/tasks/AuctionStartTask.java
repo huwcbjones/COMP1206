@@ -31,6 +31,8 @@ public class AuctionStartTask extends Task {
 
     @Override
     public void runSafe() throws Exception {
-        Server.getServer().broadcastPacket(new Packet<>(PacketType.AUCTION_START, this.itemID));
+        log.info("Auction for Item({}) started!", this.itemID);
+        Server.getData().getItem(itemID).startAuction();
+        Server.getServer().broadcastPacket(new Packet<>(PacketType.AUCTION_START, itemID));
     }
 }
