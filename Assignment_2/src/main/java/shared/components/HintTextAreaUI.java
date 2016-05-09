@@ -102,8 +102,12 @@ public class HintTextAreaUI extends BasicTextAreaUI implements FocusListener {
             } else {
                 g.setColor(comp.getForeground().brighter().brighter().brighter());
             }
-            int padding = ((comp.getHeight() / comp.getRows()) - comp.getFont().getSize());
-            g.drawString(this.hint, 3, comp.getHeight() - (comp.getRows() * comp.getFont().getSize()) - padding);
+            int position = comp.getHeight() - comp.getFont().getSize();
+            if(comp.getRows() != 0) {
+                int padding = ((comp.getHeight() / comp.getRows()) - comp.getFont().getSize());
+                position = comp.getHeight() - (comp.getRows() * comp.getFont().getSize()) + padding;
+            }
+            g.drawString(this.hint, 3, position);
         }
     }
 }
