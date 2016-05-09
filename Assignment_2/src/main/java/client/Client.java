@@ -49,7 +49,7 @@ public final class Client implements ConnectionListener {
     private static Authenticate authenticateWindow;
     private static Main mainWindow;
 
-    public Client() {
+    public Client(String username, String password) {
         Client.client = this;
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownThread"));
         try {
@@ -60,10 +60,6 @@ public final class Client implements ConnectionListener {
         System.setProperty("javax.net.ssl.trustStore", "config/keys/biddr.jks");
         System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
-        SwingUtilities.invokeLater(() -> {
-            Client.authenticateWindow = new Authenticate();
-            Client.authenticateWindow.setVisible(true);
-        });
         Client.addLoginListener(new LoginAdapter() {
             @Override
             public void loginSuccess(User user) {
@@ -85,14 +81,14 @@ public final class Client implements ConnectionListener {
                 });
             }
         });
-        Client.addConnectionListener(new ConnectionAdapter(){
+        Client.addConnectionListener(new ConnectionAdapter() {
             @Override
             public void connectionClosed(String reason) {
-                if(Client.authenticateWindow == null){
+                if (Client.authenticateWindow == null) {
                     Client.mainWindow = null;
                     Client.authenticateWindow = new Authenticate();
                     Client.authenticateWindow.setVisible(true);
-                    SwingUtilities.invokeLater(()-> JOptionPane.showMessageDialog(
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                         Client.authenticateWindow,
                         "Connection to server was lost.\nReason: " + reason,
                         "Connection lost!",
@@ -102,6 +98,20 @@ public final class Client implements ConnectionListener {
             }
         });
 
+        // Allows auto login from CLI args (because I'm lazy and in testing I really can't be bothered to keep logging in)
+        if ((username == null && password == null) || Client.config.getServers().size() == 0) {
+            SwingUtilities.invokeLater(() -> {
+                Client.authenticateWindow = new Authenticate();
+                Client.authenticateWindow.setVisible(true);
+            });
+        } else {
+            Client.config.setSelectedServer(Client.config.getServers().get(0));
+            Client.login(username, password.toCharArray());
+        }
+    }
+
+    public Client() {
+        this(null, null);
     }
 
     private void shutdown() {
@@ -330,7 +340,9 @@ public final class Client implements ConnectionListener {
         return Client.isConnected;
     }
 
-    public static User getUser() { return Client.user; }
+    public static User getUser() {
+        return Client.user;
+    }
     //endregion
 
     //region Send/Receive Packets
@@ -346,6 +358,7 @@ public final class Client implements ConnectionListener {
     //endregion
 
     //region Event Trigger Methods
+
     /**
      * Fires RegisterSuccess Event
      *
@@ -456,6 +469,7 @@ public final class Client implements ConnectionListener {
     //endregion
 
     //region Add/Remove Event Handlers
+
     /**
      * Adds a packet listener to the communications handler
      *
@@ -502,14 +516,6 @@ public final class Client implements ConnectionListener {
     }
 
     /**
-     * Fires when the connection succeeds
-     */
-    @Override
-    public void connectionSucceeded() {
-        fireConnectionSucceeded();
-    }
-
-    /**
      * Removes a login listener to the Client
      *
      * @param listener Listener to remove
@@ -534,10 +540,21 @@ public final class Client implements ConnectionListener {
      */
     public static void removeConnectionListener(ConnectionListener listener) {
         Client.listenerList.remove(ConnectionListener.class, listener);
+    }    /**
+     * Fires when the connection succeeds
+     */
+    @Override
+    public void connectionSucceeded() {
+        fireConnectionSucceeded();
     }
+
+
+
+
     //endregion
 
     //region Respond to Events
+
     /**
      * Fires when the connection fails
      *
