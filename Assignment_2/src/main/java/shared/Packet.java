@@ -17,6 +17,10 @@ public final class Packet<T extends Serializable> implements Serializable {
     private final PacketType type;
     private final T payload;
 
+    public Packet(PacketType type){
+        this(type, null);
+    }
+
     public Packet(PacketType type, T payload) {
         this.type = type;
         this.payload = payload;
@@ -66,7 +70,7 @@ public final class Packet<T extends Serializable> implements Serializable {
      * @return OK/NOK packet
      */
     public static Packet<Serializable> wasOK(boolean wasOK) {
-        return new Packet<>(wasOK ? PacketType.OK : PacketType.NOK, null);
+        return new Packet<>(wasOK ? PacketType.OK : PacketType.NOK);
     }
 
     /**
@@ -75,7 +79,7 @@ public final class Packet<T extends Serializable> implements Serializable {
      * @return PING packet
      */
     public static Packet<Serializable> Ping() {
-        return new Packet<>(PacketType.PING, null);
+        return new Packet<>(PacketType.PING);
     }
 
     /**
@@ -84,6 +88,6 @@ public final class Packet<T extends Serializable> implements Serializable {
      * @return LOGOUT packet
      */
     public static Packet<Serializable> Logout() {
-        return new Packet<>(PacketType.LOGOUT, null);
+        return new Packet<>(PacketType.LOGOUT);
     }
 }
