@@ -15,6 +15,9 @@ import shared.ItemBuilder;
 import shared.Keyword;
 import shared.utils.UUIDUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
@@ -37,6 +40,8 @@ public final class DataPersistence {
     private final ConcurrentHashMap<Integer, Keyword> keywords = new ConcurrentHashMap<>();
 
     private SQLitePooledConnection dataSource;
+
+    private File imageDirectory;
 
     //region Loading
 
@@ -72,6 +77,14 @@ public final class DataPersistence {
         if (!dataStore.canWrite()) {
             throw new OperationFailureException("Failed to open datastore, cannot write to datastore. " + dataStore.getAbsolutePath());
         }
+
+        this.imageDirectory = new File(dataStore.getParent() + File.separator + "img");
+        if (!imageDirectory.exists()) {
+            if (!imageDirectory.mkdirs()) {
+                throw new OperationFailureException("Failed to create directory structure.");
+            }
+        }
+
         try {
             SQLiteConnectionPoolDataSource ds = new SQLiteConnectionPoolDataSource();
             ds.setUrl("jdbc:sqlite:" + dataStore.getAbsolutePath());
@@ -309,7 +322,7 @@ public final class DataPersistence {
      * @throws OperationFailureException If the operation failed
      */
     public void loadItem(UUID query_itemID) throws OperationFailureException {
-        if(this.items.containsKey(query_itemID)){
+        if (this.items.containsKey(query_itemID)) {
             log.debug("Item({}) already in memory.", query_itemID);
             return;
         }
@@ -362,7 +375,7 @@ public final class DataPersistence {
                 this.items.put(newItem.getID(), newItem);
 
                 // If auction hasn't ended, queue start/end tasks
-                if(!newItem.isAuctionEnded()) {
+                if (!newItem.isAuctionEnded()) {
                     Server.getWorkerPool().scheduleTask(new AuctionStartTask(null, newItem.getID()), newItem.getTimeUntilStart());
                     Server.getWorkerPool().scheduleTask(new AuctionEndTask(null, newItem.getID()), newItem.getTimeUntilEnd());
                 }
@@ -389,6 +402,33 @@ public final class DataPersistence {
             } catch (SQLException suppress) {
                 log.trace(suppress);
             }
+        }
+    }
+
+    public void processItemImage(UUID itemID, BufferedImage image) {
+        if (image == null) return;
+
+        double scale = Math.min(128/image.getWidth(), 128/image.getHeight());
+        Double width = scale * image.getWidth();
+        Double height = scale * image.getHeight();
+        Double xPos = (128d - width)/2d;
+        Double yPos = (128d - width)/2d;
+
+        Image tmp = image.getScaledInstance(width.intValue(), height.intValue(), Image.SCALE_SMOOTH);
+        BufferedImage thumbnail = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g2d = thumbnail.createGraphics();
+        g2d.drawImage(tmp, xPos.intValue(), yPos.intValue(), null);
+        g2d.dispose();
+
+        File itemImage = new File(this.imageDirectory.getPath() + File.separator + itemID.toString());
+        File itemThumb = new File(this.imageDirectory.getPath() + File.separator + itemID.toString() + "_thumb");
+
+        try {
+            ImageIO.write(image, "png", itemImage);
+            ImageIO.write(thumbnail, "png", itemThumb);
+        } catch (IOException e) {
+            log.catching(e);
         }
     }
 
@@ -521,6 +561,7 @@ public final class DataPersistence {
 
     /**
      * Retrieves a set of keywords
+     *
      * @return HashSet of keywords
      */
     public HashSet<Keyword> getKeywords() {
