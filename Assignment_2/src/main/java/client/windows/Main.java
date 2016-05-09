@@ -159,6 +159,7 @@ public final class Main extends WindowTemplate {
 
     private void createTitlePanel(){
         this.panel_title = new JPanel(new BorderLayout());
+        this.panel_title.setBackground(Color.WHITE);
         this.panel_title.setBorder(new EmptyBorder(new Insets(6, 6, 6, 6)));
         this.label_title = new JLabel(this.getTitle(), JLabel.LEADING);
         this.label_title.setFont(this.label_title.getFont().deriveFont(18f));
