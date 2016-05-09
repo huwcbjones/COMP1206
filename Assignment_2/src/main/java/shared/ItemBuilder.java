@@ -3,10 +3,7 @@ package shared;
 import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Item Builder class
@@ -19,7 +16,7 @@ public class ItemBuilder {
     private UUID userID = null;
     private String title = null;
     private String description = null;
-    private HashSet<String> keywords = new HashSet<>();
+    private HashSet<Keyword> keywords = new HashSet<>();
     private Timestamp startTime = null;
     private Timestamp endTime = null;
     private BigDecimal reservePrice = null;
@@ -86,22 +83,27 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder addKeyword(String keyword) {
-        this.keywords.add(keyword);
+    public ItemBuilder addKeyword(Keyword... keyword) {
+        this.keywords.addAll(Arrays.asList(keyword));
         return this;
     }
 
-    public ItemBuilder addAllKeywords(String[] keywords) {
+    public ItemBuilder addAllKeywords(Keyword[] keywords) {
         this.keywords.addAll(Arrays.asList(keywords));
         return this;
     }
 
-    public ItemBuilder removeKeyword(String keyword) {
-        this.keywords.remove(keyword);
+    public ItemBuilder addAllKeywords(List<Keyword> keywords) {
+        this.keywords.addAll(keywords);
         return this;
     }
 
-    public ItemBuilder removeAllKeywords(String[] keywords) {
+    public ItemBuilder removeKeyword(Keyword... keyword) {
+        this.keywords.removeAll(Arrays.asList(keyword));
+        return this;
+    }
+
+    public ItemBuilder removeAllKeywords(Keyword[] keywords) {
         this.keywords.removeAll(Arrays.asList(keywords));
         return this;
     }

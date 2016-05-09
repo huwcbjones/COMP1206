@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Represents an Item for client.
@@ -20,7 +21,7 @@ public class Item implements Serializable {
     protected final UUID userID;
     protected final String title;
     protected final String description;
-    protected final HashSet<String> keywords;
+    protected final HashSet<Keyword> keywords;
     protected final Timestamp startTime;
     protected final Timestamp endTime;
     protected final BigDecimal reservePrice;
@@ -28,7 +29,7 @@ public class Item implements Serializable {
     protected final BufferedImage image;
     protected Bid topBid;
 
-    public Item(UUID itemID, UUID userID, String title, String description, Set<String> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
+    public Item(UUID itemID, UUID userID, String title, String description, Set<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
         this.itemID = itemID;
         this.userID = userID;
         this.title = title;
@@ -85,7 +86,7 @@ public class Item implements Serializable {
      *
      * @return Keywords
      */
-    public Set<String> getKeywords() {
+    public Set<Keyword> getKeywords() {
         return this.keywords;
     }
 
@@ -95,6 +96,9 @@ public class Item implements Serializable {
      * @return String of keywords
      */
     public String getKeywordString() {
+        List<String> keywords = new ArrayList<>(this.keywords.size());
+        // Stream, keywords, select toString value, collect into a list, add to keywords
+        keywords.addAll(this.keywords.stream().map(Keyword::toString).collect(Collectors.toList()));
         return String.join(", ", keywords);
     }
 
@@ -107,7 +111,9 @@ public class Item implements Serializable {
         return this.topBid;
     }
 
-    public ArrayList<? extends Bid> getBids() { return this.bids; }
+    public ArrayList<? extends Bid> getBids() {
+        return this.bids;
+    }
 
     /**
      * Gets the number of bids on an item
