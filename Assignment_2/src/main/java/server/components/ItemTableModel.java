@@ -94,19 +94,20 @@ public class ItemTableModel extends AbstractTableModel {
                 value = item.getUser().getUsername();
                 break;
             case 2:
-                value = item.getReserveString();
+                value = item.getStartTimeString();
                 break;
             case 3:
-                value = item.getStartTime();
-                break;
-            case 4:
                 value = item.getEndTimeString();
                 break;
-            case 5:
+            case 4:
                 value = item.getReserveString();
                 break;
-            case 6:
-                value = item.getTopBid().getUser().getUsername() + ": " + item.getTopBid().getPriceString();
+            case 5:
+                if(item.getNumberOfBids() != 0) {
+                    value = item.getTopBid().getUser().getUsername() + ": " + item.getTopBid().getPriceString();
+                } else {
+                    value = "-";
+                }
         }
         return value;
     }
