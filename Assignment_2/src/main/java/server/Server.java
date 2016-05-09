@@ -4,6 +4,7 @@ import com.djdch.log4j.StaticShutdownCallbackRegistry;
 import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import server.events.AuctionListener;
 import server.events.LoginListener;
 import server.events.ServerListener;
 import server.events.ServerPacketListener;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -43,8 +45,10 @@ public final class Server {
     /**
      * Static instance of data persistence layer
      */
-    private static final DataPersistence data = new DataPersistence();
+    private static DataPersistence data;
     private static final LoginHandler userLoginHandler = new LoginHandler();
+    private static final AuctionHandler auctionHandler = new AuctionHandler();
+
     /**
      * Static instance of this
      */
@@ -127,7 +131,11 @@ public final class Server {
             this.fireServerFailedStart(e.getMessage());
             return;
         }
+
+        this.startWorkers();
+
         try {
+            Server.data = new DataPersistence();
             this.loadData(createDatabase);
         } catch (OperationFailureException e) {
             log.catching(e);
@@ -135,7 +143,6 @@ public final class Server {
             this.fireServerFailedStart(e.getMessage());
             return;
         }
-        this.startWorkers();
 
         try {
             this.createSockets();
@@ -316,8 +323,6 @@ public final class Server {
             forEach(client -> client.sendPacket(packet));
     }
 
-    //region Get Methods
-
     /**
      * Gets the next ClientID
      *
@@ -420,9 +425,6 @@ public final class Server {
     public static Server getServer() {
         return Server.server;
     }
-    //endregion
-
-    //region Event Handling and Dispatching
 
     /**
      * Gets the config instance from a static context
@@ -451,8 +453,22 @@ public final class Server {
         return Server.workPool;
     }
 
+    /**
+     * Gets the Server's Login Handler
+     *
+     * @return Login handler
+     */
     public static LoginHandler getLoginEventHandler() {
         return Server.userLoginHandler;
+    }
+
+    /**
+     * Gets the Server's Auction Handler
+     *
+     * @return Auction handler
+     */
+    public static AuctionHandler getAuctionEventHandler() {
+        return Server.auctionHandler;
     }
 
     /**
@@ -467,6 +483,24 @@ public final class Server {
         } else {
             event.run();
         }
+    }
+
+    /**
+     * Adds an Auction listener to this server instance
+     *
+     * @param listener AuctionListener
+     */
+    public static void addAuctionListener(AuctionListener listener) {
+        Server.getServer().listeners.add(AuctionListener.class, listener);
+    }
+
+    /**
+     * Removes a Auction listener to this server instance
+     *
+     * @param listener AuctionListener
+     */
+    public static void removeAuctionListener(AuctionListener listener) {
+        Server.getServer().listeners.remove(AuctionListener.class, listener);
     }
 
     /**
@@ -504,8 +538,6 @@ public final class Server {
     public static void removeServerListener(ServerListener listener) {
         Server.getServer().listeners.remove(ServerListener.class, listener);
     }
-
-    //endregion
 
     //region Event Handler Classes
 
@@ -550,6 +582,76 @@ public final class Server {
                     for (int i = listeners.length - 2; i >= 0; i -= 2) {
                         if (listeners[i] == LoginListener.class) {
                             ((LoginListener) listeners[i + 1]).userLoggedOut(user, clientID);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Handles Auction Events
+     */
+    private static class AuctionHandler implements AuctionListener {
+
+        /**
+         * Fired when an auction starts
+         *
+         * @param itemID ID of Item
+         */
+        @Override
+        public void auctionStart(UUID itemID) {
+            log.info("Auction started for Item({})", itemID);
+            Server.dispatchEvent(new RunnableAdapter() {
+                @Override
+                public void runSafe() {
+                    Object[] listeners = Server.getServer().listeners.getListenerList();
+                    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                        if (listeners[i] == AuctionListener.class) {
+                            ((AuctionListener) listeners[i + 1]).auctionStart(itemID);
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Fired when an auction ends
+         *
+         * @param itemID ID of Item
+         */
+        @Override
+        public void auctionEnd(UUID itemID, boolean wasWon) {
+            log.info("Auction ended for Item({})", itemID);
+            Server.dispatchEvent(new RunnableAdapter() {
+                @Override
+                public void runSafe() {
+                    Object[] listeners = Server.getServer().listeners.getListenerList();
+                    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                        if (listeners[i] == AuctionListener.class) {
+                            ((AuctionListener) listeners[i + 1]).auctionEnd(itemID, wasWon);
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Fired when a bid is placed on an auction
+         *
+         * @param itemID ID of Item
+         * @param bidID  ID of Bid
+         */
+        @Override
+        public void auctionBid(UUID itemID, UUID bidID) {
+            log.info("New Bid({}) on Item({})", bidID, itemID);
+            Server.dispatchEvent(new RunnableAdapter() {
+                @Override
+                public void runSafe() {
+                    Object[] listeners = Server.getServer().listeners.getListenerList();
+                    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+                        if (listeners[i] == AuctionListener.class) {
+                            ((AuctionListener) listeners[i + 1]).auctionBid(itemID, bidID);
                         }
                     }
                 }
