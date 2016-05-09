@@ -24,7 +24,7 @@ public class Item implements Serializable {
     public static final int AUCTION_NOT_STARTED = 0;
     public static final int AUCTION_STARTED = 1;
     public static final int AUCTION_WON = 2;
-    public static final int AUCTION_NO_WINNER = 2;
+    public static final int AUCTION_NO_WINNER = 3;
 
     protected final UUID itemID;
     protected final UUID userID;
