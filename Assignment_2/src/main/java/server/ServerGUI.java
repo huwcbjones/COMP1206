@@ -1,10 +1,13 @@
 package server;
 
+import server.components.AuctionResultTableModel;
 import server.components.ItemTableModel;
 import server.components.UserTableModel;
+import server.events.AuctionListener;
 import server.events.LoginListener;
 import server.events.ServerAdapter;
 import server.events.ServerListener;
+import server.objects.Item;
 import server.objects.User;
 import server.utils.JTextAreaAppender;
 import shared.components.JTextAreaOutputStream;
@@ -17,6 +20,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.PrintStream;
+import java.util.UUID;
 
 /**
  * Server GUI interface
@@ -27,6 +31,7 @@ import java.io.PrintStream;
 public final class ServerGUI extends WindowTemplate {
 
     private static final String WINDOW_TITLE = "Biddr Server Control Panel";
+    // Make sure text area appender is reference so it gets compiled
     private static final JTextAreaAppender J_TEXT_AREA_APPENDER = null;
     private final Server server = new Server();
     private JPanel panel_GUI;
@@ -44,10 +49,13 @@ public final class ServerGUI extends WindowTemplate {
     private UserTableModel model_users;
     private JTable table_items;
     private ItemTableModel model_items;
+    private AuctionResultTableModel model_results;
+    private JTable table_results;
     private JTextArea text_console;
 
     private ServerListener serverListener = new ServerHandler();
     private LoginListener userListener = new UserHandler();
+    private AuctionListener auctionListener = new AuctionHandler();
 
     public ServerGUI() {
         super();
@@ -112,6 +120,18 @@ public final class ServerGUI extends WindowTemplate {
         this.panel_results = new JPanel(borderLayout);
         this.panel_results.setPreferredSize(new Dimension(260, 240));
         this.panel_results.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Auction Results"));
+
+        this.model_results = new AuctionResultTableModel();
+        this.table_results = new JTable(this.model_results);
+        this.table_results.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        this.table_results.setShowGrid(false);
+        this.table_results.setShowHorizontalLines(false);
+        this.table_results.setShowVerticalLines(true);
+        this.table_results.setRowMargin(0);
+        this.table_results.setIntercellSpacing(new Dimension(1, 1));
+        this.table_results.setFillsViewportHeight(true);
+        this.table_results.setRowSorter(new TableRowSorter<>(this.model_results));
+        this.panel_results.add(new JScrollPane(this.table_results));
 
         this.panel_tables.add(this.panel_results);
         //endregion
@@ -187,6 +207,7 @@ public final class ServerGUI extends WindowTemplate {
         this.addWindowListener(new WindowHandler());
         Server.addServerListener(this.serverListener);
         Server.addLoginListener(this.userListener);
+        Server.addAuctionListener(this.auctionListener);
     }
 
     private class ServerHandler extends ServerAdapter {
@@ -259,7 +280,7 @@ public final class ServerGUI extends WindowTemplate {
                     "Server failed to start.\n" + reason,
                     "Server Failed to Start!",
                     JOptionPane.ERROR_MESSAGE
-                    );
+                );
             });
         }
     }
@@ -285,6 +306,46 @@ public final class ServerGUI extends WindowTemplate {
         public void userLoggedOut(User user, ClientConnection clientID) {
             log.trace("User Logged Out.");
             SwingUtilities.invokeLater(() -> ServerGUI.this.model_users.remove(user));
+        }
+    }
+
+    private class AuctionHandler implements AuctionListener {
+        /**
+         * Fired when an auction starts
+         *
+         * @param itemID ID of Item
+         */
+        @Override
+        public void auctionStart(UUID itemID) {
+            SwingUtilities.invokeLater(() -> ServerGUI.this.model_items.add(Server.getData().getItem(itemID)));
+        }
+
+        /**
+         * Fired when an auction ends
+         *
+         * @param itemID ID of Item
+         */
+        @Override
+        public void auctionEnd(UUID itemID, boolean wasWon) {
+            SwingUtilities.invokeLater(() -> {
+                Item item = Server.getData().getItem(itemID);
+                ServerGUI.this.model_items.remove(item);
+                if(wasWon){
+                    ServerGUI.this.model_results.add(item);
+                }
+            });
+        }
+
+        /**
+         * Fired when a bid is placed on an auction
+         *
+         * @param itemID ID of Item
+         * @param bidID  ID of Bid
+         */
+        @Override
+        public void auctionBid(UUID itemID, UUID bidID) {
+            SwingUtilities.invokeLater(() -> ServerGUI.this.model_items.remove(Server.getData().getItem(itemID)));
+            SwingUtilities.invokeLater(() -> ServerGUI.this.model_items.add(Server.getData().getItem(itemID)));
         }
     }
 
