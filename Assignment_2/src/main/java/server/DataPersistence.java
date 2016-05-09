@@ -108,9 +108,9 @@ public final class DataPersistence {
 
             String usersTable = "CREATE TABLE users (" +
                 "  userID BLOB PRIMARY KEY NOT NULL," +
-                "  username VARCHAR(255) NOT NULL UNIQUE," +
-                "  firstName VARCHAR(255) NOT NULL," +
-                "  lastName VARCHAR(255) NOT NULL," +
+                "  username VARCHAR(64) NOT NULL UNIQUE," +
+                "  firstName VARCHAR(64) NOT NULL," +
+                "  lastName VARCHAR(64) NOT NULL," +
                 "  password BLOB NOT NULL" +
                 ")";
             statement.execute(usersTable);
