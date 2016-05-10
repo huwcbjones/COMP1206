@@ -371,10 +371,9 @@ public class Comms implements PacketListener {
                 } catch (IOException | VersionMismatchException | ClassCastException e) {
                     if (e.getMessage().toLowerCase().equals("socket closed")) {
                         Comms.this.fireConnectionClosed("Connection lost.");
-                        Comms.this.shutdown();
                     }
-                    log.warn("Exception whilst reading packet. {}", e.getMessage());
-                    log.debug(e);
+                    log.fatal("Exception whilst reading packet. {}", e.getMessage());
+                    Comms.this.shutdown();
                 }
             }
 
