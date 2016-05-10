@@ -92,7 +92,7 @@ public class NewAuctionTask extends Task {
             for (int r : insertKeywords.executeBatch()) {
                 result.add(r);
             }
-            if(result.parallelStream().filter(i -> i == PreparedStatement.EXECUTE_FAILED).count() != 0){
+            if(result.stream().filter(i -> i == PreparedStatement.EXECUTE_FAILED).count() != 0){
                 log.error("Failed to link keywords.");
                 c.rollback();
             } else {
