@@ -3,10 +3,7 @@ package server.tasks;
 import server.ClientConnection;
 import server.Server;
 import server.utils.Comms;
-import shared.Item;
-import shared.Packet;
-import shared.PacketType;
-import shared.RegisterUser;
+import shared.*;
 import shared.utils.RunnableAdapter;
 
 /**
@@ -48,8 +45,14 @@ public final class PacketHandler extends RunnableAdapter {
             case CREATE_ITEM:
                 Server.getWorkerPool().queueTask(new NewAuctionTask(this.client, (Item)packet.getPayload()));
                 break;
-            case GET_KEYWORDS:
+            case FETCH_KEYWORDS:
                 Server.getWorkerPool().queueTask(new KeywordTask(this.client));
+                break;
+            case FETCH_RESERVE_RANGE:
+                Server.getWorkerPool().queueTask(new ReserveTask(this.client));
+                break;
+            case SEARCH:
+                Server.getWorkerPool().queueTask(new SearchTask(this.client, (SearchOptions)packet.getPayload()));
                 break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));

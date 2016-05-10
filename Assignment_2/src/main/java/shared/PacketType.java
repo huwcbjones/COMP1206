@@ -58,6 +58,9 @@ public enum PacketType {
     EDIT_ITEM,
     EDIT_ITEM_FAIL,
     EDIT_ITEM_SUCCESS,
+
+    SEARCH,
+    SEARCH_RESULTS,
     SEARCH_ITEM,
 
     KEYWORDS,
