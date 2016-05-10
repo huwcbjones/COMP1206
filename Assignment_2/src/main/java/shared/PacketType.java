@@ -59,12 +59,35 @@ public enum PacketType {
     EDIT_ITEM_FAIL,
     EDIT_ITEM_SUCCESS,
 
+    /**
+     * Searches the database for items
+     */
     SEARCH,
-    SEARCH_RESULTS,
-    SEARCH_ITEM,
 
+    /**
+     * Returns the results of a search
+     */
+    SEARCH_RESULTS,
+
+    /**
+     * Returns a list of keywords
+     */
     KEYWORDS,
+
+    /**
+     * Fetches a list of keywords
+     */
     FETCH_KEYWORDS,
+
+    /**
+     * Fetches an Item by UUID
+     */
+    FETCH_ITEM,
+
+    /**
+     * Returns an item
+     */
+    ITEM,
 
     BID,
     FETCH_BIDS,

@@ -6,6 +6,8 @@ import server.utils.Comms;
 import shared.*;
 import shared.utils.RunnableAdapter;
 
+import java.util.UUID;
+
 /**
  * Handles Packets
  *
@@ -53,6 +55,9 @@ public final class PacketHandler extends RunnableAdapter {
                 break;
             case SEARCH:
                 Server.getWorkerPool().queueTask(new SearchTask(this.client, (SearchOptions)packet.getPayload()));
+                break;
+            case FETCH_ITEM:
+                Server.getWorkerPool().queueTask(new FetchItemTask(this.client, (UUID)packet.getPayload()));
                 break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));
