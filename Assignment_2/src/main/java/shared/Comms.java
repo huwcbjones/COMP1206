@@ -404,7 +404,7 @@ public class Comms implements PacketListener {
                     if (e.getMessage().toLowerCase().equals("socket closed")) {
                         Comms.this.fireConnectionClosed("Connection lost.");
                     } else {
-                        Comms.this.fireConnectionClosed("Communication error.");
+                        Comms.this.fireConnectionClosed("Communication error. Could not understand message.");
                     }
                     log.fatal("Exception whilst reading packet. {}", e.getMessage());
                     Comms.this.shutdown();

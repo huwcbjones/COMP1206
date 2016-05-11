@@ -91,7 +91,7 @@ public class RegisterTask extends Task {
             c.commit();
             wasSuccess = true;
         } catch (SQLException e) {
-            log.debug(e);
+            log.catching(e);
             log.debug("SQLState: {}", e.getSQLState());
             log.debug("Error Code: {}", e.getErrorCode());
             log.debug("Message: {}", e.getMessage());
@@ -116,7 +116,6 @@ public class RegisterTask extends Task {
         }
 
         return uniqueID;
-
     }
 
     private void validateFields() throws ValidationFailedException {
