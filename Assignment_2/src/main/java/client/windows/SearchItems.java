@@ -3,7 +3,6 @@ package client.windows;
 import client.Client;
 import client.components.ItemPanel;
 import client.components.WindowPanel;
-import javafx.util.Pair;
 import org.jdatepicker.JDateComponentFactory;
 import org.jdatepicker.JDatePicker;
 import shared.*;
