@@ -26,10 +26,10 @@ import java.util.UUID;
  */
 public final class Main extends WindowTemplate {
 
-    private final static String PANEL_SEARCH = "SearchItems";
-    private final static String PANEL_NEWITEM = "NewAuction";
-    private final static String PANEL_VIEWITEM = "ViewItem";
-    private final static String PANEL_VIEWUSER = "ViewUser";
+    public final static String PANEL_SEARCH = "SearchItems";
+    public final static String PANEL_NEWITEM = "NewAuction";
+    public final static String PANEL_VIEWITEM = "ViewItem";
+    public final static String PANEL_VIEWUSER = "ViewUser";
 
     private boolean promptExit = true;
 
@@ -230,7 +230,7 @@ public final class Main extends WindowTemplate {
      *
      * @param panelID The panel that should be changed to
      */
-    private void changePanel(String panelID) {
+    public void changePanel(String panelID) {
         CardLayout layout = (CardLayout) this.panel_cards.getLayout();
         layout.show(this.panel_cards, panelID);
         WindowPanel panel = this.panels.get(panelID);
@@ -238,10 +238,12 @@ public final class Main extends WindowTemplate {
         this.getRootPane().setDefaultButton(panel.getDefaultButton());
     }
 
-    public static void displayItem(UUID itemID){
-        Main main = Main.main;
-        main.panel_viewItem.setItem(itemID);
-        main.changePanel(PANEL_VIEWITEM);
+    public static Main getMain(){
+        return Main.main;
+    }
+    public void displayItem(UUID itemID){
+        this.panel_viewItem.setItem(itemID);
+        this.changePanel(PANEL_VIEWITEM);
     }
 
     public static void main(String[] args) {

@@ -137,7 +137,12 @@ public class ItemPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         // Update time values, then repaint
-        this.label_timeRemaining.setText("Time Remaining: " + TimeUtils.getTimeString(this.item.getTimeUntilEnd(), true));
+        if(this.item.getAuctionStatus() == Item.AUCTION_STARTED) {
+            this.label_timeRemaining.setText("Time Remaining: " + TimeUtils.getTimeString(this.item.getTimeUntilEnd(), true));
+        } else {
+            this.label_timeRemaining.setText("Auction Closed");
+        }
+
         this.label_timeRemaining.setForeground(this.getTimeColour(this.item.getTimeUntilEnd()));
         super.paintComponent(g);
     }
@@ -168,7 +173,7 @@ public class ItemPanel extends JPanel {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            Main.displayItem(ItemPanel.this.item.getID());
+            Main.getMain().displayItem(ItemPanel.this.item.getID());
         }
     }
 }
