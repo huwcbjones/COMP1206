@@ -19,7 +19,6 @@ import shared.exceptions.ConfigLoadException;
 import shared.utils.RunnableAdapter;
 
 import javax.swing.event.EventListenerList;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -67,9 +66,9 @@ public final class Server {
     private final EventListenerList listeners = new EventListenerList();
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
     private AtomicLong clientConnectionCounter = new AtomicLong(0);
-    private ServerComms plainSocket;
+    private ServerComms plainComms;
     //endregion
-    private ServerComms secureSocket;
+    private ServerComms secureComms;
     private boolean isRunning = false;
 
     public Server() {
@@ -150,9 +149,9 @@ public final class Server {
             return;
         }
 
-        this.plainSocket.start();
+        this.plainComms.start();
         if (Server.config.isSecureConnectionEnabled()) {
-            this.secureSocket.start();
+            this.secureComms.start();
         }
         this.isRunning = true;
         this.fireServerStarted();
@@ -187,7 +186,6 @@ public final class Server {
     /**
      * Creates the server sockets to listen to connections
      *
-     * @throws IOException               On Socket Error
      * @throws OperationFailureException On Server Error
      */
     private void createSockets() throws OperationFailureException {
@@ -195,7 +193,7 @@ public final class Server {
         log.info("Starting plain socket...");
         // Create plain ServerSocket (no encryption)
 
-        this.plainSocket = new ServerComms(this, Server.config.getPlainPort());
+        this.plainComms = new ServerComms(this, Server.config.getPlainPort());
         log.info("Plain socket started successfully!");
 
         // Check the config to see if we are listening on a secure socket
@@ -203,7 +201,7 @@ public final class Server {
 
         log.info("Starting secure socket...");
 
-        this.secureSocket = new SecureServerComms(this, Server.config.getSecurePort());
+        this.secureComms = new SecureServerComms(this, Server.config.getSecurePort());
 
         log.info("Secure socket started successfully!");
     }
@@ -225,13 +223,13 @@ public final class Server {
         log.info("Sending disconnect to clients...");
         this.broadcastPacket(new Packet<>(PacketType.DISCONNECT, "Server shutting down."));
 
-        if (this.plainSocket != null || this.secureSocket != null) {
+        if (this.plainComms != null || this.secureComms != null) {
             log.info("Closing sockets...");
-            this.plainSocket.shutdown();
+            this.plainComms.shutdown();
 
-            // Only shutdown secureSocket if it is enabled
-            if (config.isSecureConnectionEnabled() && this.secureSocket != null) {
-                this.secureSocket.shutdown();
+            // Only shutdown secureComms if it is enabled
+            if (config.isSecureConnectionEnabled() && this.secureComms != null) {
+                this.secureComms.shutdown();
             }
         }
 

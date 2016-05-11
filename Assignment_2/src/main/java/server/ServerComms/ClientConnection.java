@@ -18,7 +18,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
- * Handles a client on the server
+ * Handles a client on the server, wrapper class for Comms
  *
  * @author Huw Jones
  * @since 27/03/2016
