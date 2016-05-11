@@ -37,8 +37,7 @@ public class NewAuctionTask extends Task {
     public void runSafe() {
         try {
             validateFields();
-            UUID itemID = this.addItemToDatabase();
-            Server.getData().processItemImage(itemID, this.item.getImage());
+            UUID itemID = this.processItem();
             log.info("New item ({}) added to database!", itemID);
             this.client.sendPacket(new Packet<>(PacketType.CREATE_ITEM_SUCCESS, itemID));
             Server.getData().loadItem(itemID);
@@ -56,12 +55,13 @@ public class NewAuctionTask extends Task {
         this.client.sendPacket(new Packet<>(PacketType.CREATE_ITEM_FAIL, "There was an error creating the auction for that item."));
     }
 
-    private UUID addItemToDatabase() throws OperationFailureException {
+    private UUID processItem() throws OperationFailureException {
         UUID uniqueID;
         do {
             uniqueID = UUID.randomUUID();
         } while (Server.getData().itemExists(uniqueID));
 
+        Server.getData().processItemImage(uniqueID, this.item.getImage());
 
         Connection c = null;
         PreparedStatement insertItem = null;
