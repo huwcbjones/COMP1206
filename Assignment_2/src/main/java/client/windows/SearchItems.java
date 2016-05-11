@@ -64,6 +64,8 @@ public class SearchItems extends WindowPanel {
     private JPanel panel_results;
     private ItemList<Item> list_results;
 
+    private ActionHandler searchHandler = new ActionHandler();
+
     public SearchItems() {
         super("Search Items");
         this.initSearchOptions();
@@ -288,14 +290,14 @@ public class SearchItems extends WindowPanel {
         Client.sendPacket(new Packet<>(PacketType.FETCH_KEYWORDS));
         this.btn_update.addActionListener((e) -> this.search());
 
-        this.combo_sort.addActionListener(new ActionHandler());
-        this.combo_keyword.addActionListener(new ActionHandler());
-        this.text_search.addFocusListener(new ActionHandler());
-        this.date_to.addActionListener(new ActionHandler());
-        this.date_from.addActionListener(new ActionHandler());
-        this.slider_reserve.addChangeListener(new ActionHandler());
-        this.check_noBids.addActionListener(new ActionHandler());
-        this.check_closedAuctions.addActionListener(new ActionHandler());
+        this.combo_sort.addActionListener(this.searchHandler);
+        this.combo_keyword.addActionListener(this.searchHandler);
+        this.text_search.addFocusListener(this.searchHandler);
+        this.date_to.addActionListener(this.searchHandler);
+        this.date_from.addActionListener(this.searchHandler);
+        this.slider_reserve.addChangeListener(this.searchHandler);
+        this.check_noBids.addActionListener(this.searchHandler);
+        this.check_closedAuctions.addActionListener(this.searchHandler);
     }
 
     private void initSearchOptions() {
@@ -384,15 +386,22 @@ public class SearchItems extends WindowPanel {
         public void packetReceived(Packet packet) {
             switch (packet.getType()) {
                 case RESERVE_RANGE:
-                    SwingUtilities.invokeLater(() -> SearchItems.this.slider_reserve.setMaximum((int) packet.getPayload()));
+                    SwingUtilities.invokeLater(() -> {
+                        SearchItems.this.slider_reserve.removeChangeListener(SearchItems.this.searchHandler);
+                        SearchItems.this.slider_reserve.setMaximum((int) packet.getPayload());
+                        SearchItems.this.slider_reserve.addChangeListener(SearchItems.this.searchHandler);
+                    });
                     break;
 
                 case KEYWORDS:
                     SwingUtilities.invokeLater(() -> {
+                        SearchItems.this.combo_keyword.removeActionListener(SearchItems.this.searchHandler);
                         SearchItems.this.combo_keyword.removeAllItems();
                         SearchItems.this.combo_keyword.addItem(new Keyword(-1, "All Keywords"));
                         ArrayList<Keyword> keywords = new ArrayList<>(Arrays.asList((Keyword[])packet.getPayload()));
                         keywords.forEach(keyword -> SearchItems.this.combo_keyword.addItem(keyword));
+                        SearchItems.this.combo_keyword.addActionListener(SearchItems.this.searchHandler);
+                        SearchItems.this.combo_keyword.setSelectedIndex(0);
                     });
                     break;
 
