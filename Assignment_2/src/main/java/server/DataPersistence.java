@@ -13,10 +13,10 @@ import server.tasks.AuctionStartTask;
 import shared.Bid;
 import shared.ItemBuilder;
 import shared.Keyword;
+import shared.utils.ImageUtils;
 import shared.utils.UUIDUtils;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.sql.*;
@@ -442,18 +442,7 @@ public final class DataPersistence {
     public void processItemImage(UUID itemID, BufferedImage image) {
         if (image == null) return;
 
-        double scale = Math.min(128d/image.getWidth(), 128d/image.getHeight());
-        Double width = scale * image.getWidth();
-        Double height = scale * image.getHeight();
-        Double xPos = (128d - width)/2d;
-        Double yPos = (128d - height)/2d;
-
-        Image tmp = image.getScaledInstance(width.intValue(), height.intValue(), Image.SCALE_SMOOTH);
-        BufferedImage thumbnail = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
-
-        Graphics2D g2d = thumbnail.createGraphics();
-        g2d.drawImage(tmp, xPos.intValue(), yPos.intValue(), null);
-        g2d.dispose();
+        BufferedImage thumbnail = ImageUtils.getScaledImage(image, 128, 128);
 
         File itemImage = new File(this.imageDirectory.getPath() + File.separator + itemID.toString());
         File itemThumb = new File(this.imageDirectory.getPath() + File.separator + itemID.toString() + "_thumb");
