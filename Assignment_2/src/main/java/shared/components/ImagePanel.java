@@ -1,5 +1,7 @@
 package shared.components;
 
+import shared.utils.ImageUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -162,8 +164,12 @@ public class ImagePanel extends JPanel implements SwingConstants {
 
     public void setImage(BufferedImage image, boolean repaint) {
         this.image = image;
-        this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+        //this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         if (repaint) this.repaint();
+    }
+
+    public BufferedImage getImage() {
+        return image;
     }
 
     @Override
@@ -196,6 +202,8 @@ public class ImagePanel extends JPanel implements SwingConstants {
                 ypos = this.getHeight() - this.image.getHeight();
                 break;
         }
-        g2d.drawImage(this.image, xpos, ypos, null);
+
+        BufferedImage image = ImageUtils.getScaledImage(this.image, this.getWidth(), this.getHeight());
+        g2d.drawImage(image, xpos, ypos, null);
     }
 }
