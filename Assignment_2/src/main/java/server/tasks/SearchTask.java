@@ -52,10 +52,10 @@ public class SearchTask extends Task {
 
         // Take items from memory and put them into the ArrayList
         ArrayList<Item> items = new ArrayList<>(itemIDs.size());
-        itemIDs.stream().forEach(itemID -> items.add(Server.getData().getItem(itemID)));
+        itemIDs.stream().forEach(itemID -> items.add(Server.getData().getItem(itemID).getClientItem()));
 
         // Send results to client
-        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, items.toArray(new Item[items.size()])));
+        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, items.toArray(new shared.Item[items.size()])));
     }
 
     private List<UUID> getItemIDs(){

@@ -32,6 +32,6 @@ public class FetchItemTask extends Task {
 
     @Override
     public void runSafe() throws Exception {
-        this.client.sendPacket(new Packet<>(PacketType.ITEM, Server.getData().getItem(itemID)));
+        this.client.sendPacket(new Packet<>(PacketType.ITEM, Server.getData().getItem(itemID).getClientItem()));
     }
 }

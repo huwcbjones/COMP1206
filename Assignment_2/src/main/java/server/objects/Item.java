@@ -23,6 +23,8 @@ import java.util.UUID;
  */
 public class Item extends shared.Item {
 
+    private static final long serialUID = -2134L;
+
     private EventListenerList listenerList = new EventListenerList();
 
     public Item(UUID itemID, UUID userID, String title, String description, HashSet<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image, BufferedImage thumbnail) {
@@ -70,22 +72,22 @@ public class Item extends shared.Item {
     }
 
     public void startAuction() throws OperationFailureException {
-        if(this.getTimeUntilStart() != 0){
+        if (this.getTimeUntilStart() != 0) {
             throw new OperationFailureException("Cannot start auction, auction not due to start for " + this.getTimeUntilStart() + " seconds.");
         }
 
-        if(this.getTimeUntilEnd() == 0){
+        if (this.getTimeUntilEnd() == 0) {
             throw new OperationFailureException("Cannot start auction, auction has already ended.");
         }
         this.fireAuctionStart();
     }
 
     public void endAuction() throws OperationFailureException {
-        if(this.getTimeUntilStart() != 0){
+        if (this.getTimeUntilStart() != 0) {
             throw new OperationFailureException("Cannot end auction, auction is still due to start in " + this.getTimeUntilStart() + " seconds.");
         }
 
-        if(this.getTimeUntilEnd() != 0){
+        if (this.getTimeUntilEnd() != 0) {
             throw new OperationFailureException("Cannot end auction, auction has " + this.getTimeUntilEnd() + " seconds left.");
         }
 
@@ -146,5 +148,25 @@ public class Item extends shared.Item {
 
     public static Item createServerItem(shared.Item item) {
         return new Item(item);
+    }
+
+    public shared.Item getClientItem(){
+        return Item.getClientItem(this);
+    }
+
+    public static shared.Item getClientItem(Item item) {
+        return new shared.Item(
+            item.getID(),
+            item.getUserID(),
+            item.getTitle(),
+            item.getDescription(),
+            item.getKeywords(),
+            item.getStartTime(),
+            item.getEndTime(),
+            item.getReserve(),
+            item.getBids(),
+            item.getImage(),
+            item.getThumbnail()
+        );
     }
 }
