@@ -70,7 +70,7 @@ public class ItemPanel extends JPanel {
 
         this.label_timeRemaining = new JLabel("Time Remaining: " + TimeUtils.getTimeString(this.item.getTimeUntilEnd(), true), JLabel.LEFT);
         this.label_timeRemaining.setFont(this.label_timeRemaining.getFont().deriveFont(Font.PLAIN, 12f));
-        this.label_timeRemaining.setForeground(this.getTimeColour(this.item.getTimeUntilEnd()));
+        this.label_timeRemaining.setForeground(TimeUtils.getTimeColour(this.item.getTimeUntilEnd()));
         c = new GridBagConstraints();
         c.insets.set(6, 6, 6, 6);
         c.gridx = 1;
@@ -145,18 +145,8 @@ public class ItemPanel extends JPanel {
             this.label_timeRemaining.setText("Auction Closed");
         }
 
-        this.label_timeRemaining.setForeground(this.getTimeColour(this.item.getTimeUntilEnd()));
+        this.label_timeRemaining.setForeground(TimeUtils.getTimeColour(this.item.getTimeUntilEnd()));
         super.paintComponent(g);
-    }
-
-    private Color getTimeColour(long time){
-        if ( time < 3600000) {
-            return Color.RED;
-        } else if ( time < 86400000) {
-            return Color.orange;
-        } else {
-            return Color.BLACK;
-        }
     }
 
     private class MouseHandler extends MouseAdapter {

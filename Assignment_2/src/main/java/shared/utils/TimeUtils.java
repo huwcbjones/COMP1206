@@ -1,5 +1,6 @@
 package shared.utils;
 
+import java.awt.*;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +17,16 @@ public class TimeUtils {
         Calendar c = Calendar.getInstance();
         c.setTime(d);
         return c;
+    }
+
+    public static Color getTimeColour(long time){
+        if ( time < 3600000) {
+            return Color.RED;
+        } else if ( time < 86400000) {
+            return Color.orange;
+        } else {
+            return Color.BLACK;
+        }
     }
 
     public static String getTimeString(long time, boolean isMilliseconds) {
