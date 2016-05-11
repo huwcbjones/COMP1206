@@ -513,11 +513,12 @@ public final class DataPersistence {
      */
     private void loadServer() throws OperationFailureException {
         ArrayList<UUID> itemIDs = getCurrentItems(true);
+        // Load keywords first so keywords are included in item, when items are loaded
+        this.loadKeywords();
         log.info("Processing {} items...", itemIDs.size());
         for (UUID itemID : itemIDs) {
             this.loadItem(itemID);
         }
-        this.loadKeywords();
     }
 
     /**
