@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Searches the database
@@ -57,15 +58,24 @@ public class SearchTask extends Task {
         ArrayList<Item> items = new ArrayList<>(itemIDs.size());
         itemIDs.stream().forEach(itemID -> items.add(Server.getData().getItem(itemID)));
 
+        // Filter ended auctions
+        List<Item> itemArray = items.stream().filter(item -> item.getAuctionStatus() == Item.AUCTION_STARTED).collect(Collectors.toList());
+
         // Send results to client
-        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, items.toArray(new Item[items.size()])));
+        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, itemArray.toArray(new Item[itemArray.size()])));
     }
 
     private List<UUID> getItemIDs(){
         String selectSql;
+        List<UUID> itemIDs = new ArrayList<>();
+
+        if(this.options == null) return itemIDs;
+
         long startTime = System.currentTimeMillis();
+
+        // TODO: 11/05/2016 Make this filter dates properly
         selectSql =
-                "SELECT items.itemID, COUNT(bidID) as bidNum FROM items " +
+                "SELECT items.itemID, COUNT(bidID) AS bidNum FROM items " +
                 "LEFT JOIN bids ON bids.itemID = items.itemID " +
                 "WHERE " +
                 "(? = '' OR (title LIKE ? OR items.description LIKE ?)) AND " +
@@ -75,7 +85,7 @@ public class SearchTask extends Task {
                 "HAVING (bidNum = 0 OR NOT ?) ";
 
         // Set order
-        switch(options.getSort()){
+        switch (options.getSort()) {
             case BID:
                 selectSql += "ORDER BY bids.price " + options.getDirection().toString();
                 break;
@@ -86,15 +96,12 @@ public class SearchTask extends Task {
                 selectSql += "ORDER BY endTime " + options.getDirection().toString();
                 break;
             case RESERVE:
-                selectSql += "ORDER BY reserve " + options.getDirection().toString();
+                selectSql += "ORDER BY reservePrice " + options.getDirection().toString();
                 break;
         }
 
-        log.trace("SQL: \n {}", selectSql);
         Connection c = null;
         PreparedStatement selectQuery = null;
-
-        List<UUID> itemIDs = new ArrayList<>();
 
         try {
             c = Server.getData().getConnection();
@@ -104,11 +111,9 @@ public class SearchTask extends Task {
             long from = this.options.getStartTime().getTime() / 1000L;
             long to = this.options.getEndTime().getTime() / 1000L;
 
-            log.trace("From: {}, To: {}", from, to);
-
-            selectQuery.setString(1, this.options.getString());
-            selectQuery.setString(2, this.options.getString());
-            selectQuery.setString(3, this.options.getString());
+            selectQuery.setString(1, "%" + this.options.getString() + "%");
+            selectQuery.setString(2, "%" + this.options.getString() + "%");
+            selectQuery.setString(3, "%" + this.options.getString() + "%");
 
             selectQuery.setLong(4, from);
             selectQuery.setLong(5, to);
