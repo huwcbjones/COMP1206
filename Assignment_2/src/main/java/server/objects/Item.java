@@ -25,8 +25,8 @@ public class Item extends shared.Item {
 
     private EventListenerList listenerList = new EventListenerList();
 
-    public Item(UUID itemID, UUID userID, String title, String description, HashSet<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
-        super(itemID, userID, title, description, keywords, startTime, endTime, reservePrice, bids, image);
+    public Item(UUID itemID, UUID userID, String title, String description, HashSet<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image, BufferedImage thumbnail) {
+        super(itemID, userID, title, description, keywords, startTime, endTime, reservePrice, bids, image, thumbnail);
         this.addAuctionListener(Server.getAuctionEventHandler());
     }
 
@@ -41,7 +41,8 @@ public class Item extends shared.Item {
             item.getEndTime(),
             item.getReserve(),
             item.getBids(),
-            item.getImage()
+            item.getImage(),
+            item.getThumbnail()
         );
         this.addAuctionListener(Server.getAuctionEventHandler());
     }
