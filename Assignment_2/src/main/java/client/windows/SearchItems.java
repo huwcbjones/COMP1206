@@ -1,6 +1,7 @@
 package client.windows;
 
 import client.Client;
+import client.components.ItemPanel;
 import client.components.WindowPanel;
 import javafx.util.Pair;
 import org.jdatepicker.JDateComponentFactory;
@@ -10,9 +11,11 @@ import shared.Packet;
 import shared.PacketType;
 import shared.SearchOptions;
 import shared.components.HintTextFieldUI;
+import shared.components.ItemList;
 import shared.events.PacketListener;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
@@ -57,8 +60,7 @@ public class SearchItems extends WindowPanel {
     private JCheckBox check_noBids;
     private JSplitPane panel_split;
     private JPanel panel_results;
-    private JList<Item> list_results;
-    private DefaultListModel<Item> lm_items;
+    private ItemList<Item> list_results;
 
     public SearchItems() {
         super("Search Items");
@@ -67,8 +69,9 @@ public class SearchItems extends WindowPanel {
         this.setMainPanel(this.panel_split);
         this.addComponentListener(new ComponentHandler());
         Client.addPacketListener(new PacketHandler());
-        Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
         this.btn_update.addActionListener((e) -> this.search());
+        Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
+        Client.sendPacket(new Packet<>(PacketType.SEARCH));
     }
 
     private void initComponents() {
@@ -88,13 +91,21 @@ public class SearchItems extends WindowPanel {
         this.panel_results.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Results"));
         this.panel_results.setBackground(Color.WHITE);
 
-        this.lm_items = new DefaultListModel<>();
-        this.list_results = new JList<>(this.lm_items);
-        this.list_results.setDragEnabled(false);
-        this.list_results.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        this.list_results.setLayoutOrientation(JList.VERTICAL);
+        this.list_results = new ItemList<Item>() {
+            @Override
+            public Component drawItem(Item item) {
+                return new ItemPanel(item);
+            }
+        };
 
-        this.panel_results.add(this.list_results, BorderLayout.CENTER);
+
+        JScrollPane scroller = new JScrollPane(this.list_results);
+        scroller.setBorder(new EmptyBorder(0, 0, 0, 0));
+        scroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroller.getVerticalScrollBar().setUnitIncrement(8);
+
+        this.panel_results.add(scroller, BorderLayout.CENTER);
 
         this.panel_split.add(this.panel_results);
         this.panel_split.setDividerSize(10);
@@ -131,6 +142,7 @@ public class SearchItems extends WindowPanel {
         row++;
 
         this.combo_sort = new JComboBox<>(this.sort_options.keySet().toArray(new String[0]));
+        this.combo_sort.setSelectedIndex(0);
         c.gridy = row;
         c.insets = new Insets(0, 0, 6, 0);
         this.panel_search.add(this.combo_sort, c);
@@ -304,7 +316,7 @@ public class SearchItems extends WindowPanel {
         @Override
         public void packetReceived(Packet packet) {
             switch (packet.getType()) {
-                     case RESERVE_RANGE:
+                case RESERVE_RANGE:
                     SwingUtilities.invokeLater(() -> SearchItems.this.slider_reserve.setMaximum((int) packet.getPayload()));
                     break;
 
@@ -315,6 +327,10 @@ public class SearchItems extends WindowPanel {
 
                 case SEARCH_RESULTS:
                     List<Item> results = Arrays.asList((Item[]) packet.getPayload());
+                    SwingUtilities.invokeLater(() -> {
+                        SearchItems.this.list_results.removeAllElements();
+                        SearchItems.this.list_results.addAllElements(results);
+                    });
                     break;
             }
         }
