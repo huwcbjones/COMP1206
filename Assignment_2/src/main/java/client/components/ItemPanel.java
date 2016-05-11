@@ -108,6 +108,7 @@ public class ItemPanel extends JPanel {
         if(this.item.getNumberOfBids() != 0){
             this.label_topBid.setText("Top Bid: " + this.item.getTopBid().getPriceString());
         }
+        this.label_topBid.setFont(this.label_topBid.getFont().deriveFont(Font.BOLD, 14f));
         c = new GridBagConstraints();
         c.insets.set(6, 6, 6, 6);
         c.gridx = 2;
@@ -117,6 +118,7 @@ public class ItemPanel extends JPanel {
         this.add(this.label_topBid, c);
 
         this.label_reserve = new JLabel("Reserve: "+ this.item.getReserveString(), JLabel.LEFT);
+        this.label_reserve.setFont(this.label_reserve.getFont().deriveFont(Font.PLAIN, 14f));
         c = new GridBagConstraints();
         c.insets.set(6, 6, 6, 6);
         c.gridx = 2;
