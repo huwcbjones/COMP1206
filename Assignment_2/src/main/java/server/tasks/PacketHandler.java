@@ -59,6 +59,9 @@ public final class PacketHandler extends RunnableAdapter {
             case FETCH_ITEM:
                 Server.getWorkerPool().queueTask(new FetchItemTask(this.client, (UUID)packet.getPayload()));
                 break;
+            case FETCH_USER:
+                Server.getWorkerPool().queueTask(new FetchUserTask(this.client, (UUID)packet.getPayload()));
+                break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));
                 break;
