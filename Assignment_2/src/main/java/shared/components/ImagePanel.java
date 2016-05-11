@@ -169,6 +169,8 @@ public class ImagePanel extends JPanel implements SwingConstants {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if(image == null) return;
+
         Graphics2D g2d = (Graphics2D) g;
         int xpos = 0;
         int ypos = 0;
