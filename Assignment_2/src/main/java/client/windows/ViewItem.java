@@ -2,14 +2,12 @@ package client.windows;
 
 import client.Client;
 import client.components.WindowPanel;
-import shared.Item;
-import shared.Packet;
-import shared.PacketType;
-import shared.User;
+import shared.*;
 import shared.components.ImagePanel;
 import shared.components.JLinkLabel;
 import shared.events.PacketListener;
 import shared.utils.ImageUtils;
+import shared.utils.NumberUtils;
 import shared.utils.ReplyWaiter;
 import shared.utils.TimeUtils;
 
@@ -21,7 +19,11 @@ import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -90,6 +92,25 @@ public class ViewItem extends WindowPanel {
                 }
             }
         });
+        this.btn_bid.addActionListener(e -> {
+            try {
+                BigDecimal bid = NumberUtils.currencyToBigDecimal(this.text_bid.getText(), NumberFormat.getCurrencyInstance(Locale.UK));
+                if(this.item.getReserve().compareTo(bid) > 0){
+                    JOptionPane.showMessageDialog(this, "Bid must be more than, or equal to the reserve price.", "Bid not high enough!", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if(this.item.getTopBid() != null && bid.compareTo(this.item.getTopBid().getPrice()) <= 0){
+                    JOptionPane.showMessageDialog(this, "Bid is not greater than current top bid.", "Bid not high enough!", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                Client.sendPacket(new Packet<>(
+                    PacketType.PLACE_BID,
+                    new Bid(new UUID(0, 0), this.item.getID(), Client.getUser().getUniqueID(), bid, new Timestamp(Calendar.getInstance().getTime().getTime())))
+                );
+            } catch (ParseException e1) {
+                JOptionPane.showMessageDialog(this, "Invalid bid format. Failed to understand bid price.", "Invalid Bid!", JOptionPane.WARNING_MESSAGE);
+            }
+        });
     }
 
     private void initComponents() {
@@ -145,7 +166,6 @@ public class ViewItem extends WindowPanel {
 
         this.panel_seller = new JPanel(new GridBagLayout());
         this.panel_seller.setOpaque(false);
-        this.panel_seller.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY, 1), new EmptyBorder(16, 16, 16, 16)));
         c = new GridBagConstraints();
         c.weightx = 0.3;
         c.weighty = 0.5;
@@ -287,7 +307,7 @@ public class ViewItem extends WindowPanel {
         titlePanel.setOpaque(false);
 
         JLabel labelSeller = new JLabel("Seller Details", JLabel.LEADING);
-        labelDetails.setFont(labelDetails.getFont().deriveFont(16f));
+        labelSeller.setFont(labelDetails.getFont().deriveFont(16f));
         titlePanel.add(labelSeller, BorderLayout.CENTER);
         titlePanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.PAGE_END);
         this.panel_seller.add(titlePanel, BorderLayout.PAGE_START);
@@ -408,6 +428,11 @@ public class ViewItem extends WindowPanel {
 
             // Set reserve
             this.content_reserve.setText(this.item.getReserveString());
+            if(this.item.getNumberOfBids() == 0) {
+                this.text_bid.setValue(this.item.getReserve());
+            } else {
+                this.text_bid.setValue(this.item.getTopBid().getPrice());
+            }
 
             if (this.item.getNumberOfBids() == 0) {
                 this.content_topBid.setText("-");
@@ -416,6 +441,9 @@ public class ViewItem extends WindowPanel {
             }
 
             this.content_description.setText("<html>" + this.item.getDescription() + "</html>");
+
+            this.text_bid.setEnabled(!this.item.getUserID().equals(Client.getUser().getUniqueID()));
+            this.btn_bid.setEnabled(!this.item.getUserID().equals(Client.getUser().getUniqueID()));
 
             this.getRootPane().revalidate();
             this.getRootPane().repaint();
@@ -433,7 +461,7 @@ public class ViewItem extends WindowPanel {
      */
     @Override
     public JButton getDefaultButton() {
-        return null;
+        return this.btn_bid;
     }
 
     private class PacketHandler implements PacketListener {
@@ -446,6 +474,14 @@ public class ViewItem extends WindowPanel {
 
                 case USER:
                     SwingUtilities.invokeLater(() -> ViewItem.this.setUser((User) packet.getPayload()));
+                    break;
+
+                case BID:
+                    Bid bid = (Bid)packet.getPayload();
+                    if(bid.getItemID().equals(ViewItem.this.item.getID())){
+                        // Do something with bid
+                    }
+                    break;
             }
         }
     }

@@ -322,7 +322,18 @@ public final class DataPersistence {
      * @throws OperationFailureException If the operation failed
      */
     public void loadItem(UUID query_itemID) throws OperationFailureException {
-        if (this.items.containsKey(query_itemID)) {
+        this.loadItem(query_itemID, false);
+    }
+
+    /**
+     * Loads items with itemID into memory
+     *
+     * @param query_itemID ItemID of item
+     * @param reloadItem   If true, will force a refresh from the database
+     * @throws OperationFailureException If the operation failed
+     */
+    public void loadItem(UUID query_itemID, boolean reloadItem) throws OperationFailureException {
+        if (this.items.containsKey(query_itemID) && !reloadItem) {
             log.debug("Item({}) already in memory.", query_itemID);
             return;
         }
@@ -365,7 +376,7 @@ public final class DataPersistence {
                 File itemImage = new File(imageDirectory.getAbsolutePath() + File.separator + query_itemID);
                 File itemThumbnail = new File(imageDirectory.getAbsolutePath() + File.separator + query_itemID + "_thumb");
 
-                if(itemImage.exists() && itemImage.canRead()){
+                if (itemImage.exists() && itemImage.canRead()) {
                     try {
                         ib.setImage(ImageIO.read(itemImage));
                     } catch (IOException shouldNotHappen) {
@@ -373,7 +384,7 @@ public final class DataPersistence {
                     }
                 }
 
-                if(itemThumbnail.exists() && itemThumbnail.canRead()){
+                if (itemThumbnail.exists() && itemThumbnail.canRead()) {
                     try {
                         ib.setThumbnail(ImageIO.read(itemThumbnail));
                     } catch (IOException shouldNotHappen) {
@@ -386,11 +397,11 @@ public final class DataPersistence {
 
                 while (bidResults.next()) {
                     newBid = new Bid(
+                        UUIDUtils.BytesToUUID(bidResults.getBytes("bidID")),
                         query_itemID,
-                        UUIDUtils.BytesToUUID(bidResults.getBytes("itemID")),
                         UUIDUtils.BytesToUUID(bidResults.getBytes("userID")),
-                        bidResults.getBigDecimal("bidPrice"),
-                        bidResults.getTimestamp("time")
+                        bidResults.getBigDecimal("price"),
+                        new Timestamp(bidResults.getLong("time") * 1000L)
                     );
                     ib.addBid(newBid);
                 }
@@ -398,7 +409,7 @@ public final class DataPersistence {
                 selectKeywordQuery.setBytes(1, itemID);
                 keywordResults = selectKeywordQuery.executeQuery();
 
-                while(keywordResults.next()){
+                while (keywordResults.next()) {
                     ib.addKeyword(this.keywords.get(keywordResults.getInt("keywordID")));
                 }
 

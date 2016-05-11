@@ -34,12 +34,12 @@ public class Item implements Serializable {
     protected final Timestamp startTime;
     protected final Timestamp endTime;
     protected final BigDecimal reservePrice;
-    protected final ArrayList<? extends Bid> bids;
+    protected final HashMap<UUID, Bid> bids =  new HashMap<>();
     protected final byte[] image;
     protected final byte[] thumbnail;
     protected Bid topBid;
 
-    public Item(UUID itemID, UUID userID, String title, String description, Set<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image, BufferedImage thumbnail) {
+    public Item(UUID itemID, UUID userID, String title, String description, Set<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<Bid> bids, BufferedImage image, BufferedImage thumbnail) {
         this.itemID = itemID;
         this.userID = userID;
         this.title = title;
@@ -48,17 +48,17 @@ public class Item implements Serializable {
         this.startTime = startTime;
         this.endTime = endTime;
         this.reservePrice = reservePrice;
-        this.bids = bids;
+        bids.stream().forEach(bid -> this.bids.put(bid.getID(), bid));
         this.image = this.imageToBytes(image);
         this.thumbnail = this.imageToBytes(thumbnail);
         this.setTopBid();
     }
 
     private void setTopBid() {
-        for (Bid b : this.bids) {
+        for (Bid b : this.bids.values()) {
             if (this.topBid == null) {
                 this.topBid = b;
-            } else if (this.topBid.compareTo(b) > 0) {
+            } else if (this.topBid.compareTo(b) < 0) {
                 this.topBid = b;
             }
         }
@@ -157,8 +157,16 @@ public class Item implements Serializable {
         return this.topBid;
     }
 
-    public ArrayList<? extends Bid> getBids() {
-        return this.bids;
+    public ArrayList<Bid> getBids() {
+        return new ArrayList<>(this.bids.values());
+    }
+
+    public Bid getBid(UUID bidID){
+        if(this.bids.containsKey(bidID)){
+            return this.bids.get(bidID);
+        } else {
+            return null;
+        }
     }
 
     /**
