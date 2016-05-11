@@ -234,22 +234,29 @@ public final class Main extends WindowTemplate {
         CardLayout layout = (CardLayout) this.panel_cards.getLayout();
         layout.show(this.panel_cards, panelID);
         WindowPanel panel = this.panels.get(panelID);
-        this.setTitle(panel.getTitle());
+        updateTitle(panel);
         this.getRootPane().setDefaultButton(panel.getDefaultButton());
+    }
+
+    public void updateTitle(WindowPanel panel) {
+        this.setTitle(panel.getTitle());
     }
 
     public static Main getMain(){
         return Main.main;
     }
     public void displayItem(UUID itemID){
-        this.panel_viewItem.setItem(itemID);
-        this.changePanel(PANEL_VIEWITEM);
-    }
-
-    public static void main(String[] args) {
-        Main main = new Main();
-        main.setVisible(true);
-        main.changePanel(PANEL_NEWITEM);
+        if(this.panel_viewItem.setItem(itemID)) {
+            this.changePanel(PANEL_VIEWITEM);
+        } else {
+            SwingUtilities.invokeLater(() ->
+                JOptionPane.showMessageDialog(
+                    Main.this,
+                    "Failed to load that item from the server.",
+                    "Failed to load item.",
+                    JOptionPane.ERROR_MESSAGE
+            ));
+        }
     }
 
     private class WindowClosingHandler extends WindowAdapter{
