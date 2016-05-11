@@ -36,9 +36,10 @@ public class Item implements Serializable {
     protected final BigDecimal reservePrice;
     protected final ArrayList<? extends Bid> bids;
     protected final byte[] image;
+    protected final byte[] thumbnail;
     protected Bid topBid;
 
-    public Item(UUID itemID, UUID userID, String title, String description, Set<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image) {
+    public Item(UUID itemID, UUID userID, String title, String description, Set<Keyword> keywords, Timestamp startTime, Timestamp endTime, BigDecimal reservePrice, ArrayList<? extends Bid> bids, BufferedImage image, BufferedImage thumbnail) {
         this.itemID = itemID;
         this.userID = userID;
         this.title = title;
@@ -49,6 +50,7 @@ public class Item implements Serializable {
         this.reservePrice = reservePrice;
         this.bids = bids;
         this.image = this.imageToBytes(image);
+        this.thumbnail = this.imageToBytes(thumbnail);
         this.setTopBid();
     }
 
@@ -142,7 +144,7 @@ public class Item implements Serializable {
     public String getKeywordString() {
         List<String> keywords = new ArrayList<>(this.keywords.size());
         // Stream, keywords, select toString value, collect into a list, add to keywords
-        keywords.addAll(this.keywords.stream().map(Keyword::toString).collect(Collectors.toList()));
+        keywords.addAll(this.keywords.stream().filter(item -> item != null).map(Keyword::toString).collect(Collectors.toList()));
         return String.join(", ", keywords);
     }
 
@@ -202,6 +204,15 @@ public class Item implements Serializable {
      */
     public BufferedImage getImage() {
         return this.bytesToImage(this.image);
+    }
+
+    /**
+     * Gets the item's thumbanil image
+     *
+     * @return BufferedImage, thumbanil image
+     */
+    public BufferedImage getThumbnail() {
+        return this.bytesToImage(this.thumbnail);
     }
 
     /**

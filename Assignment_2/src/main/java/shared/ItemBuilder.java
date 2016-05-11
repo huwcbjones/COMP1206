@@ -22,6 +22,7 @@ public class ItemBuilder {
     private BigDecimal reservePrice = null;
     private ArrayList<Bid> bids = new ArrayList<>();
     private BufferedImage image = null;
+    private BufferedImage thumbnail = null;
 
     public Item getItem() throws IllegalArgumentException {
         if (itemID == null) {
@@ -45,7 +46,7 @@ public class ItemBuilder {
         if (reservePrice == null) {
             reservePrice = BigDecimal.ZERO;
         }
-        return new Item(itemID, userID, title, description, keywords, startTime, endTime, reservePrice, bids, image);
+        return new Item(itemID, userID, title, description, keywords, startTime, endTime, reservePrice, bids, image, thumbnail);
     }
 
     public ItemBuilder setID(UUID ID) {
@@ -130,6 +131,11 @@ public class ItemBuilder {
 
     public ItemBuilder setImage(BufferedImage image) {
         this.image = image;
+        return this;
+    }
+
+    public ItemBuilder setThumbnail(BufferedImage thumbnail) {
+        this.thumbnail = thumbnail;
         return this;
     }
 }
