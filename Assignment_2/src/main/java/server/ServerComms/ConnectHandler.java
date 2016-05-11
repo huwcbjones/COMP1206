@@ -70,15 +70,17 @@ public class ConnectHandler {
             this.client.sendPacket(Packet.wasOK(false));
             throw new ConnectionFailedException("Client version (" + clientVersion + ") is incompatible with server version (" + Config.VERSION + ").");
         }
+
+        PacketListener okListener = packet -> {
+            if (packet.getType() == PacketType.OK) waiter.replyReceived();
+        };
+        this.client.addPacketListener(okListener);
+
         this.client.sendPacket(Packet.wasOK(true));
         this.client.sendPacket(new Packet<>(PacketType.VERSION, Config.VERSION));
         //endregion
 
         //region
-        PacketListener okListener = packet -> {
-            if (packet.getType() == PacketType.OK) waiter.replyReceived();
-        };
-        this.client.addPacketListener(okListener);
         log.debug("Waiting for client to ready...");
         this.waiter.waitForReply();
         if (this.waiter.isReplyTimedOut()) {
