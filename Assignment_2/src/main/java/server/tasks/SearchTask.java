@@ -3,10 +3,7 @@ package server.tasks;
 import server.Server;
 import server.ServerComms.ClientConnection;
 import server.exceptions.OperationFailureException;
-import shared.Item;
-import shared.Packet;
-import shared.PacketType;
-import shared.SearchOptions;
+import shared.*;
 import shared.utils.UUIDUtils;
 
 import java.sql.Connection;
@@ -16,7 +13,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Searches the database
@@ -58,11 +54,8 @@ public class SearchTask extends Task {
         ArrayList<Item> items = new ArrayList<>(itemIDs.size());
         itemIDs.stream().forEach(itemID -> items.add(Server.getData().getItem(itemID)));
 
-        // Filter ended auctions
-        List<Item> itemArray = items.stream().filter(item -> item.getAuctionStatus() == Item.AUCTION_STARTED).collect(Collectors.toList());
-
         // Send results to client
-        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, itemArray.toArray(new Item[itemArray.size()])));
+        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, items.toArray(new Item[items.size()])));
     }
 
     private List<UUID> getItemIDs(){
@@ -73,14 +66,16 @@ public class SearchTask extends Task {
 
         long startTime = System.currentTimeMillis();
 
-        // TODO: 11/05/2016 Make this filter dates properly
         selectSql =
                 "SELECT items.itemID, COUNT(bidID) AS bidNum FROM items " +
                 "LEFT JOIN bids ON bids.itemID = items.itemID " +
+                "LEFT JOIN item_keywords ON item_keywords.itemID = items.itemID " +
                 "WHERE " +
                 "(? = '' OR (title LIKE ? OR items.description LIKE ?)) AND " +
-                "(startTime BETWEEN ? AND ? OR endTime BETWEEN ? AND ?) AND " +
-                "(reservePrice >= ?) " +
+                "(startTime BETWEEN ? AND ? OR endTime BETWEEN ? AND ? OR (startTime <= ? AND endTime >=  ?)) AND " +
+                "(CAST(strftime('%s', 'now') AS INT) < endTime  OR ?) AND " +
+                "(reservePrice >= ?) AND " +
+                "(? = -1 OR (SELECT COUNT(keywordID) FROM item_keywords WHERE itemID = items.itemID AND keywordID = ?)) " +
                 "GROUP BY items.itemID " +
                 "HAVING (bidNum = 0 OR NOT ?) ";
 
@@ -119,10 +114,22 @@ public class SearchTask extends Task {
             selectQuery.setLong(5, to);
             selectQuery.setLong(6, from);
             selectQuery.setLong(7, to);
+            selectQuery.setLong(8, from);
+            selectQuery.setLong(9, to);
 
-            selectQuery.setBigDecimal(8, this.options.getReserve());
+            selectQuery.setBoolean(10, this.options.isIncludeClosed());
 
-            selectQuery.setBoolean(9, this.options.isNoBids());
+            selectQuery.setBigDecimal(11, this.options.getReserve());
+
+            Keyword keyword = this.options.getKeyword();
+            int keywordID = -1;
+            if(keyword != null){
+                keywordID = keyword.getKeywordID();
+            }
+            selectQuery.setInt(12, keywordID);
+            selectQuery.setInt(13, keywordID);
+
+            selectQuery.setBoolean(14, this.options.isNoBids());
 
             ResultSet itemResults = selectQuery.executeQuery();
 

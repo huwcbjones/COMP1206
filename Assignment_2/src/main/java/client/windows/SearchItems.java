@@ -6,10 +6,7 @@ import client.components.WindowPanel;
 import javafx.util.Pair;
 import org.jdatepicker.JDateComponentFactory;
 import org.jdatepicker.JDatePicker;
-import shared.Item;
-import shared.Packet;
-import shared.PacketType;
-import shared.SearchOptions;
+import shared.*;
 import shared.components.HintTextFieldUI;
 import shared.components.ItemList;
 import shared.events.PacketListener;
@@ -17,11 +14,12 @@ import shared.events.PacketListener;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
@@ -43,11 +41,14 @@ public class SearchItems extends WindowPanel {
     private final TreeMap<String, Pair<SearchOptions.Sort, SearchOptions.Direction>> sort_options = new TreeMap<>();
     //region Search Pane
     private JPanel panel_search;
+    private JProgressBar progress_search;
     private JButton btn_update;
     private JLabel label_sort;
     private JComboBox<String> combo_sort;
     private JLabel label_search;
     private JTextField text_search;
+    private JLabel label_keyword;
+    private JComboBox<Keyword> combo_keyword;
     private JLabel label_from;
     private JDatePicker date_from;
     private JLabel label_to;
@@ -56,8 +57,9 @@ public class SearchItems extends WindowPanel {
     private JSlider slider_reserve;
     private JTextField text_reserve;
     private JLabel label_noBids;
-    //endregion
     private JCheckBox check_noBids;
+    private JCheckBox check_closedAuctions;
+    //endregion
     private JSplitPane panel_split;
     private JPanel panel_results;
     private ItemList<Item> list_results;
@@ -66,12 +68,8 @@ public class SearchItems extends WindowPanel {
         super("Search Items");
         this.initSearchOptions();
         this.initComponents();
+        this.initEventListeners();
         this.setMainPanel(this.panel_split);
-        this.addComponentListener(new ComponentHandler());
-        Client.addPacketListener(new PacketHandler());
-        this.btn_update.addActionListener((e) -> this.search());
-        Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
-        Client.sendPacket(new Packet<>(PacketType.SEARCH));
     }
 
     private void initComponents() {
@@ -127,6 +125,15 @@ public class SearchItems extends WindowPanel {
         c.weightx = 1;
         int row = 0;
 
+        this.progress_search = new JProgressBar(JProgressBar.HORIZONTAL);
+        this.progress_search.setMaximum(100);
+        this.progress_search.setMinimum(0);
+        this.progress_search.setIndeterminate(false);
+        c.gridy = row;
+        c.insets = new Insets(0, 0, 6, 0);
+        this.panel_search.add(this.progress_search, c);
+        row++;
+
         this.btn_update = new JButton("Update");
         this.btn_update.setMnemonic('u');
         c.gridy = row;
@@ -160,6 +167,20 @@ public class SearchItems extends WindowPanel {
         c.gridy = row;
         c.insets = new Insets(0, 0, 6, 0);
         this.panel_search.add(this.text_search, c);
+        row++;
+
+        this.label_keyword = new JLabel("Keyword", JLabel.LEADING);
+        this.label_keyword.setLabelFor(this.combo_keyword);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.panel_search.add(this.label_keyword, c);
+        row++;
+
+        this.combo_keyword = new JComboBox<>(new Keyword[]{new Keyword(-1, "All Keywords")});
+        this.combo_keyword.setSelectedIndex(0);
+        c.gridy = row;
+        c.insets = new Insets(0, 0, 6, 0);
+        this.panel_search.add(this.combo_keyword, c);
         row++;
 
         this.label_from = new JLabel("From", JLabel.LEADING);
@@ -245,11 +266,36 @@ public class SearchItems extends WindowPanel {
         this.panel_search.add(this.check_noBids, c);
         row++;
 
+        this.check_closedAuctions = new JCheckBox("Include closed auctions");
+        this.check_closedAuctions.setBackground(Color.WHITE);
+        this.check_closedAuctions.setSelected(false);
+        c.gridy = row;
+        c.insets = new Insets(0, 0, 6, 0);
+        this.panel_search.add(this.check_closedAuctions, c);
+        row++;
+
         JPanel padder = new JPanel();
         padder.setBackground(Color.WHITE);
         c.gridy = row;
         c.weighty = 0.5;
         this.panel_search.add(padder, c);
+    }
+
+    private void initEventListeners() {
+        this.addComponentListener(new ComponentHandler());
+        Client.addPacketListener(new PacketHandler());
+        Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
+        Client.sendPacket(new Packet<>(PacketType.FETCH_KEYWORDS));
+        this.btn_update.addActionListener((e) -> this.search());
+
+        this.combo_sort.addActionListener(new ActionHandler());
+        this.combo_keyword.addActionListener(new ActionHandler());
+        this.text_search.addFocusListener(new ActionHandler());
+        this.date_to.addActionListener(new ActionHandler());
+        this.date_from.addActionListener(new ActionHandler());
+        this.slider_reserve.addChangeListener(new ActionHandler());
+        this.check_noBids.addActionListener(new ActionHandler());
+        this.check_closedAuctions.addActionListener(new ActionHandler());
     }
 
     private void initSearchOptions() {
@@ -296,19 +342,40 @@ public class SearchItems extends WindowPanel {
             sort.getKey(),
             sort.getValue(),
             this.text_search.getText(),
+            (Keyword)this.combo_keyword.getSelectedItem(),
             new Timestamp(fromDate.getTime().getTime()),
             new Timestamp(toDate.getTime().getTime()),
             new BigDecimal(this.slider_reserve.getValue()).divide(BigDecimal.valueOf(100), BigDecimal.ROUND_HALF_UP),
-            this.check_noBids.isSelected()
+            this.check_noBids.isSelected(),
+            this.check_closedAuctions.isSelected()
         );
 
         Client.sendPacket(new Packet<>(PacketType.SEARCH, options));
+        this.progress_search.setIndeterminate(true);
     }
 
     private class ComponentHandler extends ComponentAdapter {
         @Override
         public void componentShown(ComponentEvent e) {
+            Client.sendPacket(new Packet<>(PacketType.FETCH_KEYWORDS));
             Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
+        }
+    }
+
+    private class ActionHandler extends FocusAdapter implements ActionListener, ChangeListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            SearchItems.this.search();
+        }
+
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            SearchItems.this.search();
+        }
+
+        @Override
+        public void focusLost(FocusEvent e) {
+            SearchItems.this.search();
         }
     }
 
@@ -320,6 +387,15 @@ public class SearchItems extends WindowPanel {
                     SwingUtilities.invokeLater(() -> SearchItems.this.slider_reserve.setMaximum((int) packet.getPayload()));
                     break;
 
+                case KEYWORDS:
+                    SwingUtilities.invokeLater(() -> {
+                        SearchItems.this.combo_keyword.removeAllItems();
+                        SearchItems.this.combo_keyword.addItem(new Keyword(-1, "All Keywords"));
+                        ArrayList<Keyword> keywords = new ArrayList<>(Arrays.asList((Keyword[])packet.getPayload()));
+                        keywords.forEach(keyword -> SearchItems.this.combo_keyword.addItem(keyword));
+                    });
+                    break;
+
                 case AUCTION_END:
                 case AUCTION_START:
                     SearchItems.this.search();
@@ -329,7 +405,15 @@ public class SearchItems extends WindowPanel {
                     List<Item> results = Arrays.asList((Item[]) packet.getPayload());
                     SwingUtilities.invokeLater(() -> {
                         SearchItems.this.list_results.removeAllElements();
-                        SearchItems.this.list_results.addAllElements(results);
+                        int i = 0;
+                        SearchItems.this.progress_search.setIndeterminate(false);
+                        SearchItems.this.progress_search.setMaximum(results.size());
+                        for(Item item: results){
+                            SearchItems.this.list_results.addElement(item);
+                            SearchItems.this.progress_search.setValue(i);
+                            i++;
+                        }
+                        SearchItems.this.progress_search.setValue(0);
                     });
                     break;
             }

@@ -13,35 +13,30 @@ import java.sql.Timestamp;
 public class SearchOptions implements Serializable {
 
     private static final long serialUID = 3456L;
-
-    public enum Sort {
-        BID,
-        NUM_BIDS,
-        TIME,
-        RESERVE
-    }
-
-    public enum Direction {
-        ASC,
-        DESC
-    }
-
     private final Sort sort;
     private final Direction direction;
     private final String string;
+    private final Keyword keyword;
     private final Timestamp startTime;
     private final Timestamp endTime;
     private final BigDecimal reserve;
     private final boolean noBids;
-
-    public SearchOptions(Sort sort, Direction direction, String string, Timestamp startTime, Timestamp endTime, BigDecimal reserve, boolean noBids) {
+    private final boolean includeClosed;
+    public SearchOptions(Sort sort, Direction direction, String string, Keyword keyword, Timestamp startTime, Timestamp endTime, BigDecimal reserve, boolean noBids, boolean includeClosed) {
         this.sort = sort;
         this.direction = direction;
         this.string = string;
+        this.keyword = keyword;
         this.startTime = startTime;
         this.endTime = endTime;
         this.reserve = reserve;
         this.noBids = noBids;
+        this.includeClosed = includeClosed;
+
+    }
+
+    public boolean isIncludeClosed() {
+        return includeClosed;
     }
 
     public Sort getSort() {
@@ -70,5 +65,21 @@ public class SearchOptions implements Serializable {
 
     public String getString() {
         return string;
+    }
+
+    public Keyword getKeyword() {
+        return keyword;
+    }
+
+    public enum Sort {
+        BID,
+        NUM_BIDS,
+        TIME,
+        RESERVE
+    }
+
+    public enum Direction {
+        ASC,
+        DESC
     }
 }
