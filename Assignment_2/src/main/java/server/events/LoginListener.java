@@ -1,6 +1,6 @@
 package server.events;
 
-import server.ClientConnection;
+import server.ServerComms.ClientConnection;
 import server.objects.User;
 
 import java.util.EventListener;

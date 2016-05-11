@@ -1,7 +1,7 @@
 package server.tasks;
 
-import server.ClientConnection;
 import server.Server;
+import server.ServerComms.ClientConnection;
 import shared.Packet;
 import shared.PacketType;
 

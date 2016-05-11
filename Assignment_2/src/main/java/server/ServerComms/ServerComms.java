@@ -1,7 +1,9 @@
-package server;
+package server.ServerComms;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import server.Server;
+import server.exceptions.OperationFailureException;
 import shared.Packet;
 import shared.exceptions.ConnectionFailedException;
 
@@ -10,27 +12,35 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * Listens for connections on a server socket
+ * Listens for connections on a server
  *
  * @author Huw Jones
  * @since 27/03/2016
  */
-class ServerListenThread extends Thread {
+public class ServerComms extends Thread {
 
-    protected static final Logger log = LogManager.getLogger(ServerListenThread.class);
+    protected static final Logger log = LogManager.getLogger(ServerComms.class);
 
     private final Server server;
-    private final ServerSocket socket;
+    protected ServerSocket socket;
     private boolean shouldQuit = false;
 
-    public ServerListenThread (Server server, ServerSocket socket) {
-        this(server, socket, "PlainServer");
+    public ServerComms (Server server, int port) throws OperationFailureException {
+        this(server, port, "PlainServer");
     }
 
-    protected ServerListenThread (Server server, ServerSocket socket, String name) {
+    protected ServerComms(Server server, int port, String name) throws OperationFailureException {
+        this(server, name);
+        try {
+            this.socket = new ServerSocket(port);
+        } catch (IOException e) {
+            throw new OperationFailureException(e.getMessage());
+        }
+    }
+
+    protected ServerComms(Server server, String name){
         super(name);
         this.server = server;
-        this.socket = socket;
     }
 
     @Override

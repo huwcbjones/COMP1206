@@ -1,7 +1,7 @@
 package server.tasks;
 
-import server.ClientConnection;
 import server.Server;
+import server.ServerComms.ClientConnection;
 import server.objects.Bid;
 import server.objects.Item;
 import server.objects.User;

@@ -1,11 +1,10 @@
-package server;
+package server.ServerComms;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import server.Server;
 import server.events.ServerPacketListener;
 import server.objects.User;
-import server.utils.Comms;
-import server.utils.ConnectHandler;
 import shared.Packet;
 import shared.events.ConnectionAdapter;
 import shared.events.ConnectionListener;

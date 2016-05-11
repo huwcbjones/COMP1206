@@ -1,6 +1,6 @@
 package server.tasks;
 
-import server.ClientConnection;
+import server.ServerComms.ClientConnection;
 import shared.utils.RunnableAdapter;
 
 /**

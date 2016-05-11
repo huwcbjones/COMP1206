@@ -2,8 +2,8 @@ package server.tasks;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import server.ClientConnection;
 import server.Server;
+import server.ServerComms.ClientConnection;
 import server.exceptions.OperationFailureException;
 import server.objects.User;
 import shared.Packet;

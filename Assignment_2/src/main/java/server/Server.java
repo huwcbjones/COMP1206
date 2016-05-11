@@ -1,9 +1,11 @@
 package server;
 
 import com.djdch.log4j.StaticShutdownCallbackRegistry;
-import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import server.ServerComms.ClientConnection;
+import server.ServerComms.SecureServerComms;
+import server.ServerComms.ServerComms;
 import server.events.AuctionListener;
 import server.events.LoginListener;
 import server.events.ServerListener;
@@ -16,13 +18,8 @@ import shared.PacketType;
 import shared.exceptions.ConfigLoadException;
 import shared.utils.RunnableAdapter;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import javax.swing.event.EventListenerList;
-import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.SocketException;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -70,9 +67,9 @@ public final class Server {
     private final EventListenerList listeners = new EventListenerList();
     private final PacketTaskHandler packetTaskHandler = new PacketTaskHandler();
     private AtomicLong clientConnectionCounter = new AtomicLong(0);
-    private ServerListenThread plainSocket;
+    private ServerComms plainSocket;
     //endregion
-    private ServerListenThread secureSocket;
+    private ServerComms secureSocket;
     private boolean isRunning = false;
 
     public Server() {
@@ -146,7 +143,7 @@ public final class Server {
 
         try {
             this.createSockets();
-        } catch (IOException | OperationFailureException e) {
+        } catch (OperationFailureException e) {
             log.catching(e);
             log.fatal("Failed to create socket: {}", e.getMessage());
             this.fireServerFailedStart(e.getMessage());
@@ -193,13 +190,12 @@ public final class Server {
      * @throws IOException               On Socket Error
      * @throws OperationFailureException On Server Error
      */
-    private void createSockets() throws IOException, OperationFailureException {
+    private void createSockets() throws OperationFailureException {
 
         log.info("Starting plain socket...");
         // Create plain ServerSocket (no encryption)
 
-        ServerSocket plainSocket = new ServerSocket(Server.config.getPlainPort());
-        this.plainSocket = new ServerListenThread(this, plainSocket);
+        this.plainSocket = new ServerComms(this, Server.config.getPlainPort());
         log.info("Plain socket started successfully!");
 
         // Check the config to see if we are listening on a secure socket
@@ -207,41 +203,8 @@ public final class Server {
 
         log.info("Starting secure socket...");
 
-        // Set the JVM SSL Keystore
-        File keyStore = Server.config.getKeyStore();
-        if (keyStore == null) {
-            throw new OperationFailureException("Could not find server keystore.");
-        }
-        log.debug("Using key-store: {}", keyStore.getAbsolutePath());
-        System.setProperty("javax.net.ssl.keyStore", keyStore.getAbsolutePath());
-        System.setProperty("javax.net.ssl.keyStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
+        this.secureSocket = new SecureServerComms(this, Server.config.getSecurePort());
 
-        try {
-            // Create SLLServerSocket
-            SSLServerSocketFactory sslSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-            SSLServerSocket sslSocket = (SSLServerSocket) sslSocketFactory.createServerSocket(Server.config.getSecurePort());
-            sslSocket.setUseClientMode(false);
-
-            // Enable strong protocols
-            sslSocket.setEnabledProtocols(StrongTls.intersection(sslSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
-            log.debug("Enabled Protocols: ");
-            for (String protocol : sslSocket.getEnabledProtocols()) {
-                log.debug("\t- {}", protocol);
-            }
-
-            // Enable stong cipher suites
-            sslSocket.setEnabledCipherSuites(StrongTls.intersection(sslSocket.getSupportedCipherSuites(), StrongTls.ENABLED_CIPHER_SUITES));
-            log.debug("Enabled Cipher Suites: ");
-            for (String cipherSuite : sslSocket.getEnabledCipherSuites()) {
-                log.debug("\t- {}", cipherSuite);
-            }
-
-            // Start Listen Thread
-            this.secureSocket = new SecureServerListenThread(this, sslSocket);
-        } catch (SocketException e) {
-            log.debug(e);
-            throw new OperationFailureException("Possible key-store location problem?");
-        }
         log.info("Secure socket started successfully!");
     }
 
@@ -290,12 +253,12 @@ public final class Server {
     }
     //endregion
 
-    void addClient(ClientConnection clientConnection) {
+    public void addClient(ClientConnection clientConnection) {
         this.clients.put(clientConnection.getClientID(), clientConnection);
         clientConnection.addServerPacketListener(this.packetTaskHandler);
     }
 
-    void removeClient(ClientConnection clientConnection) {
+    public void removeClient(ClientConnection clientConnection) {
         this.clients.remove(clientConnection.getClientID());
         clientConnection.removeServerPacketListener(this.packetTaskHandler);
     }
@@ -328,7 +291,7 @@ public final class Server {
      *
      * @return Next ClientID
      */
-    long getNextClientID() {
+    public long getNextClientID() {
         return this.clientConnectionCounter.getAndIncrement();
     }
 

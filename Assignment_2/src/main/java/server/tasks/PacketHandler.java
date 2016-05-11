@@ -1,8 +1,8 @@
 package server.tasks;
 
-import server.ClientConnection;
 import server.Server;
-import server.utils.Comms;
+import server.ServerComms.ClientConnection;
+import server.ServerComms.Comms;
 import shared.*;
 import shared.utils.RunnableAdapter;
 

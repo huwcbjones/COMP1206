@@ -8,7 +8,6 @@ import client.utils.NotificationWaiter;
 import client.utils.Server;
 import client.windows.Authenticate;
 import client.windows.Main;
-import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.*;
@@ -20,14 +19,9 @@ import shared.exceptions.ConnectionFailedException;
 import shared.exceptions.ConnectionUpgradeException;
 import shared.utils.ReplyWaiter;
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.util.Arrays;
 
 /**
@@ -57,8 +51,6 @@ public final class Client implements ConnectionListener {
         } catch (ConfigLoadException e) {
             log.warn(e.getMessage());
         }
-        System.setProperty("javax.net.ssl.trustStore", "config/keys/biddr.jks");
-        System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
 
         Client.addLoginListener(new LoginAdapter() {
             @Override
@@ -137,13 +129,8 @@ public final class Client implements ConnectionListener {
         Server server = Client.config.getSelectedServer();
         log.info("Connecting to {} ({} on {})...", server.getName(), server.getAddress(), server.getPort());
         try {
-            // Create socket
-            Socket plainSocket = new Socket(server.getAddress(), server.getPort());
-            ObjectOutputStream outputStream = new ObjectOutputStream(plainSocket.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(plainSocket.getInputStream());
-
             // Create comms class
-            Client.comms = new Comms(plainSocket, inputStream, outputStream);
+            Client.comms = Comms.createComms(server.getAddress(), server.getPort());
             ConnectHandler connectHandler = new ConnectHandler();
             Client.comms.start();
 
@@ -155,21 +142,8 @@ public final class Client implements ConnectionListener {
                 Client.comms.shutdown();
                 server = Client.config.getSelectedServer();
 
-                // Create SSLSocket
-                SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
-                SSLSocket secureSocket = (SSLSocket) sf.createSocket(server.getAddress(), server.getSecurePort());
-                secureSocket.setUseClientMode(true);
-                secureSocket.setEnabledProtocols(StrongTls.intersection(secureSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
-                log.debug("Enabled Protocols: ");
-                for (String protocol : secureSocket.getEnabledProtocols()) {
-                    log.debug("\t- {}", protocol);
-                }
-                //secureSocket.startHandshake();
-                outputStream = new ObjectOutputStream(secureSocket.getOutputStream());
-                inputStream = new ObjectInputStream(secureSocket.getInputStream());
-
                 // Create comms class
-                Client.comms = new Comms(secureSocket, inputStream, outputStream);
+                Client.comms = Comms.createSecureComms(server.getAddress(), server.getSecurePort());
                 connectHandler.initialise();
                 Client.comms.start();
 

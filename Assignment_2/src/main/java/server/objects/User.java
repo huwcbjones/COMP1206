@@ -1,7 +1,7 @@
 package server.objects;
 
-import server.ClientConnection;
 import server.Server;
+import server.ServerComms.ClientConnection;
 import server.events.LoginListener;
 import server.exceptions.OperationFailureException;
 import shared.Packet;

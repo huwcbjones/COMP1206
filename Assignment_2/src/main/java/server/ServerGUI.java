@@ -1,5 +1,6 @@
 package server;
 
+import server.ServerComms.ClientConnection;
 import server.components.AuctionResultTableModel;
 import server.components.ItemTableModel;
 import server.components.UserTableModel;

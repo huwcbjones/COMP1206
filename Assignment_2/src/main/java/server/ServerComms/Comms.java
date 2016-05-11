@@ -1,4 +1,4 @@
-package server.utils;
+package server.ServerComms;
 
 import server.Server;
 import shared.Packet;

@@ -1,5 +1,6 @@
 package shared;
 
+import nl.jteam.tls.StrongTls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import shared.events.ConnectionListener;
@@ -8,6 +9,8 @@ import shared.exceptions.PacketSendFailException;
 import shared.exceptions.VersionMismatchException;
 import shared.utils.RunnableAdapter;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.awt.event.ActionListener;
@@ -50,7 +53,35 @@ public class Comms implements PacketListener {
     protected ActionListener pingListener;
     protected boolean shouldQuit = false;
 
-    public Comms(Socket socket, ObjectInputStream input, ObjectOutputStream output) {
+    public static Comms createComms(String address, int port) throws IOException {
+        // Create socket
+        Socket socket = new Socket(address, port);
+        ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+        ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+        return new Comms(socket, inputStream, outputStream);
+    }
+
+    public static Comms createSecureComms(String address, int port) throws IOException {
+        System.setProperty("javax.net.ssl.trustStore", "config/keys/biddr.jks");
+        System.setProperty("javax.net.ssl.trustStorePassword", "fkZC17Az8f6Cuqd1bgnimMnAnhwiEm0GCly4T1sB8zmV2iCrxUyuCI1JcFznokQ98T4LS3e8ZoX6DUi7");
+
+        // Create SSLSocket
+        SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
+        SSLSocket secureSocket = (SSLSocket) sf.createSocket(address, port);
+        secureSocket.setUseClientMode(true);
+        secureSocket.setEnabledProtocols(StrongTls.intersection(secureSocket.getSupportedProtocols(), StrongTls.ENABLED_PROTOCOLS));
+        log.debug("Enabled Protocols: ");
+        for (String protocol : secureSocket.getEnabledProtocols()) {
+            log.debug("\t- {}", protocol);
+        }
+        //secureSocket.startHandshake();
+        ObjectOutputStream outputStream = new ObjectOutputStream(secureSocket.getOutputStream());
+        ObjectInputStream inputStream = new ObjectInputStream(secureSocket.getInputStream());
+
+        return new Comms(secureSocket, inputStream, outputStream);
+    }
+
+    protected Comms(Socket socket, ObjectInputStream input, ObjectOutputStream output) {
         this.packetQueue = new ConcurrentLinkedQueue<>();
         this.socket = socket;
         this.output = output;
