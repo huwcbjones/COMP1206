@@ -300,6 +300,13 @@ public class Register extends WindowPanel {
          */
         @Override
         public void componentShown(ComponentEvent e) {
+            // Refresh list of servers
+            Register.this.combo_server.removeAllItems();
+            for (Server s : Client.getConfig().getServers()) {
+                Register.this.combo_server.addItem(s);
+            }
+            Register.this.combo_server.setSelectedIndex(0);
+
             Register.this.text_username.setText(Authenticate.getUsername());
             if(Register.this.text_username.getText().equals("")){
                 Register.this.text_username.requestFocus();
@@ -315,12 +322,7 @@ public class Register extends WindowPanel {
             }
             Register.this.text_password.requestFocus();
 
-            // Refresh list of servers
-            Register.this.combo_server.removeAllItems();
-            for (Server s : Client.getConfig().getServers()) {
-                Register.this.combo_server.addItem(s);
-            }
-            Register.this.combo_server.setSelectedIndex(0);
+
         }
     }
 
