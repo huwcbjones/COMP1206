@@ -49,9 +49,9 @@ public class Authenticate extends WindowTemplate {
         super("Login");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setMinimumSize(new Dimension(600, 550));
-        this.setMaximumSize(new Dimension(600, 550));
+        this.setMinimumSize(new Dimension(800, 600));
         this.setLocationRelativeTo(null);
-        this.setResizable(false);
+        this.setResizable(true);
 
         this.panels.put(PANEL_LOGIN, this.panel_login);
         this.panels.put(PANEL_REGISTER, this.panel_register);
