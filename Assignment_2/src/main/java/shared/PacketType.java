@@ -115,6 +115,9 @@ public enum PacketType {
      */
     AUCTION_NO_WINNER,
 
+    FETCH_USER,
+
+    USER,
 
     // Let's create a game of ping pong to maintain connection
     /**
