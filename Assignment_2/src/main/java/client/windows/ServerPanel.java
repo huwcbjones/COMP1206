@@ -19,6 +19,7 @@ import java.awt.event.ActionListener;
  */
 public class ServerPanel extends WindowPanel {
 
+    private Server server;
     public JButton btn_do;
     public JLinkLabel btn_back;
     private JLabel label_name;
@@ -36,6 +37,7 @@ public class ServerPanel extends WindowPanel {
 
     public void setServer(Server server) {
         if (server != null) {
+            this.server = server;
             this.setTitle("Edit Server");
             this.text_name.setText(server.getName());
             this.text_address.setText(server.getAddress());
@@ -151,6 +153,7 @@ public class ServerPanel extends WindowPanel {
                 if(port < 0 || port > 65536){
                     throw new NumberFormatException("Invalid port range.");
                 }
+                Client.getConfig().removeServer(ServerPanel.this.server);
                 Server server = new Server(name, address, port);
                 Client.getConfig().addServer(server);
                 Client.getConfig().saveConfig();
