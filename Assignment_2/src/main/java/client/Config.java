@@ -84,7 +84,7 @@ public final class Config {
                             }
                             this.addServer(server);
                         } catch (ClassCastException | NullPointerException e) {
-                            log.debug(e);
+                            log.catching(e);
                             log.warn("Failed to parse a server definition.");
                         }
                     }
@@ -94,11 +94,11 @@ public final class Config {
                     }
                 }
             } catch (IOException | ParseException e) {
-                log.debug(e);
+                log.catching(e);
                 throw new ConfigLoadException("Failed to load config file! " + e.getMessage());
             }
         } catch (FileNotFoundException e) {
-            log.debug(e);
+            log.catching(e);
             throw new ConfigLoadException("Failed to load config file!" + e.getMessage());
         }
     }

@@ -156,8 +156,8 @@ public final class Client implements ConnectionListener {
             log.info("Connection successfully established!");
 
         } catch (ConnectionFailedException | IOException e) {
+            log.catching(e);
             log.error("Connection failed. {}", e.getMessage());
-            log.debug(e);
             fireConnectionFailed(e.getMessage());
         }
     }

@@ -279,6 +279,7 @@ public class Comms implements PacketListener {
         try {
             return (Packet) input.readObject();
         } catch (ClassNotFoundException | ClassCastException e) {
+            log.catching(e);
             throw new VersionMismatchException();
         }
     }
@@ -402,6 +403,8 @@ public class Comms implements PacketListener {
                 } catch (IOException | VersionMismatchException | ClassCastException e) {
                     if (e.getMessage().toLowerCase().equals("socket closed")) {
                         Comms.this.fireConnectionClosed("Connection lost.");
+                    } else {
+                        Comms.this.fireConnectionClosed("Communication error.");
                     }
                     log.fatal("Exception whilst reading packet. {}", e.getMessage());
                     Comms.this.shutdown();
@@ -413,7 +416,7 @@ public class Comms implements PacketListener {
                 log.trace("Closed input stream.");
 
             } catch (IOException e) {
-                log.trace(e);
+                log.catching(e);
                 log.warn("Error closing input stream. {}", e.getMessage());
             }
 
