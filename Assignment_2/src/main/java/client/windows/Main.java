@@ -3,7 +3,9 @@ package client.windows;
 import client.Client;
 import client.components.WindowPanel;
 import client.events.LoginAdapter;
+import shared.Packet;
 import shared.events.ConnectionAdapter;
+import shared.events.PacketListener;
 import shared.utils.WindowTemplate;
 
 import javax.swing.*;
@@ -14,6 +16,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Main Application Window
@@ -52,8 +55,11 @@ public final class Main extends WindowTemplate {
     private JMenu menu_help;
     private JMenuItem menu_help_about;
 
+    private static Main main;
+
     public Main() {
         super("Home");
+        Main.main = this;
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.setMinimumSize(new Dimension(800, 600));
 
@@ -217,6 +223,7 @@ public final class Main extends WindowTemplate {
         this.menu_file_exit.addActionListener(e -> this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
         this.menu_items_new.addActionListener(e -> this.changePanel(PANEL_NEWITEM));
         this.menu_items_search.addActionListener(e -> this.changePanel(PANEL_SEARCH));
+        Client.addPacketListener(new PacketHandler());
     }
     /**
      * Sets the displayed panel
@@ -229,6 +236,12 @@ public final class Main extends WindowTemplate {
         WindowPanel panel = this.panels.get(panelID);
         this.setTitle(panel.getTitle());
         this.getRootPane().setDefaultButton(panel.getDefaultButton());
+    }
+
+    public static void displayItem(UUID itemID){
+        Main main = Main.main;
+        main.panel_viewItem.setItem(itemID);
+        main.changePanel(PANEL_VIEWITEM);
     }
 
     public static void main(String[] args) {
@@ -261,6 +274,16 @@ public final class Main extends WindowTemplate {
             } else {
                 Main.this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 //Main.this.promptExit = true;
+            }
+        }
+    }
+
+    private class PacketHandler implements PacketListener {
+        @Override
+        public void packetReceived(Packet packet) {
+            switch(packet.getType()){
+                case CREATE_ITEM_SUCCESS:
+                    Main.this.changePanel(PANEL_SEARCH);
             }
         }
     }
