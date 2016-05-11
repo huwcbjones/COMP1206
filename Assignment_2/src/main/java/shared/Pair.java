@@ -1,12 +1,16 @@
 package shared;
 
+import java.io.Serializable;
+
 /**
  * Represents a key-value pair
  *
  * @author Huw Jones
  * @since 11/05/2016
  */
-public class Pair<K, V> {
+public class Pair<K extends Serializable, V extends Serializable> implements Serializable {
+
+    private static final long serialUID = 7632L;
 
     private final K key;
     private final V value;
@@ -40,8 +44,7 @@ public class Pair<K, V> {
         if (o instanceof Pair) {
             Pair pair = (Pair) o;
             if (key != null ? !key.equals(pair.key) : pair.key != null) return false;
-            if (value != null ? !value.equals(pair.value) : pair.value != null) return false;
-            return true;
+            return value != null ? value.equals(pair.value) : pair.value == null;
         }
         return false;
     }
