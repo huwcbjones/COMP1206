@@ -128,14 +128,14 @@ public class ConnectHandler {
     public void secureConnect() throws ConnectionFailedException {
         this.doConnect();
 
-        // Tell server everything is now OK
-        Client.sendPacket(Packet.wasOK(true));
-
         //region Wait for Server OK
         PacketListener okListener = packet -> {
             if (packet.getType() == PacketType.OK) waiter.replyReceived();
         };
         Client.addPacketListener(okListener);
+
+        // Tell server everything is now OK
+        Client.sendPacket(Packet.wasOK(true));
 
         log.debug("Waiting for server to get ready...");
         this.waiter.waitForReply();
