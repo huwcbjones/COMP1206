@@ -329,14 +329,17 @@ public final class DataPersistence {
         log.debug("Querying database for Item({})", query_itemID);
         String selectItemSql = "SELECT itemID, userID, title, description, startTime, endTime, reservePrice FROM items WHERE itemID=?";
         String selectBidSql = "SELECT bidID, userID, price, time FROM bids WHERE itemID=?";
+        String selectKeywordSql = "SELECT item_keywords.keywordID FROM item_keywords LEFT JOIN keywords ON item_keywords.keywordID = keywords.keywordID WHERE itemID=? ORDER BY keyword ASC";
         Connection c = null;
         PreparedStatement selectItemQuery = null;
         PreparedStatement selectBidQuery = null;
+        PreparedStatement selectKeywordQuery = null;
         try {
             c = this.getConnection();
 
             selectItemQuery = c.prepareStatement(selectItemSql);
             selectBidQuery = c.prepareStatement(selectBidSql);
+            selectKeywordQuery = c.prepareStatement(selectKeywordSql);
 
             selectItemQuery.setBytes(1, UUIDUtils.UUIDToBytes(query_itemID));
             ResultSet itemResults = selectItemQuery.executeQuery();
@@ -345,8 +348,10 @@ public final class DataPersistence {
             Item newItem;
             Bid newBid;
             ResultSet bidResults;
+            ResultSet keywordResults;
 
             while (itemResults.next()) {
+                byte[] itemID = UUIDUtils.UUIDToBytes(query_itemID);
                 ib = Item.createBuilder();
                 ib
                     .setID(query_itemID)
@@ -357,7 +362,26 @@ public final class DataPersistence {
                     .setEndTime(new Timestamp(itemResults.getLong("endTime") * 1000L))
                     .setReservePrice(itemResults.getBigDecimal("reservePrice"));
 
-                selectBidQuery.setBytes(1, UUIDUtils.UUIDToBytes(query_itemID));
+                File itemImage = new File(imageDirectory.getAbsolutePath() + File.separator + query_itemID);
+                File itemThumbnail = new File(imageDirectory.getAbsolutePath() + File.separator + query_itemID + "_thumb");
+
+                if(itemImage.exists() && itemImage.canRead()){
+                    try {
+                        ib.setImage(ImageIO.read(itemImage));
+                    } catch (IOException shouldNotHappen) {
+                        log.catching(shouldNotHappen);
+                    }
+                }
+
+                if(itemThumbnail.exists() && itemThumbnail.canRead()){
+                    try {
+                        ib.setThumbnail(ImageIO.read(itemThumbnail));
+                    } catch (IOException shouldNotHappen) {
+                        log.catching(shouldNotHappen);
+                    }
+                }
+
+                selectBidQuery.setBytes(1, itemID);
                 bidResults = selectBidQuery.executeQuery();
 
                 while (bidResults.next()) {
@@ -369,6 +393,13 @@ public final class DataPersistence {
                         bidResults.getTimestamp("time")
                     );
                     ib.addBid(newBid);
+                }
+
+                selectKeywordQuery.setBytes(1, itemID);
+                keywordResults = selectKeywordQuery.executeQuery();
+
+                while(keywordResults.next()){
+                    ib.addKeyword(this.keywords.get(keywordResults.getInt("keywordID")));
                 }
 
                 newItem = Item.createServerItem(ib.getItem());
@@ -387,7 +418,7 @@ public final class DataPersistence {
             log.debug("Error Code: {}", e.getErrorCode());
             log.debug("Message: {}", e.getMessage());
             log.debug("Cause: {}", e.getCause());
-            log.error("Failed to load user.", e);
+            log.error("Failed to load item.", e);
         } finally {
             try {
                 if (selectItemQuery != null) {
@@ -395,6 +426,9 @@ public final class DataPersistence {
                 }
                 if (selectBidQuery != null) {
                     selectBidQuery.close();
+                }
+                if (selectKeywordQuery != null) {
+                    selectKeywordQuery.close();
                 }
                 if (c != null) {
                     c.close();
@@ -408,11 +442,11 @@ public final class DataPersistence {
     public void processItemImage(UUID itemID, BufferedImage image) {
         if (image == null) return;
 
-        double scale = Math.min(128/image.getWidth(), 128/image.getHeight());
+        double scale = Math.min(128d/image.getWidth(), 128d/image.getHeight());
         Double width = scale * image.getWidth();
         Double height = scale * image.getHeight();
         Double xPos = (128d - width)/2d;
-        Double yPos = (128d - width)/2d;
+        Double yPos = (128d - height)/2d;
 
         Image tmp = image.getScaledInstance(width.intValue(), height.intValue(), Image.SCALE_SMOOTH);
         BufferedImage thumbnail = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
