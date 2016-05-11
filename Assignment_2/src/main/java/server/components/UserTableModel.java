@@ -25,20 +25,8 @@ public class UserTableModel extends AbstractTableModel {
 
     private List<User> rowData;
 
-    public UserTableModel(){
+    public UserTableModel() {
         rowData = new ArrayList<>();
-    }
-
-    /**
-     * Returns false.  This is the default implementation for all cells.
-     *
-     * @param rowIndex    the row being queried
-     * @param columnIndex the column being queried
-     * @return false
-     */
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return false;
     }
 
     public void add(User... user) {
@@ -59,6 +47,11 @@ public class UserTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    public void removeAll() {
+        this.rowData = new ArrayList<>();
+        fireTableDataChanged();
+    }
+
     @Override
     public int getRowCount() {
         return rowData.size();
@@ -67,10 +60,6 @@ public class UserTableModel extends AbstractTableModel {
     @Override
     public int getColumnCount() {
         return COLUMN_NAMES.length;
-    }
-
-    public User getUserAt(int row){
-        return rowData.get(row);
     }
 
     /**
@@ -105,8 +94,24 @@ public class UserTableModel extends AbstractTableModel {
         return value;
     }
 
+    public User getUserAt(int row) {
+        return rowData.get(row);
+    }
+
     @Override
     public String getColumnName(int column) {
         return COLUMN_NAMES[column];
+    }
+
+    /**
+     * Returns false.  This is the default implementation for all cells.
+     *
+     * @param rowIndex    the row being queried
+     * @param columnIndex the column being queried
+     * @return false
+     */
+    @Override
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return false;
     }
 }

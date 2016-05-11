@@ -267,9 +267,9 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.btn_start.setEnabled(false);
                 ServerGUI.this.btn_stop.setEnabled(false);
                 ServerGUI.this.btn_results.setEnabled(false);
-                ServerGUI.this.table_items.removeAll();
-                ServerGUI.this.table_results.removeAll();
-                ServerGUI.this.table_users.removeAll();
+                ServerGUI.this.model_results.removeAll();
+                ServerGUI.this.model_items.removeAll();
+                ServerGUI.this.model_users.removeAll();
             });
         }
 
@@ -283,9 +283,6 @@ public final class ServerGUI extends WindowTemplate {
                 ServerGUI.this.btn_start.setEnabled(true);
                 ServerGUI.this.btn_stop.setEnabled(false);
                 ServerGUI.this.btn_results.setEnabled(false);
-                ServerGUI.this.table_results.removeAll();
-                ServerGUI.this.table_items.removeAll();
-                ServerGUI.this.table_users.removeAll();
             });
         }
 

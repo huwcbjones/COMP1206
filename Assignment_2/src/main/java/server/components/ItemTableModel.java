@@ -60,6 +60,11 @@ public class ItemTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    public void removeAll() {
+        this.rowData = new ArrayList<>();
+        fireTableDataChanged();
+    }
+
     @Override
     public int getRowCount() {
         return rowData.size();
