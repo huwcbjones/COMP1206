@@ -8,7 +8,7 @@ import shared.PacketType;
 import java.util.UUID;
 
 /**
- * {DESCRIPTION}
+ * Sends an item requested by the client.
  *
  * @author Huw Jones
  * @since 11/05/2016
@@ -27,7 +27,7 @@ public class FetchItemTask extends Task {
      */
     @Override
     protected void failureAction() {
-        this.client.sendPacket(new Packet<>(PacketType.ITEM, null));
+        this.client.sendPacket(new Packet<>(PacketType.ITEM));
     }
 
     @Override
