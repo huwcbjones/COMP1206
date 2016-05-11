@@ -394,16 +394,9 @@ public class NewAuction extends WindowPanel {
             ValidationUtils.setValidation(this.list_keywords, VALIDATION_SUCCESS);
         }
 
-        // Validate start date
-        if(getStartTime().before(new Timestamp(new Date().getTime()))){
-            if (firstWrongField == null) firstWrongField = (Component) this.date_start;
-            errors.add("Start date is in the past.");
-            ValidationUtils.setValidation((JComponent) this.date_start, VALIDATION_FAIL);
-            ValidationUtils.setValidation(this.time_start, VALIDATION_FAIL);
-        } else {
-            ValidationUtils.setValidation((JComponent) this.date_start, VALIDATION_SUCCESS);
-            ValidationUtils.setValidation(this.time_start, VALIDATION_SUCCESS);
-        }
+        // Start time is always fine
+        ValidationUtils.setValidation((JComponent) this.date_start, VALIDATION_SUCCESS);
+        ValidationUtils.setValidation(this.time_start, VALIDATION_SUCCESS);
 
         // Validate end date
         if(getEndTime().before(getStartTime()) || getEndTime().equals(getStartTime()) ){

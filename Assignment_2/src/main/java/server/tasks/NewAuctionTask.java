@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.UUID;
 
 /**
@@ -63,6 +64,12 @@ public class NewAuctionTask extends Task {
 
         Server.getData().processItemImage(uniqueID, this.item.getImage());
 
+        // Set start time to now if it's less than now
+        long startTime = this.item.getStartTime().getTime();
+        if(startTime < Calendar.getInstance().getTime().getTime()){
+            startTime = Calendar.getInstance().getTime().getTime();
+        }
+
         Connection c = null;
         PreparedStatement insertItem = null;
         PreparedStatement insertKeywords = null;
@@ -78,7 +85,7 @@ public class NewAuctionTask extends Task {
             insertItem.setBytes(2, UUIDUtils.UUIDToBytes(this.item.getUserID()));
             insertItem.setString(3, this.item.getTitle());
             insertItem.setString(4, this.item.getDescription());
-            insertItem.setLong(5, this.item.getStartTime().getTime() / 1000L);
+            insertItem.setLong(5, startTime / 1000L);
             insertItem.setLong(6, this.item.getEndTime().getTime() / 1000L);
             insertItem.setBigDecimal(7, this.item.getReserve());
             insertItem.executeUpdate();
