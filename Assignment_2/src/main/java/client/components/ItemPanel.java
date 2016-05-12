@@ -34,7 +34,7 @@ public class ItemPanel extends JPanel {
 
     public ItemPanel(Item item) {
         super(new GridBagLayout());
-        this.setMinimumSize(new Dimension(560, 200));
+        this.setMinimumSize(new Dimension(0, 200));
         this.item = item;
         this.initComponents();
         this.addMouseListener(new MouseHandler());
@@ -94,6 +94,7 @@ public class ItemPanel extends JPanel {
         this.add(this.label_keywords, c);
 
         this.label_description = new JLabel("<html>" + this.item.getDescription() + "</html>", JLabel.LEADING);
+        this.label_description.setVerticalAlignment(JLabel.TOP);
         c = new GridBagConstraints();
         c.insets.set(6, 6, 6, 6);
         c.gridx = 1;
@@ -102,6 +103,7 @@ public class ItemPanel extends JPanel {
         c.weighty = 0;
         c.gridwidth = 1;
         c.gridheight = 2;
+        c.fill = GridBagConstraints.BOTH;
         this.add(this.label_description, c);
 
         this.label_topBid = new JLabel("Top Bid: " + NumberFormat.getCurrencyInstance(Locale.UK).format(0), JLabel.LEFT);
@@ -126,14 +128,6 @@ public class ItemPanel extends JPanel {
         c.weightx = 0.3;
         c.weighty = 0;
         this.add(this.label_reserve, c);
-
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 3;
-        c.weighty = 0;
-        c.weightx = 1;
-        c.gridwidth = 3;
-        this.add(new JSeparator(JSeparator.HORIZONTAL), c);
     }
 
     @Override
