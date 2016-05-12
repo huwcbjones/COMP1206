@@ -67,7 +67,7 @@ public class SearchTask extends Task {
         long startTime = System.currentTimeMillis();
 
         selectSql =
-                "SELECT items.itemID, COUNT(bidID) AS bidNum FROM items " +
+                "SELECT items.itemID, COUNT(bidID) AS bidNum, MAX(bids.price) AS maxBid FROM items " +
                 "LEFT JOIN bids ON bids.itemID = items.itemID " +
                 "LEFT JOIN item_keywords ON item_keywords.itemID = items.itemID " +
                 "WHERE " +
@@ -83,7 +83,7 @@ public class SearchTask extends Task {
         // Set order
         switch (options.getSort()) {
             case BID:
-                selectSql += "ORDER BY bids.price " + options.getDirection().toString();
+                selectSql += "ORDER BY maxBid " + options.getDirection().toString();
                 break;
             case NUM_BIDS:
                 selectSql += "ORDER BY COUNT(bids.itemID) " + options.getDirection().toString();
