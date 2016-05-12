@@ -4,6 +4,7 @@ import client.components.WindowPanel;
 import shared.User;
 
 import javax.swing.*;
+import java.util.UUID;
 
 
 /**
@@ -18,8 +19,13 @@ public class ViewUser extends WindowPanel {
         super("View User");
     }
 
-    public void setUser(User user){
+    public boolean setUser(UUID userID){
+        return false;
+    }
+
+    public boolean setUser(User user){
         this.user = user;
+        return false;
     }
 
     /**

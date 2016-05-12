@@ -261,6 +261,19 @@ public final class Main extends WindowTemplate {
         }
     }
 
+    public void displayUser(UUID userID) {
+        if (this.panel_viewUser.setUser(userID)) {
+            this.changePanel(PANEL_VIEWUSER);
+        } else {
+            JOptionPane.showMessageDialog(
+                Main.this,
+                "Failed to load that user from the server.",
+                "Failed to load user.",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
     public static Main getMain() {
         return Main.main;
     }
