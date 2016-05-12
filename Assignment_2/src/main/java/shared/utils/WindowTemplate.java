@@ -1,6 +1,5 @@
 package shared.utils;
 
-import client.Client;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -67,10 +66,6 @@ public abstract class WindowTemplate extends JFrame {
      */
     @Override
     public void setTitle(String title) {
-        if(Client.getUser() != null) {
-            super.setTitle(title + " | Biddr - [" + Client.getUser().getFullName() + "]");
-        } else {
-            super.setTitle(title + " | Biddr");
-        }
+        super.setTitle(title + " | Biddr");
     }
 }
