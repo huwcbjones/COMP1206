@@ -37,6 +37,7 @@ import static shared.SearchOptions.Sort.*;
  */
 public class SearchItems extends WindowPanel {
 
+    private final SortedMap<UUID, Item> items = new TreeMap<>();
     private final TreeMap<String, Pair<SearchOptions.Sort, SearchOptions.Direction>> sort_options = new TreeMap<>();
     //region Search Pane
     private JPanel panel_search;
@@ -355,6 +356,11 @@ public class SearchItems extends WindowPanel {
         this.progress_search.setIndeterminate(true);
     }
 
+    private void displayItems() {
+        this.list_results.removeAllElements();
+        this.list_results.addAllElements(new ArrayList<>(this.items.values()));
+    }
+
     private class ComponentHandler extends ComponentAdapter {
         @Override
         public void componentShown(ComponentEvent e) {
@@ -411,18 +417,25 @@ public class SearchItems extends WindowPanel {
 
                 case SEARCH_RESULTS:
                     List<Item> results = Arrays.asList((Item[]) packet.getPayload());
+                    SearchItems.this.items.clear();
+                    results.forEach(item -> SearchItems.this.items.put(item.getID(), item));
                     SwingUtilities.invokeLater(() -> {
-                        SearchItems.this.list_results.removeAllElements();
-                        int i = 0;
+                        SearchItems.this.displayItems();
                         SearchItems.this.progress_search.setIndeterminate(false);
-                        SearchItems.this.progress_search.setMaximum(results.size());
-                        for(Item item: results){
-                            SearchItems.this.list_results.addElement(item);
-                            SearchItems.this.progress_search.setValue(i);
-                            i++;
-                        }
-                        SearchItems.this.progress_search.setValue(0);
                     });
+                    break;
+
+                case ITEM:
+                    Item item = (Item)packet.getPayload();
+                    SearchItems.this.items.put(item.getID(), item);
+                    SearchItems.this.displayItems();
+                    break;
+
+                case BID:
+                    UUID itemID = ((Bid)packet.getPayload()).getItemID();
+                    if(SearchItems.this.items.containsKey(itemID)){
+                        Client.sendPacket(new Packet<>(PacketType.FETCH_ITEM, itemID));
+                    }
                     break;
             }
         }
