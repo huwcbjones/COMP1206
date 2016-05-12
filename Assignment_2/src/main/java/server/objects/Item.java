@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import server.Server;
 import server.events.AuctionListener;
-import server.events.LoginListener;
 import server.exceptions.OperationFailureException;
 import shared.Keyword;
 import shared.utils.RunnableAdapter;
@@ -97,7 +96,7 @@ public class Item extends shared.Item {
         }
 
         UUID bidID = this.addBidToDatabase(userID, price);
-        Server.getData().loadItem(this.getID(), true);
+        //Server.getData().loadItem(this.getID(), true);
         this.loadBid(bidID);
         this.topBid = this.bids.get(bidID);
         this.fireAuctionBid(this.getBid(bidID));
@@ -149,7 +148,7 @@ public class Item extends shared.Item {
             public void runSafe() {
                 Object[] listeners = Item.this.listenerList.getListenerList();
                 for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                    if (listeners[i] == LoginListener.class) {
+                    if (listeners[i] == AuctionListener.class) {
                         ((AuctionListener) listeners[i + 1]).auctionBid(Item.this.itemID, bid.getID());
                     }
                 }

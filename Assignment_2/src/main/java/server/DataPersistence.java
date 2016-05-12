@@ -416,8 +416,9 @@ public final class DataPersistence {
                 newItem = Item.createServerItem(ib.getItem());
                 this.items.put(newItem.getID(), newItem);
 
+                // If we are reloading the item, we don't need to queue the tasks again
                 // If auction hasn't ended, queue start/end tasks
-                if (!newItem.isAuctionEnded()) {
+                if (!newItem.isAuctionEnded() & !reloadItem) {
                     Server.getWorkerPool().scheduleTask(new AuctionStartTask(null, newItem.getID()), newItem.getTimeUntilStart());
                     Server.getWorkerPool().scheduleTask(new AuctionEndTask(null, newItem.getID()), newItem.getTimeUntilEnd());
                 }
