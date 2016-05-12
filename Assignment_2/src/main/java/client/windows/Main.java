@@ -13,7 +13,10 @@ import shared.utils.WindowTemplate;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -52,21 +55,8 @@ public final class Main extends WindowTemplate {
     private JMenu menu_help;
     private JMenuItem menu_help_about;
 
-    private TrayIcon trayIcon = null;
-
     public Main() {
         super("Home");
-        if (SystemTray.isSupported()) {
-            SystemTray systemTray = SystemTray.getSystemTray();
-            this.trayIcon = new TrayIcon(this.getIconImage(), "Biddr Client" + Client.getUser().getFullName());
-            this.trayIcon.setImageAutoSize(true);
-
-            try {
-                systemTray.add(this.trayIcon);
-            } catch (AWTException ex) {
-                log.warn("Failed to add tray notification.");
-            }
-        }
         Main.main = this;
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.setMinimumSize(new Dimension(800, 600));
@@ -247,26 +237,11 @@ public final class Main extends WindowTemplate {
         this.getRootPane().setDefaultButton(this.activePanel.getDefaultButton());
     }
 
-    public void showNotification(String title, final String msg, TrayIcon.MessageType type, int jOptionPaneType, RunnableAdapter action) {
-        SwingUtilities.invokeLater(() -> {
-            if (SystemTray.isSupported()) {
-                String message = msg + "\nClick this bubble to view more.";
-                trayIcon.displayMessage(title, message, type);
-                this.trayIcon.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        action.run();
-                        Main.this.trayIcon.removeActionListener(this);
-                    }
-                });
-            } else {
-                String message = msg + "\nDo you want to view more?";
-                int result = JOptionPane.showConfirmDialog(this, message, title, JOptionPane.YES_NO_OPTION, jOptionPaneType);
-                if (result == JOptionPane.YES_OPTION) {
-                    action.run();
-                }
-            }
-        });
+    public void showNotification(String title, String msg, int type, RunnableAdapter action) {
+        int result = JOptionPane.showConfirmDialog(this, msg, title, JOptionPane.YES_NO_OPTION, type);
+        if (result == JOptionPane.YES_OPTION) {
+            action.run();
+        }
     }
 
     public void updateTitle() {
@@ -300,9 +275,6 @@ public final class Main extends WindowTemplate {
         @Override
         public void windowClosing(WindowEvent e) {
             if (!promptExit) {
-                if (Main.this.trayIcon != null) {
-                    SystemTray.getSystemTray().remove(Main.this.trayIcon);
-                }
                 return;
             }
             int result = JOptionPane.showConfirmDialog(Main.this,
@@ -313,9 +285,6 @@ public final class Main extends WindowTemplate {
             );
             if (result == JOptionPane.OK_OPTION) {
                 Main.this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-                if (Main.this.trayIcon != null) {
-                    SystemTray.getSystemTray().remove(Main.this.trayIcon);
-                }
             } else {
                 Main.this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             }
@@ -332,19 +301,30 @@ public final class Main extends WindowTemplate {
                 case AUCTION_WIN:
                     Item item = (Item) packet.getPayload();
                     if (item.getUserID().equals(Client.getUser().getUniqueID())) {
-                        SwingUtilities.invokeLater(() -> Main.getMain().showNotification("Auction Won!", "An item you auctioned has been sold!", TrayIcon.MessageType.INFO, JOptionPane.INFORMATION_MESSAGE, new RunnableAdapter() {
-                            @Override
-                            public void runSafe() throws Exception {
-                                Main.getMain().displayItem(item.getID());
+                        SwingUtilities.invokeLater(() -> Main.getMain().showNotification(
+                            "Auction Won!",
+                            "An item you auctioned has been sold!\nDo you want to view that item?",
+                            JOptionPane.INFORMATION_MESSAGE,
+                            new RunnableAdapter() {
+                                @Override
+                                public void runSafe() throws Exception {
+                                    Main.getMain().displayItem(item.getID());
+                                }
                             }
-                        }));
+                        ));
+
                     } else {
-                        SwingUtilities.invokeLater(() -> Main.getMain().showNotification("Auction Won!", "Congratulations, you've won an auction!", TrayIcon.MessageType.INFO, JOptionPane.INFORMATION_MESSAGE, new RunnableAdapter() {
-                            @Override
-                            public void runSafe() throws Exception {
-                                Main.getMain().displayItem(item.getID());
+                        SwingUtilities.invokeLater(() -> Main.getMain().showNotification(
+                            "Auction Won!",
+                            "Congratulations, you've won an auction!\nDo you want to view that item?",
+                            JOptionPane.INFORMATION_MESSAGE,
+                            new RunnableAdapter() {
+                                @Override
+                                public void runSafe() throws Exception {
+                                    Main.getMain().displayItem(item.getID());
+                                }
                             }
-                        }));
+                        ));
                     }
                     break;
 
