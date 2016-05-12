@@ -168,11 +168,6 @@ public class Authenticate extends WindowTemplate {
         Authenticate.username = username;
     }
 
-    public static void main(String[] args) {
-        Authenticate main = new Authenticate();
-        main.setVisible(true);
-    }
-
     /**
      * Handles LoginEvents
      */
