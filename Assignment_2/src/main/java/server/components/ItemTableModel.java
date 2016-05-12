@@ -3,10 +3,7 @@ package server.components;
 import server.objects.Item;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * {DESCRIPTION}
@@ -26,9 +23,11 @@ public class ItemTableModel extends AbstractTableModel {
     };
 
     private HashMap<UUID, Item> rowData;
+    private ArrayList<UUID> indexData;
 
     public ItemTableModel(){
         rowData = new HashMap<>();
+        indexData = new ArrayList<>();
     }
 
     /**
@@ -48,7 +47,10 @@ public class ItemTableModel extends AbstractTableModel {
     }
 
     public void add(List<Item> items) {
-        items.stream().forEach(item -> this.rowData.put(item.getID(), item));
+        items.stream().forEach(item -> {
+            this.rowData.put(item.getID(), item);
+            this.indexData.add(item.getID());
+        });
         fireTableDataChanged();
     }
 
@@ -57,12 +59,16 @@ public class ItemTableModel extends AbstractTableModel {
     }
 
     public void remove(List<Item> items) {
-        items.stream().forEach(item -> this.rowData.remove(item.getID()));
+        items.stream().forEach(item -> {
+            this.rowData.remove(item.getID());
+            this.indexData.remove(item.getID());
+        });
         fireTableDataChanged();
     }
 
     public void removeAll() {
         this.rowData = new HashMap<>();
+        this.indexData = new ArrayList<>();
         fireTableDataChanged();
     }
 
@@ -77,7 +83,7 @@ public class ItemTableModel extends AbstractTableModel {
     }
 
     public Item getItemAt(int row){
-        return rowData.get(row);
+        return this.rowData.get(this.indexData.get(row));
     }
 
     /**
