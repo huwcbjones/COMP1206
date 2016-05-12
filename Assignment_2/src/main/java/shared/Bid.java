@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -63,6 +64,14 @@ public class Bid implements Serializable, Comparable<Bid> {
      */
     public Timestamp getTime() {
         return time;
+    }
+
+    public String getTimeString(){
+        return getTimeString("HH:mm:ss dd/MM/yyyy");
+    }
+
+    public String getTimeString(String format) {
+        return new SimpleDateFormat(format).format(this.getTime());
     }
 
     @Override
