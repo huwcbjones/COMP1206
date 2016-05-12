@@ -27,6 +27,9 @@ COMPILATION INSTRUCTIONS:
 		    SQLite Java DataBase Connection library.
 		    This provides the JDBC libraries to use SQLite databases.
 		    As SQLite is file based, this ensures my application can save data to files whilst also maintaining SQL features.
+		- hamcrest-core
+		- junit-4
+		    Maven added these dependencies as I have written some (not enough) unit tests for my code.
 
     To compile and run, execute the following commands in the base directory of my submission. (Note: change {$OUTPUT_DIR} to where you wish the class files to be generated).
 	The base directory of my submission is the directory that contains pom.xml.
@@ -38,7 +41,7 @@ COMPILATION INSTRUCTIONS:
 		        javac -cp "src/main/java:lib/*" -d {$OUTPUT_DIR} src/main/java/*.java
 		
 		COPY DEPENDENCIES:
-			The contents of "src/main/resources/" needs to be copied to {$OUTPUT_DIR}/. This copies the config files, image resources, log4j2 config file file (log4j2.xml) and keystore to the output path.
+			The contents of "src/main/resources/" needs to be copied to {$OUTPUT_DIR}/. This copies the config files, image resources, log4j2 config file (log4j2.xml) and keystore to the output path.
 			
 		TO RUN:
 		    Where {$CLASSNAME} is one of the following:
@@ -50,12 +53,12 @@ COMPILATION INSTRUCTIONS:
 		    OS X/Unix:
             	java -cp "{$OUTPUT_DIR}:lib/*" {$CLASSNAME}
 		
-	Alternatively, if you have maven, run "mvn package" in the base directory of my submission. This will create 3 jar's and copy the required dependencies to lib/*.
+	Alternatively, if you have maven, run "mvn package" in the base directory of my submission. This will create 3 executable jar's and copy the required dependencies to lib/*.
 	This allows you to start the:
-	- Auction Server Client with    "java -cp "lib/*" -jar BiddrClient.jar";
-	- Auction Server GUI with       "java -cp "lib/*" -jar BiddrServer.jar";
-	- Headless Auction Server with  "java -cp "lib/*" -jar biddrd.jar";
-	It also means you don't have to copy the keystore, log4j2 config file file (log4j2.xml) or image resources to the output directory.
+	- Auction Server Client with    "java -jar BiddrClient.jar";
+	- Auction Server GUI with       "java -jar BiddrServer.jar";
+	- Headless Auction Server with  "java -jar biddrd.jar";
+	It also means you don't have to copy the keystore, log4j2 config file (log4j2.xml) or image resources to the output directory.
 
   ______      _                 _
  |  ____|    | |               (_)
@@ -77,15 +80,17 @@ COMPILATION INSTRUCTIONS:
     - Multiple clients can connect at once (using a ServerSocket, instead of a Socket).
     - Each client runs in its own thread. Prevents clients locking each other up.
     - ServerSockets listen on two different thread. Allows simultaneous secure/insecure connections.
-    - Worker pool for running tasks. Allows tasks queued to run immediately, or scheduled to run at a later date (through the use of a ScheduledExecutorServer).
+    - Worker pool for running tasks. Allows tasks queued to run immediately, or scheduled to run at a later date (through the use of a ScheduledExecutorService).
       Also allows for tasks such as auction closed to be handled on a separate thread, rather than blocking the main server thread and preventing clients connecting.
- 4) Extensive use of event based programming. This means instead of manually having to call receiveMessage every time I want to fetch a message from the comms class,
+ 4) Extensive use of event based programming. This means instead of manually having to call receiveMessage every time I want to fetch a message from the Comms class,
     an event listener can be attached on the Comms class and the relevant code will be executed when a message comes in.
     Also implemented is a ConnectionListener which listens to the server/client connection and allows for listening to ConnectionSucceeded, ConnectionFailed, and ConnectionClosed.
+    Auction listener for AuctionStart, AuctionEnd, AuctionBid events.
+    LoginListener for handling user login and logout events.
  5) Server/client ping-pong keep alive. A ping message is sent between server/client to ensure the connection is maintained. If a packet is not received in x time,
     the connection is declared to have been closed and the ConnectionClosed event is raised.
  6) Uses an SQLite database instead of a custom storage format. This means the data file is standardised and the DataPersistence class could be ported to run on any database implementation easily.
-    All the developer has to do is change the JDBC driver.
+    All the developer has to do is change the JDBC driver (and tweak queries for the SQL dialect subset for the RDBMS driver).
     In addition, this allows the power of SQL to be used.
  7) Memory cache for Users/Items in front of the database.
     This allows changes to be made instantly to Objects in memory and then written back to the database (file system) at a later date.
@@ -96,3 +101,4 @@ COMPILATION INSTRUCTIONS:
  THIRD PARTY LIBRARIES:
  json-simple: https://code.google.com/archive/p/json-simple/
  sqlite-jdbc: https://bitbucket.org/xerial/sqlite-jdbc
+ jdatepicker: https://jdatepicker.org
