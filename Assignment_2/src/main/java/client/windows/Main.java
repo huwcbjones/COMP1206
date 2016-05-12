@@ -2,21 +2,19 @@ package client.windows;
 
 import client.Client;
 import client.components.WindowPanel;
+import client.components.WindowTemplate;
 import client.events.LoginAdapter;
 import shared.Item;
 import shared.Packet;
 import shared.events.ConnectionAdapter;
 import shared.events.PacketListener;
 import shared.utils.RunnableAdapter;
-import shared.utils.WindowTemplate;
+import shared.utils.UUIDUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -51,7 +49,8 @@ public final class Main extends WindowTemplate {
     private JMenuItem menu_items_search;
     private JMenuItem menu_items_new;
     private JMenuItem menu_items_fromID;
-    private JMenu menu_options;
+    private JMenuItem menu_items_myItems;
+    private JMenuItem menu_items_myBids;
     private JMenu menu_help;
     private JMenuItem menu_help_about;
 
@@ -151,14 +150,19 @@ public final class Main extends WindowTemplate {
         this.menu_items_fromID.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
         this.menu_items.add(this.menu_items_fromID);
 
+        this.menu_items.addSeparator();
+
+        this.menu_items_myItems = new JMenuItem("My Items");
+        this.menu_items_myItems.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_MASK));
+        this.menu_items_myItems.setName(PANEL_VIEWUSER);
+        this.menu_items.add(this.menu_items_myItems);
+
+        this.menu_items_myBids = new JMenuItem("My Bids");
+        this.menu_items_myBids.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_MASK));
+        this.menu_items_myBids.setName(PANEL_SEARCH);
+        this.menu_items.add(this.menu_items_myBids);
+
         this.menuBar.add(this.menu_items);
-        //endregion
-
-        //region Options
-        this.menu_options = new JMenu("Options");
-        this.menu_options.setMnemonic('o');
-
-        this.menuBar.add(this.menu_options);
         //endregion
 
         //region Help
@@ -221,6 +225,8 @@ public final class Main extends WindowTemplate {
         this.menu_file_exit.addActionListener(e -> this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
         this.menu_items_new.addActionListener(e -> this.changePanel(PANEL_NEWITEM));
         this.menu_items_search.addActionListener(e -> this.changePanel(PANEL_SEARCH));
+        this.menu_items_fromID.addActionListener(new GetItemByID());
+        this.menu_items_myItems.addActionListener(e -> this.displayUser(Client.getUser().getUniqueID()));
         Client.addPacketListener(new PacketHandler());
     }
 
@@ -271,6 +277,15 @@ public final class Main extends WindowTemplate {
                 "Failed to load user.",
                 JOptionPane.ERROR_MESSAGE
             );
+        }
+    }
+
+    private class GetItemByID implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String itemID = JOptionPane.showInputDialog(Main.this, "Please enter the item's ID code.\nE.g.: JbxroUMLRoKzG9SzBn1d6Q==");
+            UUID uuid = UUIDUtils.Base64StringToUUID(itemID);
+            Main.getMain().displayItem(uuid);
         }
     }
 

@@ -2,12 +2,12 @@ package client.windows;
 
 import client.Client;
 import client.components.WindowPanel;
+import client.components.WindowTemplate;
 import client.events.LoginAdapter;
 import client.events.RegisterListener;
 import shared.User;
 import shared.components.ImagePanel;
 import shared.components.RolloverImagePanel;
-import shared.utils.WindowTemplate;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
