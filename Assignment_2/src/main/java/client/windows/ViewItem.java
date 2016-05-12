@@ -478,8 +478,9 @@ public class ViewItem extends WindowPanel {
 
                 case BID:
                     Bid bid = (Bid)packet.getPayload();
-                    if(bid.getItemID().equals(ViewItem.this.item.getID())){
-                        // Do something with bid
+                    // If the bid is for the current loaded item, reload that item from the server.
+                    if(ViewItem.this.item != null && bid.getItemID().equals(ViewItem.this.item.getID())){
+                        Client.sendPacket(new Packet<>(PacketType.FETCH_ITEM, bid.getItemID()));
                     }
                     break;
             }
