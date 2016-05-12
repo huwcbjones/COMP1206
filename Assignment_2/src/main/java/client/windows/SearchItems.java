@@ -37,7 +37,7 @@ import static shared.SearchOptions.Sort.*;
  */
 public class SearchItems extends WindowPanel {
 
-    private final SortedMap<UUID, Item> items = new TreeMap<>();
+    private final LinkedHashMap<UUID, Item> items = new LinkedHashMap<>();
     private final TreeMap<String, Pair<SearchOptions.Sort, SearchOptions.Direction>> sort_options = new TreeMap<>();
     //region Search Pane
     private JPanel panel_search;
