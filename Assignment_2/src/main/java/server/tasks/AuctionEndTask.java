@@ -39,11 +39,11 @@ public class AuctionEndTask extends Task {
         item.endAuction();
 
         // Tell logged in clients that the auction has ended
-        Server.getServer().broadcastPacket(new Packet<>(PacketType.AUCTION_END, this.itemID), true);
+        Server.getServer().broadcastPacket(new Packet<>(PacketType.AUCTION_END, item.getClientItem()), true);
 
         // Let seller know the auction failed (if logged in)
         if(item.getAuctionStatus() == shared.Item.AUCTION_NO_WINNER && item.getUser().isLoggedIn()){
-            item.getUser().getClient().sendPacket(new Packet<>(PacketType.AUCTION_NO_WINNER, itemID));
+            item.getUser().getClient().sendPacket(new Packet<>(PacketType.AUCTION_NO_WINNER, item.getClientItem()));
             return;
         }
 
@@ -52,9 +52,9 @@ public class AuctionEndTask extends Task {
         User winningUser = winningBid.getUser();
 
         if(winningUser.isLoggedIn()) {
-            winningUser.getClient().sendPacket(new Packet<>(PacketType.AUCTION_WIN, this.itemID));
+            winningUser.getClient().sendPacket(new Packet<>(PacketType.AUCTION_WIN, item.getClientItem()));
             if(item.getUser().isLoggedIn()){
-                item.getUser().getClient().sendPacket(new Packet<>(PacketType.AUCTION_WIN, itemID));
+                item.getUser().getClient().sendPacket(new Packet<>(PacketType.AUCTION_WIN, item.getClientItem()));
             }
         }
     }
