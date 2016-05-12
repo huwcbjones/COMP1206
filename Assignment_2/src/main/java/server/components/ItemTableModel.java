@@ -1,6 +1,7 @@
 package server.components;
 
 import server.objects.Item;
+import shared.utils.UUIDUtils;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.*;
@@ -14,11 +15,13 @@ import java.util.*;
 public class ItemTableModel extends AbstractTableModel {
 
     protected static final String[] COLUMN_NAMES = {
+        "Item ID",
         "Title",
-        "User",
+        "Seller",
         "Start Time",
         "End Time",
         "Reserve",
+        "Top Bidder",
         "Top Bid",
     };
 
@@ -100,26 +103,37 @@ public class ItemTableModel extends AbstractTableModel {
         Object value = null;
         switch (columnIndex) {
             case 0:
-                value = item.getTitle();
+                value = UUIDUtils.UUIDToBase64String(item.getID());
                 break;
             case 1:
-                value = item.getUser().getUsername();
+                value = item.getTitle();
                 break;
             case 2:
-                value = item.getStartTimeString();
+                value = item.getUser().getUsername();
                 break;
             case 3:
-                value = item.getEndTimeString();
+                value = item.getStartTimeString();
                 break;
             case 4:
-                value = item.getReserveString();
+                value = item.getEndTimeString();
                 break;
             case 5:
+                value = item.getReserveString();
+                break;
+            case 6:
                 if(item.getNumberOfBids() != 0) {
-                    value = item.getTopBid().getUser().getUsername() + ": " + item.getTopBid().getPriceString();
+                    value = item.getTopBid().getUser().getUsername();
                 } else {
                     value = "-";
                 }
+                break;
+            case 7:
+                if(item.getNumberOfBids() != 0) {
+                    value = item.getTopBid().getPriceString();
+                } else {
+                    value = "-";
+                }
+                break;
         }
         return value;
     }

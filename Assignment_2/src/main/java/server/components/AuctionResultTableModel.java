@@ -4,9 +4,7 @@ import server.objects.Item;
 import server.objects.User;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * {DESCRIPTION}
@@ -23,10 +21,12 @@ public class AuctionResultTableModel extends AbstractTableModel {
         "Winner"
     };
 
-    private List<Item> rowData;
+    private HashMap<UUID, Item> rowData;
+    private ArrayList<UUID> indexData;
 
     public AuctionResultTableModel(){
-        rowData = new ArrayList<>();
+        rowData = new HashMap<>();
+        indexData = new ArrayList<>();
     }
 
     /**
@@ -46,7 +46,10 @@ public class AuctionResultTableModel extends AbstractTableModel {
     }
 
     public void add(List<Item> items) {
-        rowData.addAll(items);
+        items.stream().forEach(item -> {
+            this.rowData.put(item.getID(), item);
+            this.indexData.add(item.getID());
+        });
         fireTableDataChanged();
     }
 
@@ -55,12 +58,16 @@ public class AuctionResultTableModel extends AbstractTableModel {
     }
 
     public void remove(List<Item> items) {
-        rowData.removeAll(items);
+        items.stream().forEach(item -> {
+            this.rowData.remove(item.getID());
+            this.indexData.remove(item.getID());
+        });
         fireTableDataChanged();
     }
 
     public void removeAll() {
-        this.rowData = new ArrayList<>();
+        this.rowData = new HashMap<>();
+        this.indexData = new ArrayList<>();
         fireTableDataChanged();
     }
 
@@ -75,7 +82,7 @@ public class AuctionResultTableModel extends AbstractTableModel {
     }
 
     public Item getItemAt(int row){
-        return rowData.get(row);
+        return this.rowData.get(this.indexData.get(row));
     }
 
     /**
@@ -95,7 +102,8 @@ public class AuctionResultTableModel extends AbstractTableModel {
                 value = item.getTitle();
                 break;
             case 1:
-                value = item.getUser().getUsername();
+                User seller = item.getUser();
+                value = seller.getFullName() + " (" + seller.getUsername() + ")";
                 break;
             case 2:
                 if(item.getNumberOfBids() != 0) {
