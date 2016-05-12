@@ -180,15 +180,18 @@ public class ImagePanel extends JPanel implements SwingConstants {
         Graphics2D g2d = (Graphics2D) g;
         int xpos = 0;
         int ypos = 0;
+
+        BufferedImage image = ImageUtils.getScaledImage(this.image, this.getWidth(), this.getHeight());
+
         switch (horizontalAlignment){
             case LEFT:
                 xpos = 0;
                 break;
             case CENTER:
-                xpos = (this.getWidth() - this.image.getWidth()) / 2;
+                xpos = (this.getWidth() - image.getWidth()) / 2;
                 break;
             case RIGHT:
-                xpos = this.getWidth() - this.image.getWidth();
+                xpos = this.getWidth() - image.getWidth();
                 break;
         }
         switch (verticalAlignment){
@@ -196,14 +199,13 @@ public class ImagePanel extends JPanel implements SwingConstants {
                 ypos = 0;
                 break;
             case CENTER:
-                ypos = (this.getHeight() - this.image.getHeight()) / 2;
+                ypos = (this.getHeight() - image.getHeight()) / 2;
                 break;
             case BOTTOM:
-                ypos = this.getHeight() - this.image.getHeight();
+                ypos = this.getHeight() - image.getHeight();
                 break;
         }
 
-        BufferedImage image = ImageUtils.getScaledImage(this.image, this.getWidth(), this.getHeight());
         g2d.drawImage(image, xpos, ypos, null);
     }
 }
