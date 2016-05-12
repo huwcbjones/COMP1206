@@ -308,7 +308,7 @@ public class Item implements Serializable {
         } else if (this.getTimeUntilStart() == 0 && this.getTimeUntilEnd() != 0) {
             return AUCTION_STARTED;
         } else {
-            if (this.bids.size() == 0 || this.getTopBid().getPrice().compareTo(this.getReserve()) < 0) {
+            if (this.getTopBid() == null || this.getTopBid().getPrice().compareTo(this.getReserve()) < 0) {
                 return AUCTION_NO_WINNER;
             } else {
                 return AUCTION_WON;
