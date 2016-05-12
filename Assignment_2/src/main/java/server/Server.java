@@ -606,7 +606,7 @@ public final class Server {
         @Override
         public void auctionBid(UUID itemID, UUID bidID) {
             log.info("New Bid({}) on Item({})", bidID, itemID);
-            Server.getServer().broadcastPacket(new Packet<>(PacketType.BID, bidID));
+            Server.getServer().broadcastPacket(new Packet<>(PacketType.BID, Server.getData().getItem(itemID).getBid(bidID)));
             Server.dispatchEvent(new RunnableAdapter() {
                 @Override
                 public void runSafe() {
