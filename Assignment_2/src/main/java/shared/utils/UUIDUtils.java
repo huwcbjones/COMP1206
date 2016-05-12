@@ -1,8 +1,7 @@
 package shared.utils;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-
 import java.nio.ByteBuffer;
+import java.util.Base64;
 import java.util.UUID;
 
 /**
@@ -36,7 +35,13 @@ public class UUIDUtils {
     }
 
     public static String UUIDToBase64String(UUID uuid){
-        return Base64.encode(UUIDToBytes(uuid));
+        Base64.Encoder encoder = Base64.getEncoder();
+        return encoder.encodeToString(UUIDToBytes(uuid));
+    }
+
+    public static UUID Base64StringToUUID(String uuid){
+        Base64.Decoder decoder = Base64.getDecoder();
+        return UUIDUtils.BytesToUUID(decoder.decode(uuid));
     }
 
 }
