@@ -3,18 +3,17 @@ package client.windows;
 import client.Client;
 import client.components.WindowPanel;
 import client.events.LoginAdapter;
+import shared.Item;
 import shared.Packet;
 import shared.events.ConnectionAdapter;
 import shared.events.PacketListener;
+import shared.utils.RunnableAdapter;
 import shared.utils.WindowTemplate;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -30,19 +29,17 @@ public final class Main extends WindowTemplate {
     public final static String PANEL_NEWITEM = "NewAuction";
     public final static String PANEL_VIEWITEM = "ViewItem";
     public final static String PANEL_VIEWUSER = "ViewUser";
-
+    private static Main main;
     private boolean promptExit = true;
-
     private JPanel panel_title;
     private JLabel label_title;
-
     private JPanel panel_cards;
     private HashMap<String, WindowPanel> panels = new HashMap<>();
+    private WindowPanel activePanel = null;
     private SearchItems panel_search;
     private NewAuction panel_newAuction;
     private ViewItem panel_viewItem;
     private ViewUser panel_viewUser;
-
     private JMenuBar menuBar;
     private JMenu menu_file;
     private JMenuItem menu_file_logout;
@@ -55,10 +52,21 @@ public final class Main extends WindowTemplate {
     private JMenu menu_help;
     private JMenuItem menu_help_about;
 
-    private static Main main;
+    private TrayIcon trayIcon = null;
 
     public Main() {
         super("Home");
+        if (SystemTray.isSupported()) {
+            SystemTray systemTray = SystemTray.getSystemTray();
+            this.trayIcon = new TrayIcon(this.getIconImage(), "Biddr Client" + Client.getUser().getFullName());
+            this.trayIcon.setImageAutoSize(true);
+
+            try {
+                systemTray.add(this.trayIcon);
+            } catch (AWTException ex) {
+                log.warn("Failed to add tray notification.");
+            }
+        }
         Main.main = this;
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.setMinimumSize(new Dimension(800, 600));
@@ -78,6 +86,20 @@ public final class Main extends WindowTemplate {
         this.initMainMenu();
         this.initPanels();
         initEventListeners();
+    }
+
+    /**
+     * Sets the title for this frame to the specified string.
+     *
+     * @param title the title to be displayed in the frame's border.
+     *              A <code>null</code> value
+     *              is treated as an empty string, "".
+     * @see #getTitle
+     */
+    @Override
+    public void setTitle(String title) {
+        super.setTitle(title);
+        this.label_title.setText(title);
     }
 
     private void initPanels() {
@@ -163,7 +185,7 @@ public final class Main extends WindowTemplate {
         this.setJMenuBar(this.menuBar);
     }
 
-    private void createTitlePanel(){
+    private void createTitlePanel() {
         this.panel_title = new JPanel(new BorderLayout());
         this.panel_title.setBackground(Color.WHITE);
         this.panel_title.setBorder(new EmptyBorder(new Insets(6, 6, 6, 6)));
@@ -173,23 +195,9 @@ public final class Main extends WindowTemplate {
         this.add(this.panel_title, BorderLayout.PAGE_START);
     }
 
-    /**
-     * Sets the title for this frame to the specified string.
-     *
-     * @param title the title to be displayed in the frame's border.
-     *              A <code>null</code> value
-     *              is treated as an empty string, "".
-     * @see #getTitle
-     */
-    @Override
-    public void setTitle(String title) {
-        super.setTitle(title);
-        this.label_title.setText(title);
-    }
-
     private void initEventListeners() {
         this.addWindowListener(new WindowClosingHandler());
-        Client.addLoginListener(new LoginAdapter(){
+        Client.addLoginListener(new LoginAdapter() {
             @Override
             public void logout() {
                 Main.this.promptExit = false;
@@ -215,7 +223,7 @@ public final class Main extends WindowTemplate {
                     JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.QUESTION_MESSAGE
                 );
-                if(result == JOptionPane.OK_OPTION){
+                if (result == JOptionPane.OK_OPTION) {
                     Client.logout();
                 }
             })
@@ -225,6 +233,7 @@ public final class Main extends WindowTemplate {
         this.menu_items_search.addActionListener(e -> this.changePanel(PANEL_SEARCH));
         Client.addPacketListener(new PacketHandler());
     }
+
     /**
      * Sets the displayed panel
      *
@@ -233,33 +242,55 @@ public final class Main extends WindowTemplate {
     public void changePanel(String panelID) {
         CardLayout layout = (CardLayout) this.panel_cards.getLayout();
         layout.show(this.panel_cards, panelID);
-        WindowPanel panel = this.panels.get(panelID);
-        updateTitle(panel);
-        this.getRootPane().setDefaultButton(panel.getDefaultButton());
+        this.activePanel = this.panels.get(panelID);
+        updateTitle();
+        this.getRootPane().setDefaultButton(this.activePanel.getDefaultButton());
     }
 
-    public void updateTitle(WindowPanel panel) {
-        this.setTitle(panel.getTitle());
+    public void showNotification(String title, final String msg, TrayIcon.MessageType type, int jOptionPaneType, RunnableAdapter action) {
+        SwingUtilities.invokeLater(() -> {
+            if (SystemTray.isSupported()) {
+                String message = msg + "\nClick this bubble to view more.";
+                trayIcon.displayMessage(title, message, type);
+                this.trayIcon.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        action.run();
+                        Main.this.trayIcon.removeActionListener(this);
+                    }
+                });
+            } else {
+                String message = msg + "\nDo you want to view more?";
+                int result = JOptionPane.showConfirmDialog(this, message, title, JOptionPane.YES_NO_OPTION, jOptionPaneType);
+                if (result == JOptionPane.YES_OPTION) {
+                    action.run();
+                }
+            }
+        });
     }
 
-    public static Main getMain(){
-        return Main.main;
+    public void updateTitle() {
+        this.setTitle(this.activePanel.getTitle());
     }
-    public void displayItem(UUID itemID){
-        if(this.panel_viewItem.setItem(itemID)) {
+
+    public void displayItem(UUID itemID) {
+        if (this.panel_viewItem.setItem(itemID)) {
             this.changePanel(PANEL_VIEWITEM);
         } else {
-            SwingUtilities.invokeLater(() ->
-                JOptionPane.showMessageDialog(
-                    Main.this,
-                    "Failed to load that item from the server.",
-                    "Failed to load item.",
-                    JOptionPane.ERROR_MESSAGE
-            ));
+            JOptionPane.showMessageDialog(
+                Main.this,
+                "Failed to load that item from the server.",
+                "Failed to load item.",
+                JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 
-    private class WindowClosingHandler extends WindowAdapter{
+    public static Main getMain() {
+        return Main.main;
+    }
+
+    private class WindowClosingHandler extends WindowAdapter {
         /**
          * Invoked when a window is in the process of being closed.
          * The close operation can be overridden at this point.
@@ -268,7 +299,10 @@ public final class Main extends WindowTemplate {
          */
         @Override
         public void windowClosing(WindowEvent e) {
-            if(!promptExit) {
+            if (!promptExit) {
+                if (Main.this.trayIcon != null) {
+                    SystemTray.getSystemTray().remove(Main.this.trayIcon);
+                }
                 return;
             }
             int result = JOptionPane.showConfirmDialog(Main.this,
@@ -277,12 +311,13 @@ public final class Main extends WindowTemplate {
                 JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE
             );
-            if(result == JOptionPane.OK_OPTION){
+            if (result == JOptionPane.OK_OPTION) {
                 Main.this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-                //Main.this.promptExit = false;
+                if (Main.this.trayIcon != null) {
+                    SystemTray.getSystemTray().remove(Main.this.trayIcon);
+                }
             } else {
                 Main.this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-                //Main.this.promptExit = true;
             }
         }
     }
@@ -290,9 +325,29 @@ public final class Main extends WindowTemplate {
     private class PacketHandler implements PacketListener {
         @Override
         public void packetReceived(Packet packet) {
-            switch(packet.getType()){
+            switch (packet.getType()) {
                 case CREATE_ITEM_SUCCESS:
-                    Main.this.changePanel(PANEL_SEARCH);
+                    SwingUtilities.invokeLater(() -> Main.this.changePanel(PANEL_SEARCH));
+                    break;
+                case AUCTION_WIN:
+                    Item item = (Item) packet.getPayload();
+                    if (item.getUserID().equals(Client.getUser().getUniqueID())) {
+                        SwingUtilities.invokeLater(() -> Main.getMain().showNotification("Auction Won!", "An item you auctioned has been sold!", TrayIcon.MessageType.INFO, JOptionPane.INFORMATION_MESSAGE, new RunnableAdapter() {
+                            @Override
+                            public void runSafe() throws Exception {
+                                Main.getMain().displayItem(item.getID());
+                            }
+                        }));
+                    } else {
+                        SwingUtilities.invokeLater(() -> Main.getMain().showNotification("Auction Won!", "Congratulations, you've won an auction!", TrayIcon.MessageType.INFO, JOptionPane.INFORMATION_MESSAGE, new RunnableAdapter() {
+                            @Override
+                            public void runSafe() throws Exception {
+                                Main.getMain().displayItem(item.getID());
+                            }
+                        }));
+                    }
+                    break;
+
             }
         }
     }

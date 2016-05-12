@@ -4,6 +4,7 @@ import client.Client;
 import client.components.WindowPanel;
 import shared.*;
 import shared.components.ImagePanel;
+import shared.components.ItemList;
 import shared.components.JLinkLabel;
 import shared.events.PacketListener;
 import shared.utils.ImageUtils;
@@ -50,6 +51,7 @@ public class ViewItem extends WindowPanel {
     private JFormattedTextField text_bid;
     private JButton btn_bid;
     private JLabel content_description;
+    private ItemList<Bid> content_bids;
 
     private Timer updateTimer;
 
@@ -300,6 +302,32 @@ public class ViewItem extends WindowPanel {
         this.panel_details.add(container, BorderLayout.CENTER);
         //endregion
 
+        //region Bids Panel
+        this.panel_bids.setLayout(new BorderLayout());
+
+        titlePanel = new JPanel(new BorderLayout());
+        titlePanel.setOpaque(false);
+
+        JLabel labelBids = new JLabel("Bids", JLabel.LEADING);
+        labelBids.setFont(labelDetails.getFont().deriveFont(16f));
+        titlePanel.add(labelBids, BorderLayout.CENTER);
+        titlePanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.PAGE_END);
+        this.panel_bids.add(titlePanel, BorderLayout.PAGE_START);
+
+        this.content_bids = new ItemList<Bid>() {
+            @Override
+            public Component drawItem(Bid item) {
+                JPanel panel = new JPanel();
+                panel.setOpaque(false);
+
+
+                return panel;
+            }
+        };
+
+        this.panel_bids.add(this.content_bids, BorderLayout.CENTER);
+        //endregion
+
         //region Seller Panel
         this.panel_seller.setLayout(new BorderLayout());
 
@@ -410,7 +438,7 @@ public class ViewItem extends WindowPanel {
         SwingUtilities.invokeLater(() -> {
             // Title
             this.setTitle(item.getTitle());
-            Main.getMain().updateTitle(this);
+            Main.getMain().updateTitle();
 
             if (this.item.getImage() != null) this.panel_image.setImage(this.item.getImage());
             this.panel_image.repaint();
