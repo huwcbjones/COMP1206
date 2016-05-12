@@ -1,10 +1,14 @@
 package client.windows;
 
 import client.Client;
+import client.components.Bid;
+import client.components.BidTableModel;
 import client.components.WindowPanel;
-import shared.*;
+import shared.Item;
+import shared.Packet;
+import shared.PacketType;
+import shared.User;
 import shared.components.ImagePanel;
-import shared.components.ItemList;
 import shared.components.JLinkLabel;
 import shared.events.PacketListener;
 import shared.utils.ImageUtils;
@@ -13,9 +17,11 @@ import shared.utils.ReplyWaiter;
 import shared.utils.TimeUtils;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableRowSorter;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -24,9 +30,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * View Item Panel
@@ -51,7 +55,8 @@ public class ViewItem extends WindowPanel {
     private JFormattedTextField text_bid;
     private JButton btn_bid;
     private JLabel content_description;
-    private ItemList<Bid> content_bids;
+    private JTable content_bids;
+    private BidTableModel model_bid;
 
     private Timer updateTimer;
 
@@ -105,6 +110,15 @@ public class ViewItem extends WindowPanel {
                     JOptionPane.showMessageDialog(this, "Bid is not greater than current top bid.", "Bid not high enough!", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+                if(JOptionPane.showConfirmDialog(this,
+                        "Are you sure you want to place a bid of " + NumberFormat.getCurrencyInstance(Locale.UK).format(bid) +" on this item?" +
+                        "\nBids cannot be reversed and you are committing to purchasing this item from the seller",
+                        "Place bid?",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                    ) != JOptionPane.OK_OPTION){
+                    return;
+                }
                 Client.sendPacket(new Packet<>(
                     PacketType.PLACE_BID,
                     new Bid(new UUID(0, 0), this.item.getID(), Client.getUser().getUniqueID(), bid, new Timestamp(Calendar.getInstance().getTime().getTime())))
@@ -122,9 +136,10 @@ public class ViewItem extends WindowPanel {
         GridBagConstraints c;
         //region Panels
         this.panel_image = new ImagePanel();
-        this.panel_image.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY, 1), new EmptyBorder(16, 16, 16, 16)));
+        this.panel_image.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
         c = new GridBagConstraints();
-        c.weighty = c.weightx = 0.4;
+        c.weightx = 0.4;
+        c.weighty = 0.5;
         c.insets = new Insets(16, 16, 16, 16);
         c.gridx = 0;
         c.gridy = 0;
@@ -142,11 +157,9 @@ public class ViewItem extends WindowPanel {
         c.fill = GridBagConstraints.BOTH;
         this.add(this.panel_details, c);
 
-        this.panel_bids = new JPanel(new GridBagLayout());
+        this.panel_bids = new JPanel(new BorderLayout());
         this.panel_bids.setOpaque(false);
-        this.panel_bids.setBorder(new CompoundBorder(new LineBorder(Color.LIGHT_GRAY, 1), new EmptyBorder(16, 16, 16, 16)));
         c = new GridBagConstraints();
-        c.weightx = 0.3;
         c.weighty = 0.5;
         c.gridx = 2;
         c.gridy = 0;
@@ -157,8 +170,8 @@ public class ViewItem extends WindowPanel {
         this.panel_description = new JPanel(new GridBagLayout());
         this.panel_description.setOpaque(false);
         c = new GridBagConstraints();
-        c.weightx = 0.4;
-        c.weighty = 0.6;
+        c.weightx = 0.7;
+        c.weighty = 0.5;
         c.gridx = 0;
         c.gridy = 1;
         c.gridwidth = 2;
@@ -169,7 +182,6 @@ public class ViewItem extends WindowPanel {
         this.panel_seller = new JPanel(new GridBagLayout());
         this.panel_seller.setOpaque(false);
         c = new GridBagConstraints();
-        c.weightx = 0.3;
         c.weighty = 0.5;
         c.gridx = 2;
         c.gridy = 1;
@@ -303,8 +315,6 @@ public class ViewItem extends WindowPanel {
         //endregion
 
         //region Bids Panel
-        this.panel_bids.setLayout(new BorderLayout());
-
         titlePanel = new JPanel(new BorderLayout());
         titlePanel.setOpaque(false);
 
@@ -314,18 +324,29 @@ public class ViewItem extends WindowPanel {
         titlePanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.PAGE_END);
         this.panel_bids.add(titlePanel, BorderLayout.PAGE_START);
 
-        this.content_bids = new ItemList<Bid>() {
-            @Override
-            public Component drawItem(Bid item) {
-                JPanel panel = new JPanel();
-                panel.setOpaque(false);
+        this.model_bid = new BidTableModel();
+        this.content_bids = new JTable(this.model_bid);
+        this.content_bids.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        this.content_bids.setShowGrid(false);
+        this.content_bids.setShowHorizontalLines(false);
+        this.content_bids.setShowVerticalLines(false);
+        this.content_bids.setRowMargin(0);
+        this.content_bids.setIntercellSpacing(new Dimension(4, 2));
+        this.content_bids.setFillsViewportHeight(true);
+        this.content_bids.setRowSorter(new TableRowSorter<>(this.model_bid));
+        this.content_bids.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        this.content_bids.setDragEnabled(false);
 
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+        this.content_bids.getColumnModel().getColumn(1).setCellRenderer(rightRenderer);
+        this.content_bids.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);
 
-                return panel;
-            }
-        };
+        JScrollPane scroller =  new JScrollPane(this.content_bids);
+        scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroller.setBorder(new EmptyBorder(2, 2, 2, 2));
 
-        this.panel_bids.add(this.content_bids, BorderLayout.CENTER);
+        this.panel_bids.add(scroller, BorderLayout.CENTER);
         //endregion
 
         //region Seller Panel
@@ -440,8 +461,8 @@ public class ViewItem extends WindowPanel {
             this.setTitle(item.getTitle());
             Main.getMain().updateTitle();
 
-            if (this.item.getImage() != null) this.panel_image.setImage(this.item.getImage());
-            this.panel_image.repaint();
+            if (this.item.getImage() != null) this.panel_image.setImage(this.item.getImage(), true);
+            //.panel_image.repaint();
 
             // Set keywords
             this.content_keywords.setText(this.item.getKeywordString());
@@ -473,13 +494,21 @@ public class ViewItem extends WindowPanel {
             this.text_bid.setEnabled(!this.item.getUserID().equals(Client.getUser().getUniqueID()));
             this.btn_bid.setEnabled(!this.item.getUserID().equals(Client.getUser().getUniqueID()));
 
+            this.model_bid.removeAll();
+            ArrayList<Bid> bids = new ArrayList<>();
+            this.item.getBids().forEach(bid -> bids.add(new Bid(bid)));
+            Collections.sort(bids, Collections.reverseOrder());
+            this.model_bid.add(bids);
+
             this.getRootPane().revalidate();
             this.getRootPane().repaint();
         });
     }
 
     private void setUser(User user) {
-        this.link_seller.setText(user.getFullName() + " (" + user.getUsername() + ")");
+        if(this.item.getUserID().equals(user.getUniqueID())) {
+            this.link_seller.setText(user.getFullName() + " (" + user.getUsername() + ")");
+        }
     }
 
     /**
@@ -504,8 +533,16 @@ public class ViewItem extends WindowPanel {
                     SwingUtilities.invokeLater(() -> ViewItem.this.setUser((User) packet.getPayload()));
                     break;
 
+                case PLACE_BID_FAIL:
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(ViewItem.this, "Sorry, we failed to place that bid.\nReason: " + packet.getPayload(), "Bid Failed!", JOptionPane.ERROR_MESSAGE));
+                    break;
+
+                case PLACE_BID_SUCCESS:
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(ViewItem.this, "Bid successfully placed!", "Bid Placed!", JOptionPane.INFORMATION_MESSAGE));
+                    break;
+
                 case BID:
-                    Bid bid = (Bid)packet.getPayload();
+                    Bid bid = new Bid((shared.Bid)packet.getPayload());
                     // If the bid is for the current loaded item, reload that item from the server.
                     if(ViewItem.this.item != null && bid.getItemID().equals(ViewItem.this.item.getID())){
                         Client.sendPacket(new Packet<>(PacketType.FETCH_ITEM, bid.getItemID()));
