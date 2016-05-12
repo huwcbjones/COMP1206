@@ -5,7 +5,6 @@ import shared.Packet;
 import shared.PacketType;
 import shared.User;
 import shared.utils.ReplyWaiter;
-import shared.utils.UUIDUtils;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -27,9 +26,9 @@ public class Bid extends shared.Bid {
         this(bid.getID(), bid.getItemID(), bid.getUserID(), bid.getPrice(), bid.getTime());
     }
 
-    public String getUserString(){
+    public User getUser(){
         if(Client.getUser().getUniqueID().equals(this.getUserID())){
-            return "You";
+            return Client.getUser();
         } else if(this.user == null){
             ReplyWaiter handler = new ReplyWaiter(Client.getConfig().getTimeout()) {
                 @Override
@@ -52,12 +51,12 @@ public class Bid extends shared.Bid {
             Client.removePacketListener(handler);
 
             if (handler.getWaiter().isReplyTimedOut() && user == null) {
-                return UUIDUtils.UUIDToBase64String(this.getUserID());
+                return null;
             } else {
-                return this.user.getUsername();
+                return this.user;
             }
         } else {
-            return this.user.getUsername();
+            return this.user;
         }
     }
 }

@@ -11,10 +11,7 @@ import shared.User;
 import shared.components.ImagePanel;
 import shared.components.JLinkLabel;
 import shared.events.PacketListener;
-import shared.utils.ImageUtils;
-import shared.utils.NumberUtils;
-import shared.utils.ReplyWaiter;
-import shared.utils.TimeUtils;
+import shared.utils.*;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -44,20 +41,25 @@ public class ViewItem extends WindowPanel {
     private ImagePanel panel_image;
     private JPanel panel_details;
     private JPanel panel_bids;
-    private JPanel panel_seller;
     private JPanel panel_description;
 
-    private JLinkLabel link_seller;
     private JLabel content_keywords;
     private JLabel content_timeRemaining;
     private JLabel content_reserve;
     private JLabel content_topBid;
+    private JLabel label_winner;
+    private JLinkLabel content_winner;
     private JFormattedTextField text_bid;
     private JButton btn_bid;
+    private JTextField content_itemID;
     private JLabel content_description;
-    private JTable content_bids;
+    //region Bids
     private BidTableModel model_bid;
-
+    private JTable content_bids;
+    //endregion
+    //region Seller
+    private JLinkLabel link_seller;
+    //endregion
     private Timer updateTimer;
 
 
@@ -69,10 +71,7 @@ public class ViewItem extends WindowPanel {
 
     private void initEventListeners() {
         Client.addPacketListener(new PacketHandler());
-        this.link_seller.addActionListener(e -> {
-
-            Main.getMain().changePanel(Main.PANEL_VIEWUSER);
-        });
+        this.link_seller.addActionListener(e -> Main.getMain().displayUser(this.item.getUserID()));
         this.updateTimer = new Timer(1000, e -> {
             if (this.item == null) return;
 
@@ -89,7 +88,7 @@ public class ViewItem extends WindowPanel {
         this.panel_image.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                if(ViewItem.this.item == null) return;
+                if (ViewItem.this.item == null) return;
 
                 ImagePanel panel = ViewItem.this.panel_image;
                 if (ViewItem.this.item.getImage() != null) {
@@ -102,21 +101,21 @@ public class ViewItem extends WindowPanel {
         this.btn_bid.addActionListener(e -> {
             try {
                 BigDecimal bid = NumberUtils.currencyToBigDecimal(this.text_bid.getText(), NumberFormat.getCurrencyInstance(Locale.UK));
-                if(this.item.getReserve().compareTo(bid) > 0){
+                if (this.item.getReserve().compareTo(bid) > 0) {
                     JOptionPane.showMessageDialog(this, "Bid must be more than, or equal to the reserve price.", "Bid not high enough!", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                if(this.item.getTopBid() != null && bid.compareTo(this.item.getTopBid().getPrice()) <= 0){
+                if (this.item.getTopBid() != null && bid.compareTo(this.item.getTopBid().getPrice()) <= 0) {
                     JOptionPane.showMessageDialog(this, "Bid is not greater than current top bid.", "Bid not high enough!", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                if(JOptionPane.showConfirmDialog(this,
-                        "Are you sure you want to place a bid of " + NumberFormat.getCurrencyInstance(Locale.UK).format(bid) +" on this item?" +
+                if (JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to place a bid of " + NumberFormat.getCurrencyInstance(Locale.UK).format(bid) + " on this item?" +
                         "\nBids cannot be reversed and you are committing to purchasing this item from the seller",
-                        "Place bid?",
-                        JOptionPane.OK_CANCEL_OPTION,
-                        JOptionPane.QUESTION_MESSAGE
-                    ) != JOptionPane.OK_OPTION){
+                    "Place bid?",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+                ) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 Client.sendPacket(new Packet<>(
@@ -127,6 +126,7 @@ public class ViewItem extends WindowPanel {
                 JOptionPane.showMessageDialog(this, "Invalid bid format. Failed to understand bid price.", "Invalid Bid!", JOptionPane.WARNING_MESSAGE);
             }
         });
+        this.content_winner.addActionListener(e -> Main.getMain().displayUser(this.item.getTopBid().getUserID()));
     }
 
     private void initComponents() {
@@ -160,7 +160,9 @@ public class ViewItem extends WindowPanel {
         this.panel_bids = new JPanel(new BorderLayout());
         this.panel_bids.setOpaque(false);
         c = new GridBagConstraints();
-        c.weighty = 0.5;
+        c.gridheight = 2;
+        c.weightx = 0.2;
+        c.weighty = 1;
         c.gridx = 2;
         c.gridy = 0;
         c.insets = new Insets(16, 16, 16, 16);
@@ -178,16 +180,6 @@ public class ViewItem extends WindowPanel {
         c.insets = new Insets(16, 16, 16, 16);
         c.fill = GridBagConstraints.BOTH;
         this.add(this.panel_description, c);
-
-        this.panel_seller = new JPanel(new GridBagLayout());
-        this.panel_seller.setOpaque(false);
-        c = new GridBagConstraints();
-        c.weighty = 0.5;
-        c.gridx = 2;
-        c.gridy = 1;
-        c.insets = new Insets(16, 16, 16, 16);
-        c.fill = GridBagConstraints.BOTH;
-        this.add(this.panel_seller, c);
         //endregion
 
         //region Details Panel
@@ -241,6 +233,44 @@ public class ViewItem extends WindowPanel {
         container.add(this.content_timeRemaining, c);
         row++;
 
+        JLabel label_seller = new JLabel("Seller:", JLabel.TRAILING);
+        label_seller.setFont(label_timeRemaining.getFont().deriveFont(12f));
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(label_seller, c);
+
+        this.link_seller = new JLinkLabel("", JLinkLabel.LEADING);
+        this.link_seller.setFont(this.link_seller.getFont().deriveFont(Font.BOLD, 12f));
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.link_seller, c);
+        row++;
+
+        this.label_winner = new JLabel("Winner:", JLabel.TRAILING);
+        this.label_winner.setFont(this.label_winner.getFont().deriveFont(12f));
+        this.label_winner.setVisible(false);
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(this.label_winner, c);
+
+        this.content_winner = new JLinkLabel("", JLabel.LEADING);
+        this.content_winner.setFont(this.content_winner.getFont().deriveFont(Font.BOLD, 12f));
+        this.content_winner.setVisible(false);
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.content_winner, c);
+        row++;
+
         JLabel label_topBid = new JLabel("Top Bid:", JLabel.TRAILING);
         label_topBid.setFont(label_topBid.getFont().deriveFont(12f));
         c = new GridBagConstraints();
@@ -269,7 +299,7 @@ public class ViewItem extends WindowPanel {
         c.insets = new Insets(2, 4, 2, 6);
         container.add(label_reserve, c);
 
-        this.content_reserve = new JLabel("Reserve:", JLabel.LEADING);
+        this.content_reserve = new JLabel("", JLabel.LEADING);
         this.content_reserve.setFont(this.content_reserve.getFont().deriveFont(12f));
         c.gridx = 1;
         c.weightx = 0.7;
@@ -299,6 +329,24 @@ public class ViewItem extends WindowPanel {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(2, 32, 2, 32);
         container.add(this.btn_bid, c);
+        row++;
+
+        JLabel label_itemID = new JLabel("Item ID:", JLabel.TRAILING);
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(8, 6, 2, 4);
+        container.add(label_itemID, c);
+
+        this.content_itemID = new JTextField("");
+        this.content_itemID.setEditable(false);
+        c.gridy = row;
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(8, 4, 2, 32);
+        container.add(this.content_itemID, c);
         row++;
 
         JPanel padder = new JPanel();
@@ -342,51 +390,11 @@ public class ViewItem extends WindowPanel {
         this.content_bids.getColumnModel().getColumn(1).setCellRenderer(rightRenderer);
         this.content_bids.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);
 
-        JScrollPane scroller =  new JScrollPane(this.content_bids);
+        JScrollPane scroller = new JScrollPane(this.content_bids);
         scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroller.setBorder(new EmptyBorder(2, 2, 2, 2));
 
         this.panel_bids.add(scroller, BorderLayout.CENTER);
-        //endregion
-
-        //region Seller Panel
-        this.panel_seller.setLayout(new BorderLayout());
-
-        titlePanel = new JPanel(new BorderLayout());
-        titlePanel.setOpaque(false);
-
-        JLabel labelSeller = new JLabel("Seller Details", JLabel.LEADING);
-        labelSeller.setFont(labelDetails.getFont().deriveFont(16f));
-        titlePanel.add(labelSeller, BorderLayout.CENTER);
-        titlePanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.PAGE_END);
-        this.panel_seller.add(titlePanel, BorderLayout.PAGE_START);
-
-        container = new JPanel(new GridBagLayout());
-        container.setOpaque(false);
-
-        row = 0;
-        this.link_seller = new JLinkLabel("", JLinkLabel.LEADING);
-        this.link_seller.setFont(this.link_seller.getFont().deriveFont(Font.BOLD, 14f));
-        c = new GridBagConstraints();
-        c.gridy = row;
-        c.gridx = 0;
-        c.weightx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(2, 8, 2, 8);
-        container.add(this.link_seller, c);
-        row++;
-
-        padder = new JPanel();
-        padder.setOpaque(false);
-        c = new GridBagConstraints();
-        c.gridy = row;
-        c.gridx = 0;
-        c.gridwidth = 2;
-        c.weighty = 1;
-        c.fill = GridBagConstraints.BOTH;
-        container.add(padder, c);
-
-        this.panel_seller.add(container, BorderLayout.CENTER);
         //endregion
 
         //region Description Panel
@@ -462,7 +470,6 @@ public class ViewItem extends WindowPanel {
             Main.getMain().updateTitle();
 
             if (this.item.getImage() != null) this.panel_image.setImage(this.item.getImage(), true);
-            //.panel_image.repaint();
 
             // Set keywords
             this.content_keywords.setText(this.item.getKeywordString());
@@ -477,7 +484,7 @@ public class ViewItem extends WindowPanel {
 
             // Set reserve
             this.content_reserve.setText(this.item.getReserveString());
-            if(this.item.getNumberOfBids() == 0) {
+            if (this.item.getNumberOfBids() == 0) {
                 this.text_bid.setValue(this.item.getReserve());
             } else {
                 this.text_bid.setValue(this.item.getTopBid().getPrice());
@@ -489,10 +496,13 @@ public class ViewItem extends WindowPanel {
                 this.content_topBid.setText(item.getTopBid().getPriceString());
             }
 
+            this.content_itemID.setText(UUIDUtils.UUIDToBase64String(this.item.getID()));
+
             this.content_description.setText("<html>" + this.item.getDescription() + "</html>");
 
-            this.text_bid.setEnabled(!this.item.getUserID().equals(Client.getUser().getUniqueID()));
-            this.btn_bid.setEnabled(!this.item.getUserID().equals(Client.getUser().getUniqueID()));
+            boolean canBid = !this.item.getUserID().equals(Client.getUser().getUniqueID()) && this.item.getAuctionStatus() == Item.AUCTION_STARTED;
+            this.text_bid.setEnabled(canBid);
+            this.btn_bid.setEnabled(canBid);
 
             this.model_bid.removeAll();
             ArrayList<Bid> bids = new ArrayList<>();
@@ -500,14 +510,28 @@ public class ViewItem extends WindowPanel {
             Collections.sort(bids, Collections.reverseOrder());
             this.model_bid.add(bids);
 
+            if (!canBid && this.item.getAuctionStatus() == Item.AUCTION_WON) {
+                this.content_winner.setText(new Bid(this.item.getTopBid()).getUser().getFullName());
+                this.content_winner.setVisible(true);
+                this.label_winner.setVisible(true);
+                this.text_bid.setVisible(false);
+                this.btn_bid.setVisible(false);
+            } else {
+                this.content_winner.setText("");
+                this.content_winner.setVisible(false);
+                this.label_winner.setVisible(false);
+                this.text_bid.setVisible(true);
+                this.btn_bid.setVisible(true);
+            }
+
             this.getRootPane().revalidate();
             this.getRootPane().repaint();
         });
     }
 
     private void setUser(User user) {
-        if(this.item.getUserID().equals(user.getUniqueID())) {
-            this.link_seller.setText(user.getFullName() + " (" + user.getUsername() + ")");
+        if (this.item.getUserID().equals(user.getUniqueID())) {
+            this.link_seller.setText(user.getFullName());
         }
     }
 
@@ -542,9 +566,9 @@ public class ViewItem extends WindowPanel {
                     break;
 
                 case BID:
-                    Bid bid = new Bid((shared.Bid)packet.getPayload());
+                    Bid bid = new Bid((shared.Bid) packet.getPayload());
                     // If the bid is for the current loaded item, reload that item from the server.
-                    if(ViewItem.this.item != null && bid.getItemID().equals(ViewItem.this.item.getID())){
+                    if (ViewItem.this.item != null && bid.getItemID().equals(ViewItem.this.item.getID())) {
                         Client.sendPacket(new Packet<>(PacketType.FETCH_ITEM, bid.getItemID()));
                     }
                     break;

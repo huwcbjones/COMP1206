@@ -1,5 +1,8 @@
 package client.components;
 
+import client.Client;
+import shared.utils.UUIDUtils;
+
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,7 +90,13 @@ public class BidTableModel extends AbstractTableModel {
         Object value = null;
         switch (columnIndex) {
             case 0:
-                value = bid.getUserString();
+                if(bid.getUser() == null){
+                    value = UUIDUtils.UUIDToBase64String(bid.getUserID());
+                } else if(bid.getUserID().equals(Client.getUser().getUniqueID())) {
+                    value = "You";
+                } else {
+                    value = bid.getUser().getUsername();
+                }
                 break;
             case 1:
                 value = bid.getPriceString();
