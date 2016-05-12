@@ -334,7 +334,6 @@ public final class DataPersistence {
      */
     public void loadItem(UUID query_itemID, boolean reloadItem) throws OperationFailureException {
         if (this.items.containsKey(query_itemID) && !reloadItem) {
-            log.debug("Item({}) already in memory.", query_itemID);
             return;
         }
         log.debug("Querying database for Item({})", query_itemID);
