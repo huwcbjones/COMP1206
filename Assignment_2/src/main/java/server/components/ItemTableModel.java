@@ -3,9 +3,10 @@ package server.components;
 import server.objects.Item;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * {DESCRIPTION}
@@ -24,10 +25,10 @@ public class ItemTableModel extends AbstractTableModel {
         "Top Bid",
     };
 
-    private List<Item> rowData;
+    private HashMap<UUID, Item> rowData;
 
     public ItemTableModel(){
-        rowData = new ArrayList<>();
+        rowData = new HashMap<>();
     }
 
     /**
@@ -47,7 +48,7 @@ public class ItemTableModel extends AbstractTableModel {
     }
 
     public void add(List<Item> items) {
-        rowData.addAll(items);
+        items.stream().forEach(item -> this.rowData.put(item.getID(), item));
         fireTableDataChanged();
     }
 
@@ -56,12 +57,12 @@ public class ItemTableModel extends AbstractTableModel {
     }
 
     public void remove(List<Item> items) {
-        rowData.removeAll(items);
+        items.stream().forEach(item -> this.rowData.remove(item.getID()));
         fireTableDataChanged();
     }
 
     public void removeAll() {
-        this.rowData = new ArrayList<>();
+        this.rowData = new HashMap<>();
         fireTableDataChanged();
     }
 
