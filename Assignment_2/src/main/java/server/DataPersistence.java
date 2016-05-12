@@ -720,6 +720,7 @@ public final class DataPersistence {
      * @throws NoSuchElementException If the item does not exist
      */
     public Item getItem(UUID itemID) throws NoSuchElementException {
+        if(itemID == null) return null;
         if (this.items.containsKey(itemID)) {
             return this.items.get(itemID);
         } else {

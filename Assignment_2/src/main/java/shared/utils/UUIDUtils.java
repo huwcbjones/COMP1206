@@ -40,6 +40,9 @@ public class UUIDUtils {
     }
 
     public static UUID Base64StringToUUID(String uuid){
+        // All Base64 encoded UUIDs are 24 chars long because a UUID is 128 bits (16 bytes),
+        // and Base64 encoding works using bytes.
+        if(uuid.length() != 24) return null;
         Base64.Decoder decoder = Base64.getDecoder();
         return UUIDUtils.BytesToUUID(decoder.decode(uuid));
     }
