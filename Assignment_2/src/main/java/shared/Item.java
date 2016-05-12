@@ -34,7 +34,7 @@ public class Item implements Serializable {
     protected final Timestamp startTime;
     protected final Timestamp endTime;
     protected final BigDecimal reservePrice;
-    protected final HashMap<UUID, Bid> bids =  new HashMap<>();
+    protected final SortedMap<UUID, Bid> bids =  new TreeMap<>();
     protected final byte[] image;
     protected final byte[] thumbnail;
     protected Bid topBid;
@@ -48,6 +48,7 @@ public class Item implements Serializable {
         this.startTime = startTime;
         this.endTime = endTime;
         this.reservePrice = reservePrice;
+        Collections.sort(bids, Collections.reverseOrder());
         bids.stream().forEach(bid -> this.bids.put(bid.getID(), bid));
         this.image = this.imageToBytes(image);
         this.thumbnail = this.imageToBytes(thumbnail);
