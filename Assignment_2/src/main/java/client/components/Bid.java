@@ -30,7 +30,7 @@ public class Bid extends shared.Bid {
     public String getUserString(){
         if(Client.getUser().getUniqueID().equals(this.getUserID())){
             return "You";
-        } else {
+        } else if(this.user == null){
             ReplyWaiter handler = new ReplyWaiter(Client.getConfig().getTimeout()) {
                 @Override
                 public void packetReceived(Packet packet) {
@@ -56,6 +56,8 @@ public class Bid extends shared.Bid {
             } else {
                 return this.user.getUsername();
             }
+        } else {
+            return this.user.getUsername();
         }
     }
 }
