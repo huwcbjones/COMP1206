@@ -166,7 +166,7 @@ public class Item extends shared.Item {
         PreparedStatement insertBid = null;
 
         String selectBidIDsSql = "SELECT bidID FROM bids";
-        String insertBidSql = "INSERT INTO bids (bidID, itemID, userID, price, time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+        String insertBidSql = "INSERT INTO bids (bidID, itemID, userID, price, time) VALUES (?, ?, ?, ?, (CAST(strftime('%s', 'now') AS INT)))";
 
         ResultSet bidIDSet = null;
         boolean wasSuccess = false;
