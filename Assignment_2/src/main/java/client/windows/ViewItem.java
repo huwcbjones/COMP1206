@@ -138,7 +138,7 @@ public class ViewItem extends WindowPanel {
         this.panel_image = new ImagePanel();
         this.panel_image.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
         c = new GridBagConstraints();
-        c.weightx = 0.4;
+        c.weightx = 0.5;
         c.weighty = 0.5;
         c.insets = new Insets(16, 16, 16, 16);
         c.gridx = 0;
@@ -531,7 +531,7 @@ public class ViewItem extends WindowPanel {
     }
 
     private void setUser(User user) {
-        if (this.item.getUserID().equals(user.getUniqueID())) {
+        if (user != null && this.item.getUserID().equals(user.getUniqueID())) {
             this.link_seller.setText(user.getFullName());
         }
     }
