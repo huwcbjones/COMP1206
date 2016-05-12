@@ -100,44 +100,46 @@ public class SearchTask extends Task {
 
         try {
             c = Server.getData().getConnection();
-            selectQuery = c.prepareStatement(selectSql);
+            if(!c.isClosed()) {
+                selectQuery = c.prepareStatement(selectSql);
 
-            // Convert Java Timestamp to Unix Timestamp (Java includes ms, so divide by 1000)
-            long from = this.options.getStartTime().getTime() / 1000L;
-            long to = this.options.getEndTime().getTime() / 1000L;
+                // Convert Java Timestamp to Unix Timestamp (Java includes ms, so divide by 1000)
+                long from = this.options.getStartTime().getTime() / 1000L;
+                long to = this.options.getEndTime().getTime() / 1000L;
 
-            selectQuery.setString(1, "%" + this.options.getString() + "%");
-            selectQuery.setString(2, "%" + this.options.getString() + "%");
-            selectQuery.setString(3, "%" + this.options.getString() + "%");
+                selectQuery.setString(1, "%" + this.options.getString() + "%");
+                selectQuery.setString(2, "%" + this.options.getString() + "%");
+                selectQuery.setString(3, "%" + this.options.getString() + "%");
 
-            selectQuery.setLong(4, from);
-            selectQuery.setLong(5, to);
-            selectQuery.setLong(6, from);
-            selectQuery.setLong(7, to);
-            selectQuery.setLong(8, from);
-            selectQuery.setLong(9, to);
+                selectQuery.setLong(4, from);
+                selectQuery.setLong(5, to);
+                selectQuery.setLong(6, from);
+                selectQuery.setLong(7, to);
+                selectQuery.setLong(8, from);
+                selectQuery.setLong(9, to);
 
-            selectQuery.setBoolean(10, this.options.isIncludeClosed());
+                selectQuery.setBoolean(10, this.options.isIncludeClosed());
 
-            selectQuery.setBigDecimal(11, this.options.getReserve());
+                selectQuery.setBigDecimal(11, this.options.getReserve());
 
-            Keyword keyword = this.options.getKeyword();
-            int keywordID = -1;
-            if(keyword != null){
-                keywordID = keyword.getKeywordID();
+                Keyword keyword = this.options.getKeyword();
+                int keywordID = -1;
+                if (keyword != null) {
+                    keywordID = keyword.getKeywordID();
+                }
+                selectQuery.setInt(12, keywordID);
+                selectQuery.setInt(13, keywordID);
+
+                selectQuery.setBoolean(14, this.options.isNoBids());
+
+                ResultSet itemResults = selectQuery.executeQuery();
+
+                while (itemResults.next()) {
+                    itemIDs.add(UUIDUtils.BytesToUUID(itemResults.getBytes("itemID")));
+                }
+
+                itemResults.close();
             }
-            selectQuery.setInt(12, keywordID);
-            selectQuery.setInt(13, keywordID);
-
-            selectQuery.setBoolean(14, this.options.isNoBids());
-
-            ResultSet itemResults = selectQuery.executeQuery();
-
-            while (itemResults.next()) {
-                itemIDs.add(UUIDUtils.BytesToUUID(itemResults.getBytes("itemID")));
-            }
-
-            itemResults.close();
         } catch (SQLException e) {
             log.debug("SQLState: {}", e.getSQLState());
             log.debug("Error Code: {}", e.getErrorCode());
