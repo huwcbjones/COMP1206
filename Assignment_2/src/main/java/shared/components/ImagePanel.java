@@ -164,6 +164,7 @@ public class ImagePanel extends JPanel implements SwingConstants {
 
     public void setImage(BufferedImage image, boolean repaint) {
         this.image = image;
+        if(image == null) return;
         this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         if (repaint) this.repaint();
     }
