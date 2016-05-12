@@ -50,7 +50,6 @@ public final class Main extends WindowTemplate {
     private JMenuItem menu_items_new;
     private JMenuItem menu_items_fromID;
     private JMenuItem menu_items_myItems;
-    private JMenuItem menu_items_myBids;
     private JMenu menu_help;
     private JMenuItem menu_help_about;
 
@@ -58,7 +57,7 @@ public final class Main extends WindowTemplate {
         super("Home");
         Main.main = this;
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        this.setMinimumSize(new Dimension(800, 600));
+        this.setMinimumSize(new Dimension(1024, 600));
 
         this.panels.put(PANEL_SEARCH, this.panel_search);
         this.panels.put(PANEL_NEWITEM, this.panel_newAuction);
@@ -152,15 +151,10 @@ public final class Main extends WindowTemplate {
 
         this.menu_items.addSeparator();
 
-        this.menu_items_myItems = new JMenuItem("My Items");
+        this.menu_items_myItems = new JMenuItem("My Items & Bids");
         this.menu_items_myItems.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_MASK));
         this.menu_items_myItems.setName(PANEL_VIEWUSER);
         this.menu_items.add(this.menu_items_myItems);
-
-        this.menu_items_myBids = new JMenuItem("My Bids");
-        this.menu_items_myBids.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_MASK));
-        this.menu_items_myBids.setName(PANEL_SEARCH);
-        this.menu_items.add(this.menu_items_myBids);
 
         this.menuBar.add(this.menu_items);
         //endregion
