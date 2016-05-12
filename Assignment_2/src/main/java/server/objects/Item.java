@@ -292,6 +292,7 @@ public class Item extends shared.Item {
     @Override
     public Bid getTopBid() {
         shared.Bid bid = super.getTopBid();
+        if(bid == null) return null;
         return new Bid(
             bid.getID(),
             bid.getItemID(),
