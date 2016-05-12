@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Represents a set of search options
@@ -14,6 +15,8 @@ import java.util.UUID;
 public class SearchOptions implements Serializable {
 
     private static final long serialUID = 3456L;
+    private static final AtomicLong searchIDs = new AtomicLong();
+    private final long searchID;
     private final Sort sort;
     private final Direction direction;
     private final String string;
@@ -26,6 +29,7 @@ public class SearchOptions implements Serializable {
     private final boolean includeClosed;
 
     public SearchOptions(Sort sort, Direction direction, String string, UUID sellerID, Keyword keyword, Timestamp startTime, Timestamp endTime, BigDecimal reserve, boolean noBids, boolean includeClosed) {
+        this.searchID = searchIDs.getAndIncrement();
         this.sort = sort;
         this.direction = direction;
         this.string = string;
@@ -37,6 +41,10 @@ public class SearchOptions implements Serializable {
         this.noBids = noBids;
         this.includeClosed = includeClosed;
 
+    }
+
+    public long getSearchID() {
+        return searchID;
     }
 
     public boolean isIncludeClosed() {

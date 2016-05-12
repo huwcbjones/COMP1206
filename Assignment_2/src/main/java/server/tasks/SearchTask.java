@@ -55,7 +55,7 @@ public class SearchTask extends Task {
         itemIDs.stream().forEach(itemID -> items.add(Server.getData().getItem(itemID).getClientItem()));
 
         // Send results to client
-        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, items.toArray(new shared.Item[items.size()])));
+        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, new SearchResults(items, this.options.getSearchID())));
     }
 
     private List<UUID> getItemIDs(){

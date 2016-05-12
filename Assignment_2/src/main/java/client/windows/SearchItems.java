@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.List;
 
 import static shared.SearchOptions.Direction.ASC;
 import static shared.SearchOptions.Direction.DESC;
@@ -39,6 +38,8 @@ public class SearchItems extends WindowPanel {
 
     private final LinkedHashMap<UUID, Item> items = new LinkedHashMap<>();
     private final TreeMap<String, Pair<SearchOptions.Sort, SearchOptions.Direction>> sort_options = new TreeMap<>();
+    private final Set<Long> searchIDs = new HashSet<>();
+
     //region Search Pane
     private JPanel panel_search;
     private JProgressBar progress_search;
@@ -371,6 +372,10 @@ public class SearchItems extends WindowPanel {
             this.check_closedAuctions.isSelected()
         );
 
+        synchronized (SearchItems.this.searchIDs){
+            this.searchIDs.add(options.getSearchID());
+        }
+
         Client.sendPacket(new Packet<>(PacketType.SEARCH, options));
         this.progress_search.setIndeterminate(true);
     }
@@ -448,9 +453,15 @@ public class SearchItems extends WindowPanel {
                     break;
 
                 case SEARCH_RESULTS:
-                    List<Item> results = Arrays.asList((Item[]) packet.getPayload());
+                    SearchResults results = (SearchResults)packet.getPayload();
+                    synchronized (SearchItems.this.searchIDs){
+                        if(!SearchItems.this.searchIDs.contains(results.getSearchID())){
+                            return;
+                        }
+                        SearchItems.this.searchIDs.remove(results.getSearchID());
+                    }
                     SearchItems.this.items.clear();
-                    results.forEach(item -> SearchItems.this.items.put(item.getID(), item));
+                    results.getItems().forEach(item -> SearchItems.this.items.put(item.getID(), item));
                     SwingUtilities.invokeLater(() -> {
                         SearchItems.this.displayItems();
                         SearchItems.this.progress_search.setIndeterminate(false);
