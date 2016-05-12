@@ -67,6 +67,7 @@ public final class Client implements ConnectionListener {
             @Override
             public void logout() {
                 SwingUtilities.invokeLater(() -> {
+                    Client.user = null;
                     Client.mainWindow = null;
                     Client.authenticateWindow = new Authenticate();
                     Client.authenticateWindow.setVisible(true);
@@ -77,6 +78,7 @@ public final class Client implements ConnectionListener {
             @Override
             public void connectionClosed(String reason) {
                 if (Client.authenticateWindow == null) {
+                    Client.user = null;
                     Client.mainWindow = null;
                     Client.authenticateWindow = new Authenticate();
                     Client.authenticateWindow.setVisible(true);
