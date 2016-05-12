@@ -3,6 +3,7 @@ package shared;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 /**
  * Represents a set of search options
@@ -16,16 +17,19 @@ public class SearchOptions implements Serializable {
     private final Sort sort;
     private final Direction direction;
     private final String string;
+    private final UUID sellerID;
     private final Keyword keyword;
     private final Timestamp startTime;
     private final Timestamp endTime;
     private final BigDecimal reserve;
     private final boolean noBids;
     private final boolean includeClosed;
-    public SearchOptions(Sort sort, Direction direction, String string, Keyword keyword, Timestamp startTime, Timestamp endTime, BigDecimal reserve, boolean noBids, boolean includeClosed) {
+
+    public SearchOptions(Sort sort, Direction direction, String string, UUID sellerID, Keyword keyword, Timestamp startTime, Timestamp endTime, BigDecimal reserve, boolean noBids, boolean includeClosed) {
         this.sort = sort;
         this.direction = direction;
         this.string = string;
+        this.sellerID = sellerID;
         this.keyword = keyword;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -37,6 +41,10 @@ public class SearchOptions implements Serializable {
 
     public boolean isIncludeClosed() {
         return includeClosed;
+    }
+
+    public UUID getSellerID() {
+        return sellerID;
     }
 
     public Sort getSort() {

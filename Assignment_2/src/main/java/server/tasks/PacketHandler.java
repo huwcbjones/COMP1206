@@ -65,6 +65,9 @@ public final class PacketHandler extends RunnableAdapter {
             case PLACE_BID:
                 Server.getWorkerPool().queueTask(new NewBidTask(this.client, (Bid)packet.getPayload()));
                 break;
+            case FETCH_SELLER_LIST:
+                Server.getWorkerPool().queueTask(new FetchSellerList(this.client));
+                break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));
                 break;

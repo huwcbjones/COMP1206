@@ -49,6 +49,8 @@ public class SearchItems extends WindowPanel {
     private JTextField text_search;
     private JLabel label_keyword;
     private JComboBox<Keyword> combo_keyword;
+    private JLabel label_seller;
+    private JComboBox<Seller> combo_seller;
     private JLabel label_from;
     private JDatePicker date_from;
     private JLabel label_to;
@@ -185,6 +187,20 @@ public class SearchItems extends WindowPanel {
         this.panel_search.add(this.combo_keyword, c);
         row++;
 
+        this.label_seller = new JLabel("Seller", JLabel.LEADING);
+        this.label_seller.setLabelFor(this.combo_seller);
+        c.insets = new Insets(3, 0, 3, 0);
+        c.gridy = row;
+        this.panel_search.add(this.label_seller, c);
+        row++;
+
+        this.combo_seller = new JComboBox<>(new Seller[]{new Seller()});
+        this.combo_seller.setSelectedIndex(0);
+        c.gridy = row;
+        c.insets = new Insets(0, 0, 6, 0);
+        this.panel_search.add(this.combo_seller, c);
+        row++;
+
         this.label_from = new JLabel("From", JLabel.LEADING);
         this.label_from.setLabelFor((Component) this.date_from);
         c.insets = new Insets(3, 0, 3, 0);
@@ -288,10 +304,12 @@ public class SearchItems extends WindowPanel {
         Client.addPacketListener(new PacketHandler());
         Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
         Client.sendPacket(new Packet<>(PacketType.FETCH_KEYWORDS));
+        Client.sendPacket(new Packet<>(PacketType.FETCH_SELLER_LIST));
         this.btn_update.addActionListener((e) -> this.search());
 
         this.combo_sort.addActionListener(this.searchHandler);
         this.combo_keyword.addActionListener(this.searchHandler);
+        this.combo_seller.addActionListener(this.searchHandler);
         this.text_search.addFocusListener(this.searchHandler);
         this.date_to.addActionListener(this.searchHandler);
         this.date_from.addActionListener(this.searchHandler);
@@ -344,6 +362,7 @@ public class SearchItems extends WindowPanel {
             sort.getKey(),
             sort.getValue(),
             this.text_search.getText(),
+            ((Seller)this.combo_seller.getSelectedItem()).getUserID(),
             (Keyword)this.combo_keyword.getSelectedItem(),
             new Timestamp(fromDate.getTime().getTime()),
             new Timestamp(toDate.getTime().getTime()),
@@ -366,6 +385,7 @@ public class SearchItems extends WindowPanel {
         public void componentShown(ComponentEvent e) {
             Client.sendPacket(new Packet<>(PacketType.FETCH_KEYWORDS));
             Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
+            Client.sendPacket(new Packet<>(PacketType.FETCH_SELLER_LIST));
         }
     }
 
@@ -395,6 +415,18 @@ public class SearchItems extends WindowPanel {
                         SearchItems.this.slider_reserve.removeChangeListener(SearchItems.this.searchHandler);
                         SearchItems.this.slider_reserve.setMaximum((int) packet.getPayload());
                         SearchItems.this.slider_reserve.addChangeListener(SearchItems.this.searchHandler);
+                    });
+                    break;
+
+                case SELLER_LIST:
+                    SwingUtilities.invokeLater(() -> {
+                        SearchItems.this.combo_seller.removeActionListener(SearchItems.this.searchHandler);
+                        SearchItems.this.combo_seller.removeAllItems();
+                        SearchItems.this.combo_seller.addItem(new Seller());
+                        ArrayList<User> seller = new ArrayList<>(Arrays.asList((User[])packet.getPayload()));
+                        seller.forEach(user -> SearchItems.this.combo_seller.addItem(new Seller(user)));
+                        SearchItems.this.combo_seller.addActionListener(SearchItems.this.searchHandler);
+                        SearchItems.this.combo_seller.setSelectedIndex(0);
                     });
                     break;
 
@@ -438,6 +470,30 @@ public class SearchItems extends WindowPanel {
                     }
                     break;
             }
+        }
+    }
+
+    private class Seller {
+        private final UUID userID;
+        private final String user;
+
+        public Seller(){
+            this.userID = new UUID(0, 0);
+            this.user = "All Users";
+        }
+
+        public Seller(User user){
+            this.userID = user.getUniqueID();
+            this.user = user.getFullName();
+        }
+
+        public UUID getUserID() {
+            return userID;
+        }
+
+        @Override
+        public String toString() {
+            return this.user;
         }
     }
 }

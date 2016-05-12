@@ -75,7 +75,8 @@ public class SearchTask extends Task {
                 "(startTime BETWEEN ? AND ? OR endTime BETWEEN ? AND ? OR (startTime <= ? AND endTime >=  ?)) AND " +
                 "(CAST(strftime('%s', 'now') AS INT) < endTime  OR ?) AND " +
                 "(reservePrice >= ?) AND " +
-                "(? = -1 OR (SELECT COUNT(keywordID) FROM item_keywords WHERE itemID = items.itemID AND keywordID = ?)) " +
+                "(? = -1 OR (SELECT COUNT(keywordID) FROM item_keywords WHERE itemID = items.itemID AND keywordID = ?)) AND " +
+                "(NOT ? OR items.userID = ?) " +
                 "GROUP BY items.itemID " +
                 "HAVING (bidNum = 0 OR NOT ?) ";
 
@@ -107,6 +108,15 @@ public class SearchTask extends Task {
                 long from = this.options.getStartTime().getTime() / 1000L;
                 long to = this.options.getEndTime().getTime() / 1000L;
 
+                UUID sellerID = this.options.getSellerID();
+                boolean restrictSeller = sellerID.getLeastSignificantBits() != 0 && sellerID.getMostSignificantBits() != 0;
+
+                Keyword keyword = this.options.getKeyword();
+                int keywordID = -1;
+                if (keyword != null) {
+                    keywordID = keyword.getKeywordID();
+                }
+
                 selectQuery.setString(1, "%" + this.options.getString() + "%");
                 selectQuery.setString(2, "%" + this.options.getString() + "%");
                 selectQuery.setString(3, "%" + this.options.getString() + "%");
@@ -122,15 +132,13 @@ public class SearchTask extends Task {
 
                 selectQuery.setBigDecimal(11, this.options.getReserve());
 
-                Keyword keyword = this.options.getKeyword();
-                int keywordID = -1;
-                if (keyword != null) {
-                    keywordID = keyword.getKeywordID();
-                }
                 selectQuery.setInt(12, keywordID);
                 selectQuery.setInt(13, keywordID);
 
-                selectQuery.setBoolean(14, this.options.isNoBids());
+                selectQuery.setBoolean(14, restrictSeller);
+                selectQuery.setBytes(15, UUIDUtils.UUIDToBytes(this.options.getSellerID()));
+
+                selectQuery.setBoolean(16, this.options.isNoBids());
 
                 ResultSet itemResults = selectQuery.executeQuery();
 

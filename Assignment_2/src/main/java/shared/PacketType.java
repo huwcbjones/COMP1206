@@ -59,6 +59,9 @@ public enum PacketType {
     CREATE_ITEM_FAIL,
     CREATE_ITEM_SUCCESS,
 
+    FETCH_SELLER_LIST,
+    SELLER_LIST,
+
     EDIT_ITEM,
     EDIT_ITEM_FAIL,
     EDIT_ITEM_SUCCESS,
