@@ -137,7 +137,7 @@ public final class ServerGUI extends WindowTemplate {
 
         this.model_results = new AuctionResultTableModel();
         this.table_results = new JTable(this.model_results);
-        this.table_results.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        this.table_results.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         this.table_results.setShowGrid(false);
         this.table_results.setShowHorizontalLines(false);
         this.table_results.setShowVerticalLines(true);

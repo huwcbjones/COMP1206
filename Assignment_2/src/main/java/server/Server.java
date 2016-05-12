@@ -17,8 +17,13 @@ import shared.Packet;
 import shared.PacketType;
 import shared.exceptions.ConfigLoadException;
 import shared.utils.RunnableAdapter;
+import shared.utils.UUIDUtils;
 
 import javax.swing.event.EventListenerList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
@@ -504,6 +509,44 @@ public final class Server {
     public ArrayList<UUID> getWonItems(){
         ArrayList<UUID> wonItems = new ArrayList<>();
 
+        String selectWonItems =
+            "SELECT items.itemID, COUNT(bidID) AS numBids FROM items " +
+            "LEFT JOIN bids ON bids.itemID = items.itemID " +
+            "WHERE CAST(strftime('%s', 'now') AS INT) >= endTime " +
+            "GROUP BY items.itemID " +
+            "HAVING (NOT numBids = 0)";
+
+        Connection c = null;
+        PreparedStatement selectItems = null;
+        try {
+            c = Server.getData().getConnection();
+
+            selectItems = c.prepareStatement(selectWonItems);
+
+            ResultSet sellerResults = selectItems.executeQuery();
+            while (sellerResults.next()) {
+                wonItems.add(UUIDUtils.BytesToUUID(sellerResults.getBytes("itemID")));
+            }
+            sellerResults.close();
+        } catch (SQLException e) {
+            log.debug("Statement: {}", selectWonItems);
+            log.debug("SQLState: {}", e.getSQLState());
+            log.debug("Error Code: {}", e.getErrorCode());
+            log.debug("Message: {}", e.getMessage());
+            log.debug("Cause: {}", e.getCause());
+            log.error("Failed to load user.", e);
+        } finally {
+            try {
+                if (selectItems != null) {
+                    selectItems.close();
+                }
+                if (c != null) {
+                    c.close();
+                }
+            } catch (SQLException suppress) {
+                log.trace(suppress);
+            }
+        }
 
         return wonItems;
     }
