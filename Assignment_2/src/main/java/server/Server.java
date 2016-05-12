@@ -19,6 +19,7 @@ import shared.exceptions.ConfigLoadException;
 import shared.utils.RunnableAdapter;
 
 import javax.swing.event.EventListenerList;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -500,6 +501,12 @@ public final class Server {
         Server.getServer().listeners.remove(ServerListener.class, listener);
     }
 
+    public ArrayList<UUID> getWonItems(){
+        ArrayList<UUID> wonItems = new ArrayList<>();
+
+
+        return wonItems;
+    }
     //region Event Handler Classes
 
     /**

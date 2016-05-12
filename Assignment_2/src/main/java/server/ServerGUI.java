@@ -18,10 +18,13 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -215,10 +218,12 @@ public final class ServerGUI extends WindowTemplate {
         });
 
         this.btn_stop.addActionListener(e -> server.shutdownServer());
+        this.btn_results.addActionListener(new FetchResults());
         this.addWindowListener(new WindowHandler());
         Server.addServerListener(this.serverListener);
         Server.addLoginListener(this.userListener);
         Server.addAuctionListener(this.auctionListener);
+
 
         this.clock = new Timer(1000, e -> SwingUtilities.invokeLater(this::setTime));
         this.clock.setRepeats(true);
@@ -382,6 +387,16 @@ public final class ServerGUI extends WindowTemplate {
         public void windowClosing(WindowEvent e) {
             Server.removeServerListener(ServerGUI.this.serverListener);
             Server.removeLoginListener(ServerGUI.this.userListener);
+        }
+    }
+
+    private class FetchResults implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            ArrayList<UUID> wonItemIDs = Server.getServer().getWonItems();
+            ArrayList<Item> wonItems = new ArrayList<>();
+            wonItemIDs.forEach(ID -> wonItems.add(Server.getData().getItem(ID)));
+            ServerGUI.this.model_results.add(wonItems);
         }
     }
 }
