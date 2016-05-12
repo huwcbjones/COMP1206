@@ -85,7 +85,9 @@ public class UserTableModel extends AbstractTableModel {
                 value = user.getLastName();
                 break;
             case 3:
-                value = user.getClient().toString();
+                if(user.getClient() != null) {
+                    value = user.getClient().toString();
+                }
                 break;
             case 4:
                 value = user.getUniqueID();
