@@ -418,6 +418,7 @@ public class ViewItem extends WindowPanel {
     }
 
     public boolean setItem(UUID itemID) {
+        if(itemID == null) return false;
         ReplyWaiter handler = new ReplyWaiter(Client.getConfig().getTimeout()) {
             @Override
             public void packetReceived(Packet packet) {
