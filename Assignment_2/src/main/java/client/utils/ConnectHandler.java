@@ -28,12 +28,22 @@ public class ConnectHandler {
         this.initialise();
     }
 
+    /**
+     * Initialises event handlers before first message is sent
+     * (Prevents misfire)
+     */
     public void initialise(){
         this.okListener = packet -> {
             if (packet.getType() == PacketType.OK) waiter.replyReceived();
         };
         Client.addPacketListener(this.okListener);
     }
+
+    /**
+     * Connects a client to the server
+     * @throws ConnectionFailedException If the connection failed
+     * @throws ConnectionUpgradeException If the connection should be upgraded to a secure line
+     */
     public void connect() throws ConnectionFailedException, ConnectionUpgradeException {
         this.doConnect();
 
@@ -84,6 +94,15 @@ public class ConnectHandler {
             }
         };
         Client.addPacketListener(replyHandler);
+
+        VersionOKHandler versionOKHandler = new VersionOKHandler(this.waiter);
+        PacketListener serverVersionHandler = packet -> {
+            if (packet.getType() == PacketType.VERSION) log.info("Server version is: {}", (int) packet.getPayload());
+        };
+
+        Client.addPacketListener(versionOKHandler);
+        Client.addPacketListener(serverVersionHandler);
+
         Client.sendPacket(Packet.Hello());
 
         // Wait for reply
@@ -95,13 +114,6 @@ public class ConnectHandler {
         //endregion
 
         //region Handle Versions
-        VersionOKHandler versionOKHandler = new VersionOKHandler(this.waiter);
-        PacketListener serverVersionHandler = packet -> {
-            if (packet.getType() == PacketType.VERSION) log.info("Server version is: {}", (int) packet.getPayload());
-        };
-
-        Client.addPacketListener(versionOKHandler);
-        Client.addPacketListener(serverVersionHandler);
 
         log.debug("Sending server our version number...");
         Client.sendPacket(new Packet<>(PacketType.VERSION, Config.VERSION));
@@ -145,6 +157,10 @@ public class ConnectHandler {
         Client.removePacketListener(okListener);
         //endregion
     }
+
+    /**
+     * Class for checking versions
+     */
     private class VersionOKHandler extends ReplyWaiter {
         boolean versionIsOK = false;
 
@@ -172,6 +188,9 @@ public class ConnectHandler {
         }
     }
 
+    /**
+     * Class for handling secure connection upgrading
+     */
     private class SecureHandler extends ReplyWaiter {
         int securePort = -1;
 

@@ -35,6 +35,11 @@ import javax.swing.*;
 import java.io.File;
 
 /* Utils.java is used by FileChooserDemo2.java. */
+
+/**
+ * Utils for getting an image extension
+ * From: https://docs.oracle.com/javase/tutorial/uiswing/examples/components/FileChooserDemo2Project/src/components/Utils.java
+ */
 public class Utils {
     public final static String jpeg = "jpeg";
     public final static String jpg = "jpg";

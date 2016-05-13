@@ -35,6 +35,11 @@ import javax.swing.filechooser.FileFilter;
 import java.io.File;
 
 /* ImageFilter.java is used by FileChooserDemo2.java. */
+
+/**
+ * Filter to set image types in file browsers.
+ * From: https://docs.oracle.com/javase/tutorial/uiswing/examples/components/FileChooserDemo2Project/src/components/ImageFilter.java
+ */
 public class ImageFilter extends FileFilter {
 
     //Accept all directories and all gif, jpg, tiff, or png files.
@@ -45,16 +50,12 @@ public class ImageFilter extends FileFilter {
 
         String extension = Utils.getExtension(f);
         if (extension != null) {
-            if (extension.equals(Utils.tiff) ||
+            return extension.equals(Utils.tiff) ||
                 extension.equals(Utils.tif) ||
                 extension.equals(Utils.gif) ||
                 extension.equals(Utils.jpeg) ||
                 extension.equals(Utils.jpg) ||
-                extension.equals(Utils.png)) {
-                return true;
-            } else {
-                return false;
-            }
+                extension.equals(Utils.png);
         }
 
         return false;
