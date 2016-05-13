@@ -34,7 +34,7 @@ public class SearchTask extends Task {
      */
     @Override
     protected void failureAction() {
-        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, new Item[0]));
+        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, new SearchResults(new ArrayList<>(), this.options.getSearchID())));
     }
 
     @Override
@@ -54,8 +54,13 @@ public class SearchTask extends Task {
         ArrayList<Item> items = new ArrayList<>(itemIDs.size());
         itemIDs.stream().forEach(itemID -> items.add(Server.getData().getItem(itemID).getClientItem()));
 
+        long searchID = -1;
+        if(this.options != null){
+            searchID = this.options.getSearchID();
+        }
+
         // Send results to client
-        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, new SearchResults(items, this.options.getSearchID())));
+        this.client.sendPacket(new Packet<>(PacketType.SEARCH_RESULTS, new SearchResults(items, searchID)));
     }
 
     private List<UUID> getItemIDs(){

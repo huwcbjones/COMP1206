@@ -306,6 +306,7 @@ public class SearchItems extends WindowPanel {
         Client.sendPacket(new Packet<>(PacketType.FETCH_RESERVE_RANGE));
         Client.sendPacket(new Packet<>(PacketType.FETCH_KEYWORDS));
         Client.sendPacket(new Packet<>(PacketType.FETCH_SELLER_LIST));
+        this.search();
         this.btn_update.addActionListener((e) -> this.search());
 
         this.combo_sort.addActionListener(this.searchHandler);
@@ -430,8 +431,8 @@ public class SearchItems extends WindowPanel {
                         SearchItems.this.combo_seller.addItem(new Seller());
                         ArrayList<User> seller = new ArrayList<>(Arrays.asList((User[])packet.getPayload()));
                         seller.forEach(user -> SearchItems.this.combo_seller.addItem(new Seller(user)));
-                        SearchItems.this.combo_seller.addActionListener(SearchItems.this.searchHandler);
                         SearchItems.this.combo_seller.setSelectedIndex(0);
+                        SearchItems.this.combo_seller.addActionListener(SearchItems.this.searchHandler);
                     });
                     break;
 
@@ -442,8 +443,8 @@ public class SearchItems extends WindowPanel {
                         SearchItems.this.combo_keyword.addItem(new Keyword(-1, "All Keywords"));
                         ArrayList<Keyword> keywords = new ArrayList<>(Arrays.asList((Keyword[])packet.getPayload()));
                         keywords.forEach(keyword -> SearchItems.this.combo_keyword.addItem(keyword));
-                        SearchItems.this.combo_keyword.addActionListener(SearchItems.this.searchHandler);
                         SearchItems.this.combo_keyword.setSelectedIndex(0);
+                        SearchItems.this.combo_keyword.addActionListener(SearchItems.this.searchHandler);
                     });
                     break;
 
