@@ -26,6 +26,8 @@ public final class PacketHandler extends RunnableAdapter {
 
     @Override
     public void runSafe () {
+        // Yes, I know I could restructure this instead of having a massive switch statement
+        // I could probably do something clever using annotations if I taught myself how to use them.
         switch(this.packet.getType()){
             case HELLO:
                 this.client.sendPacket(new Packet<>(PacketType.HELLO, "hello"));
@@ -60,13 +62,16 @@ public final class PacketHandler extends RunnableAdapter {
                 Server.getWorkerPool().queueTask(new FetchItemTask(this.client, (UUID)packet.getPayload()));
                 break;
             case FETCH_USER:
-                Server.getWorkerPool().queueTask(new FetchUserTask(this.client, (UUID)packet.getPayload()));
+                Server.getWorkerPool().queueTask(new FetchUserTask(this.client, (UserRequest) packet.getPayload()));
                 break;
             case PLACE_BID:
                 Server.getWorkerPool().queueTask(new NewBidTask(this.client, (Bid)packet.getPayload()));
                 break;
             case FETCH_SELLER_LIST:
                 Server.getWorkerPool().queueTask(new FetchSellerList(this.client));
+                break;
+            case FETCH_USERBIDS:
+                Server.getWorkerPool().queueTask(new FetchUserBidsTask(this.client, (UUID)packet.getPayload()));
                 break;
             default:
                 this.client.sendPacket(Packet.wasOK(false));

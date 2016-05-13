@@ -99,6 +99,9 @@ public enum PacketType {
     BID,
     FETCH_BIDS,
 
+    FETCH_USERBIDS,
+    USERBIDS,
+
     /**
      * Gets the range of reserves for a search criteria
      */

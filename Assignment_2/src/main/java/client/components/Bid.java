@@ -4,6 +4,7 @@ import client.Client;
 import shared.Packet;
 import shared.PacketType;
 import shared.User;
+import shared.UserRequest;
 import shared.utils.ReplyWaiter;
 
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ import java.util.UUID;
  */
 public class Bid extends shared.Bid {
     private User user = null;
+    private long requestID;
 
     public Bid(UUID bidID, UUID itemID, UUID userID, BigDecimal bidPrice, Timestamp time) {
         super(bidID, itemID, userID, bidPrice, time);
@@ -35,17 +37,22 @@ public class Bid extends shared.Bid {
                 public void packetReceived(Packet packet) {
                     switch (packet.getType()) {
                         case USER:
-                            User user = (User)packet.getPayload();
-                            if(Bid.this.getUserID().equals(user.getUniqueID())){
-                                this.waiter.replyReceived();
-                                Bid.this.user = user;
+                            UserRequest userRequest = (UserRequest) packet.getPayload();
+                            if(userRequest.getRequestID() == requestID) {
+                                User user = userRequest.getUser();
+                                if (Bid.this.getUserID().equals(user.getUniqueID())) {
+                                    this.waiter.replyReceived();
+                                    Bid.this.user = user;
+                                }
                             }
                             break;
                     }
                 }
             };
             Client.addPacketListener(handler);
-            Client.sendPacket(new Packet<>(PacketType.FETCH_USER, getUserID()));
+            UserRequest userRequest = new UserRequest(getUserID());
+            this.requestID = userRequest.getRequestID();
+            Client.sendPacket(new Packet<>(PacketType.FETCH_USER, userRequest));
 
             handler.getWaiter().waitForReply();
             Client.removePacketListener(handler);

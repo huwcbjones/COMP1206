@@ -4,10 +4,7 @@ import client.Client;
 import client.components.Bid;
 import client.components.BidTableModel;
 import client.components.WindowPanel;
-import shared.Item;
-import shared.Packet;
-import shared.PacketType;
-import shared.User;
+import shared.*;
 import shared.components.ImagePanel;
 import shared.components.JLinkLabel;
 import shared.events.PacketListener;
@@ -61,6 +58,8 @@ public class ViewItem extends WindowPanel {
     private JLinkLabel link_seller;
     //endregion
     private Timer updateTimer;
+
+    private long requestID;
 
 
     public ViewItem() {
@@ -446,9 +445,12 @@ public class ViewItem extends WindowPanel {
             public void packetReceived(Packet packet) {
                 switch (packet.getType()) {
                     case USER:
-                        if (((User) packet.getPayload()).getUniqueID().equals(item.getUserID())) {
-                            this.waiter.replyReceived();
-                            SwingUtilities.invokeLater(() -> ViewItem.this.setUser((User) packet.getPayload()));
+                        UserRequest userRequest = (UserRequest)packet.getPayload();
+                        if(userRequest.getRequestID() == requestID) {
+                            if (userRequest.getUser().getUniqueID().equals(item.getUserID())) {
+                                this.waiter.replyReceived();
+                                SwingUtilities.invokeLater(() -> ViewItem.this.setUser(userRequest.getUser()));
+                            }
                         }
                         break;
                 }
@@ -456,7 +458,9 @@ public class ViewItem extends WindowPanel {
         };
 
         Client.addPacketListener(handler);
-        Client.sendPacket(new Packet<>(PacketType.FETCH_USER, item.getUserID()));
+        UserRequest userRequest = new UserRequest(item.getUserID());
+        this.requestID = userRequest.getRequestID();
+        Client.sendPacket(new Packet<>(PacketType.FETCH_USER, userRequest));
 
         handler.getWaiter().waitForReply();
         return !handler.getWaiter().isReplyTimedOut();
@@ -556,7 +560,10 @@ public class ViewItem extends WindowPanel {
                     break;
 
                 case USER:
-                    SwingUtilities.invokeLater(() -> ViewItem.this.setUser((User) packet.getPayload()));
+                    UserRequest userRequest = (UserRequest)packet.getPayload();
+                    if(userRequest.getRequestID() == requestID) {
+                        SwingUtilities.invokeLater(() -> ViewItem.this.setUser(userRequest.getUser()));
+                    }
                     break;
 
                 case PLACE_BID_FAIL:

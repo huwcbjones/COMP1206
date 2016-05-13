@@ -4,8 +4,7 @@ import server.Server;
 import server.ServerComms.ClientConnection;
 import shared.Packet;
 import shared.PacketType;
-
-import java.util.UUID;
+import shared.UserRequest;
 
 /**
  * Fetches a user the client requests.
@@ -15,22 +14,25 @@ import java.util.UUID;
  */
 public class FetchUserTask extends Task {
 
-    private final UUID userID;
+    private final UserRequest userRequest;
 
-    public FetchUserTask(ClientConnection client, UUID userID){
+    public FetchUserTask(ClientConnection client, UserRequest userRequest){
         super("FetchUserTask", client);
-        this.userID = userID;
+        this.userRequest = userRequest;
     }
     /**
      * Executed on task failure
      */
     @Override
     protected void failureAction() {
-        this.client.sendPacket(new Packet<>(PacketType.USER));
+        this.client.sendPacket(new Packet<>(PacketType.USER, new UserRequest(userRequest.getUserID(), userRequest.getRequestID(), null)));
     }
 
     @Override
     public void runSafe() throws Exception {
-        this.client.sendPacket(new Packet<>(PacketType.USER, Server.getData().getUser(userID).getSharedUser()));
+        this.client.sendPacket(new Packet<>(
+            PacketType.USER,
+            new UserRequest(userRequest.getUserID(), userRequest.getRequestID(), Server.getData().getUser(userRequest.getUserID()).getSharedUser())
+        ));
     }
 }

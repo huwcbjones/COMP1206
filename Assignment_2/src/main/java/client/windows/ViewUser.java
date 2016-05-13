@@ -5,6 +5,7 @@ import client.components.ItemPanel;
 import client.components.WindowPanel;
 import shared.*;
 import shared.components.ItemList;
+import shared.components.JLinkLabel;
 import shared.events.PacketListener;
 import shared.utils.ReplyWaiter;
 import shared.utils.UUIDUtils;
@@ -15,6 +16,8 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static shared.SearchOptions.Direction.DESC;
 import static shared.SearchOptions.Sort.TIME;
@@ -27,11 +30,13 @@ import static shared.SearchOptions.Sort.TIME;
  * @since 20/04/2016
  */
 public class ViewUser extends WindowPanel {
-    private User user;
-
     private final Set<Long> searchIDs = new HashSet<>();
     private final LinkedHashMap<UUID, Item> items = new LinkedHashMap<>();
+    private final HashMap<UUID, Item> bid_items = new HashMap<>();
+    private final LinkedHashMap<UUID, Bid> bids = new LinkedHashMap<>();
 
+    private long requestID;
+    private User user;
     private JPanel panel_details;
     private JPanel panel_items;
     private JPanel panel_bids;
@@ -42,6 +47,8 @@ public class ViewUser extends WindowPanel {
     private JLabel content_lastName;
     private JLabel content_joined;
     private JLabel content_numAuctions;
+
+    private ItemList<Bid> content_bids;
 
     private ItemList<Item> content_items;
 
@@ -268,29 +275,65 @@ public class ViewUser extends WindowPanel {
         titlePanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.PAGE_END);
         this.panel_bids.add(titlePanel, BorderLayout.PAGE_START);
 
-        /*this.model_bid = new BidTableModel();
-        this.content_bids = new JTable(this.model_bid);
-        this.content_bids.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        this.content_bids.setShowGrid(false);
-        this.content_bids.setShowHorizontalLines(false);
-        this.content_bids.setShowVerticalLines(false);
-        this.content_bids.setRowMargin(0);
-        this.content_bids.setIntercellSpacing(new Dimension(4, 2));
-        this.content_bids.setFillsViewportHeight(true);
-        this.content_bids.setRowSorter(new TableRowSorter<>(this.model_bid));
-        this.content_bids.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        this.content_bids.setDragEnabled(false);
+        this.content_bids = new ItemList<Bid>() {
+            @Override
+            public Component drawItem(Bid bid) {
 
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
-        this.content_bids.getColumnModel().getColumn(1).setCellRenderer(rightRenderer);
-        this.content_bids.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);
+                JPanel bidPanel = new JPanel(new GridBagLayout());
+                bidPanel.setOpaque(false);
+                GridBagConstraints c = new GridBagConstraints();
 
-        JScrollPane scroller = new JScrollPane(this.content_bids);
-        scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scroller.setBorder(new EmptyBorder(2, 2, 2, 2));
+                c.fill = GridBagConstraints.BOTH;
+                c.weighty = 1;
+                c.insets = new Insets(2, 4, 2, 4);
 
-        this.panel_bids.add(scroller, BorderLayout.CENTER);*/
+
+                int col = 0;
+                Item item = ViewUser.this.bid_items.get(bid.getItemID());
+
+                JLabel label_title;
+                if (item == null) {
+                    label_title = new JLabel("-", JLabel.LEADING);
+                } else {
+                    label_title = new JLabel(item.getTitle(), JLabel.LEADING);
+                }
+                c.gridx = col;
+                c.weightx = 0.3;
+                bidPanel.add(label_title, c);
+                col++;
+
+                JLabel label_time;
+                label_time = new JLabel(bid.getTimeString(), JLabel.TRAILING);
+                c.gridx = col;
+                c.weightx = 0.3;
+                bidPanel.add(label_time, c);
+                col++;
+
+                JLabel label_price;
+                label_price = new JLabel(bid.getPriceString(), JLabel.TRAILING);
+                c.gridx = col;
+                c.weightx = 0.2;
+                bidPanel.add(label_price, c);
+                col++;
+
+                JLinkLabel link_view = new JLinkLabel("View Item ≫", JLinkLabel.LEADING);
+                link_view.addActionListener(e -> Main.getMain().displayItem(bid.getItemID()));
+                c.gridx = col;
+                c.weightx = 0.2;
+                bidPanel.add(link_view, c);
+                col++;
+
+                return bidPanel;
+            }
+        };
+
+        JScrollPane bidScroller = new JScrollPane(this.content_bids);
+        bidScroller.setOpaque(false);
+        bidScroller.setBorder(new EmptyBorder(4, 8, 2, 8));
+        bidScroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        bidScroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        bidScroller.getVerticalScrollBar().setUnitIncrement(8);
+        this.panel_bids.add(bidScroller, BorderLayout.CENTER);
         //endregion
     }
 
@@ -306,12 +349,15 @@ public class ViewUser extends WindowPanel {
             public void packetReceived(Packet packet) {
                 switch (packet.getType()) {
                     case USER:
-                        if (((User) packet.getPayload()).getUniqueID().equals(userID)) {
-                            // No point setting the user again
-                            if(ViewUser.this.user == null || !ViewUser.this.user.getUniqueID().equals(userID)) {
-                                SwingUtilities.invokeLater(() -> ViewUser.this.setUser((User) packet.getPayload()));
+                        UserRequest userRequest = (UserRequest)packet.getPayload();
+                        if(userRequest.getRequestID() == requestID) {
+                            if (userRequest.getUser().getUniqueID().equals(userID)) {
+                                // No point setting the user again
+                                if (ViewUser.this.user == null || !ViewUser.this.user.getUniqueID().equals(userID)) {
+                                    SwingUtilities.invokeLater(() -> ViewUser.this.setUser(userRequest.getUser()));
+                                }
+                                this.waiter.replyReceived();
                             }
-                            this.waiter.replyReceived();
                         }
                         break;
                 }
@@ -319,7 +365,10 @@ public class ViewUser extends WindowPanel {
         };
 
         Client.addPacketListener(handler);
-        Client.sendPacket(new Packet<>(PacketType.FETCH_USER, userID));
+
+        UserRequest userRequest = new UserRequest(userID);
+        this.requestID = userRequest.getRequestID();
+        Client.sendPacket(new Packet<>(PacketType.FETCH_USER, userRequest));
 
         handler.getWaiter().waitForReply();
         return !handler.getWaiter().isReplyTimedOut();
@@ -328,10 +377,11 @@ public class ViewUser extends WindowPanel {
     public void setUser(User user) {
         this.user = user;
         SearchOptions search = new SearchOptions(TIME, DESC, "", this.user.getUniqueID(), new Keyword(-1, ""), new Timestamp(0), new Timestamp(Long.MAX_VALUE), BigDecimal.ZERO, false, true);
-        synchronized (this.searchIDs){
+        synchronized (this.searchIDs) {
             this.searchIDs.add(search.getSearchID());
         }
         Client.sendPacket(new Packet<>(PacketType.SEARCH, search));
+        Client.sendPacket(new Packet<>(PacketType.FETCH_USERBIDS, user.getUniqueID()));
         SwingUtilities.invokeLater(() -> {
             // Title
             this.setTitle(user.getFullName());
@@ -362,14 +412,58 @@ public class ViewUser extends WindowPanel {
         this.content_items.addAllElements(new ArrayList<>(this.items.values()));
     }
 
+    private void displayBids() {
+        this.content_numAuctions.setText(this.items.size() + "");
+        this.content_bids.removeAllElements();
+        this.content_bids.addAllElements(new ArrayList<>(this.bids.values()));
+    }
+
+    private void processBids(List<Item> items) {
+        this.bids.clear();
+        this.bid_items.clear();
+
+        // Iterate over each item
+        items.forEach(item -> {
+
+            Bid maxBid = null;
+
+            // Put item into hashmap for later usage
+            this.bid_items.put(item.getID(), item);
+
+            // Iterate over all content_bids for an item
+            List<Bid> bids = item.getBids().stream()
+                // Filter content_bids that are not from the displayed user
+                .filter(bid -> bid.getUserID().equals(this.user.getUniqueID()))
+                // Sorted the list
+                .sorted()
+                .collect(Collectors.toList());
+
+            // Iterate over content_bids that the user has placed and find the maximum one
+            for (Bid bid : bids) {
+                if (maxBid == null) {
+                    maxBid = bid;
+                } else if (maxBid.compareTo(bid) < 0) {
+                    maxBid = bid;
+                }
+            }
+
+            // Add the max bid to the content_bids
+            if (maxBid != null) {
+                this.bids.put(maxBid.getID(), maxBid);
+            }
+        });
+
+        displayBids();
+    }
+
     private class PacketHandler implements PacketListener {
         @Override
         public void packetReceived(Packet packet) {
-            switch(packet.getType()){
+            switch (packet.getType()) {
                 case SEARCH_RESULTS:
-                    SearchResults results = (SearchResults)packet.getPayload();
-                    synchronized (ViewUser.this.searchIDs){
-                        if(!ViewUser.this.searchIDs.contains(results.getSearchID())){
+                    SearchResults results = (SearchResults) packet.getPayload();
+                    synchronized (ViewUser.this.searchIDs) {
+                        if (!ViewUser.this.searchIDs.contains(results.getSearchID())) {
                             return;
                         }
                         ViewUser.this.searchIDs.remove(results.getSearchID());
@@ -377,6 +471,11 @@ public class ViewUser extends WindowPanel {
                     ViewUser.this.items.clear();
                     results.getItems().forEach(item -> ViewUser.this.items.put(item.getID(), item));
                     SwingUtilities.invokeLater(ViewUser.this::displayItems);
+                    break;
+
+                case USERBIDS:
+                    Item[] items = (Item[]) packet.getPayload();
+                    ViewUser.this.processBids(Arrays.asList(items));
                     break;
             }
         }
