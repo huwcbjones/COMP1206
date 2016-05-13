@@ -531,7 +531,7 @@ public class ViewItem extends WindowPanel {
     }
 
     private void setUser(User user) {
-        if (user != null && this.item.getUserID().equals(user.getUniqueID())) {
+        if (user != null && this.item != null && this.item.getUserID().equals(user.getUniqueID())) {
             this.link_seller.setText(user.getFullName());
         }
     }
