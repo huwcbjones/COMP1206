@@ -13,5 +13,10 @@ import java.util.EventListener;
  */
 public interface ServerPacketListener extends EventListener {
 
+    /**
+     * Fire when a packet is received
+     * @param client Client that sent the packet
+     * @param packet Packet
+     */
     void packetReceived(ClientConnection client, Packet packet);
 }
