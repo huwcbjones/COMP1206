@@ -96,10 +96,25 @@ public enum PacketType {
      */
     ITEM,
 
-    BID,
+    /**
+     * Fetches the bids of an item from the server
+     */
     FETCH_BIDS,
 
+    /**
+     * Response to FETCH_BIDS, Bid[]
+     */
+    BID,
+
+    /**
+     * Fetches the bids of a user.
+     * Returns an Item[]
+     */
     FETCH_USERBIDS,
+
+    /**
+     * Item[] of a user's bids
+     */
     USERBIDS,
 
     /**
@@ -125,8 +140,14 @@ public enum PacketType {
      */
     AUCTION_NO_WINNER,
 
+    /**
+     * Fetches a user from the server
+     */
     FETCH_USER,
 
+    /**
+     * Sent to client: contains a UserRequest
+     */
     USER,
 
     // Let's create a game of ping pong to maintain connection

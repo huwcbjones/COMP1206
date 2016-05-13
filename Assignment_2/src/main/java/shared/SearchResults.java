@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
- * {DESCRIPTION}
+ * Search Results Packet
  *
  * @author Huw Jones
  * @since 12/05/2016

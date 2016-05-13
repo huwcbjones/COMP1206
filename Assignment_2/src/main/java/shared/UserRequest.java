@@ -5,7 +5,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * {DESCRIPTION}
+ * User Request Packet
  *
  * @author Huw Jones
  * @since 13/05/2016
