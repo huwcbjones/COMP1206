@@ -69,6 +69,9 @@ public class Authenticate extends WindowTemplate {
         initEventListeners();
     }
 
+    /**
+     * Create panels
+     */
     private void initPanels() {
         this.panel_GUI = new JPanel(new BorderLayout());
         this.panel_GUI.setBackground(Color.WHITE);
@@ -123,6 +126,9 @@ public class Authenticate extends WindowTemplate {
         this.setContentPane(this.panel_GUI);
     }
 
+    /**
+     * Create Event Listeners
+     */
     private void initEventListeners() {
         this.panel_login.btn_register.addActionListener(e -> this.changePanel(PANEL_REGISTER));
         this.panel_register.btn_back.addActionListener(e -> this.changePanel(PANEL_LOGIN));
