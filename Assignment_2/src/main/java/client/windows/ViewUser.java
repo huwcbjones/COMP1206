@@ -7,6 +7,7 @@ import shared.*;
 import shared.components.ItemList;
 import shared.events.PacketListener;
 import shared.utils.ReplyWaiter;
+import shared.utils.UUIDUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -35,6 +36,12 @@ public class ViewUser extends WindowPanel {
     private JPanel panel_items;
     private JPanel panel_bids;
 
+    private JLabel content_id;
+    private JLabel content_username;
+    private JLabel content_firstName;
+    private JLabel content_lastName;
+    private JLabel content_joined;
+
     private ItemList<Item> content_items;
 
     public ViewUser() {
@@ -52,8 +59,8 @@ public class ViewUser extends WindowPanel {
         this.panel_details = new JPanel(new GridBagLayout());
         this.panel_details.setOpaque(false);
         c = new GridBagConstraints();
-        c.weightx = 0.3;
-        c.weighty = 0.6;
+        c.weightx = 0.2;
+        c.weighty = 0.4;
         c.insets = new Insets(16, 16, 16, 16);
         c.gridx = 0;
         c.gridy = 0;
@@ -63,7 +70,7 @@ public class ViewUser extends WindowPanel {
         this.panel_items = new JPanel(new GridBagLayout());
         this.panel_items.setOpaque(false);
         c = new GridBagConstraints();
-        c.weightx = 0.7;
+        c.weightx = 0.8;
         c.weighty = 1;
         c.insets = new Insets(16, 16, 16, 16);
         c.gridx = 1;
@@ -75,8 +82,8 @@ public class ViewUser extends WindowPanel {
         this.panel_bids = new JPanel(new GridBagLayout());
         this.panel_bids.setOpaque(false);
         c = new GridBagConstraints();
-        c.weightx = 0.3;
-        c.weighty = 0.4;
+        c.weightx = 0.2;
+        c.weighty = 0.6;
         c.insets = new Insets(16, 16, 16, 16);
         c.gridx = 0;
         c.gridy = 1;
@@ -99,6 +106,95 @@ public class ViewUser extends WindowPanel {
         container.setOpaque(false);
 
         int row = 0;
+        JLabel label_uniqueID = new JLabel("User ID:", JLabel.TRAILING);
+        label_uniqueID.setFont(label_uniqueID.getFont().deriveFont(12f));
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(label_uniqueID, c);
+
+        this.content_id = new JLabel("", JLabel.LEADING);
+        this.content_id.setFont(this.content_id.getFont().deriveFont(12f));
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.content_id, c);
+        row++;
+
+        JLabel label_username = new JLabel("Username:", JLabel.TRAILING);
+        label_username.setFont(label_username.getFont().deriveFont(12f));
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(label_username, c);
+
+        this.content_username = new JLabel("", JLabel.LEADING);
+        this.content_username.setFont(this.content_username.getFont().deriveFont(12f));
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.content_username, c);
+        row++;
+
+        JLabel labelFirstName = new JLabel("First Name:", JLabel.TRAILING);
+        labelFirstName.setFont(labelFirstName.getFont().deriveFont(12f));
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(labelFirstName, c);
+
+        this.content_firstName = new JLabel("", JLabel.LEADING);
+        this.content_firstName.setFont(this.content_firstName.getFont().deriveFont(12f));
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.content_firstName, c);
+        row++;
+
+        JLabel labelLastName = new JLabel("Last Name:", JLabel.TRAILING);
+        labelLastName.setFont(labelLastName.getFont().deriveFont(12f));
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(labelLastName, c);
+
+        this.content_lastName = new JLabel("", JLabel.LEADING);
+        this.content_lastName.setFont(this.content_lastName.getFont().deriveFont(12f));
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.content_lastName, c);
+        row++;
+
+        JLabel labelJoined = new JLabel("Date Joined:", JLabel.TRAILING);
+        labelJoined.setFont(labelJoined.getFont().deriveFont(12f));
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(labelJoined, c);
+
+        this.content_joined = new JLabel("", JLabel.LEADING);
+        this.content_joined.setFont(this.content_joined.getFont().deriveFont(12f));
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.content_joined, c);
+        row++;
 
         JPanel padder = new JPanel();
         padder.setOpaque(false);
@@ -216,6 +312,13 @@ public class ViewUser extends WindowPanel {
             // Title
             this.setTitle(user.getFullName());
             Main.getMain().updateTitle();
+
+            this.content_id.setText(UUIDUtils.UUIDToBase64String(user.getUniqueID()));
+            this.content_username.setText(user.getUsername());
+            this.content_firstName.setText(user.getFirstName());
+            this.content_lastName.setText(user.getLastName());
+            this.content_joined.setText(user.getJoinedString());
+
         });
     }
 
