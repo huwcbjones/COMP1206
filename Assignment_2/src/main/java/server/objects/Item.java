@@ -69,10 +69,20 @@ public class Item extends shared.Item {
         this.listenerList.remove(AuctionListener.class, listener);
     }
 
+    /**
+     * Gets the User of the seller
+     *
+     * @return User of the seller
+     */
     public User getUser() {
         return Server.getData().getUser(this.getUserID());
     }
 
+    /**
+     * Starts an auction
+     *
+     * @throws OperationFailureException Thrown if the auction cannot be started
+     */
     public void startAuction() throws OperationFailureException {
         if (this.getTimeUntilStart() != 0) {
             throw new OperationFailureException("Cannot start auction, auction not due to start for " + this.getTimeUntilStart() + " seconds.");
@@ -84,24 +94,35 @@ public class Item extends shared.Item {
         this.fireAuctionStart();
     }
 
+    /**
+     * Places a bid on this item
+     *
+     * @param userID Used placing the bid
+     * @param price  Price of the bid
+     * @throws OperationFailureException Thrown if the bid could not be placed
+     */
     public void placeBid(UUID userID, BigDecimal price) throws OperationFailureException {
-        if(userID.equals(this.getUserID())){
+        if (userID.equals(this.getUserID())) {
             throw new OperationFailureException("Cannot bid on this item.");
         }
-        if(this.getReserve().compareTo(price) > 0){
+        if (this.getReserve().compareTo(price) > 0) {
             throw new OperationFailureException("Bid must be greater than or equal to the reserce price.");
         }
-        if(this.bids.size() != 0 && price.compareTo(this.getTopBid().getPrice()) <= 0){
+        if (this.bids.size() != 0 && price.compareTo(this.getTopBid().getPrice()) <= 0) {
             throw new OperationFailureException("Bid must be greater than current top bid.");
         }
 
         UUID bidID = this.addBidToDatabase(userID, price);
-        //Server.getData().loadItem(this.getID(), true);
         this.loadBid(bidID);
         this.topBid = this.bids.get(bidID);
         this.fireAuctionBid(this.getBid(bidID));
     }
 
+    /**
+     * Ends an auction
+     *
+     * @throws OperationFailureException Thrown if the auction cannot be ended
+     */
     public void endAuction() throws OperationFailureException {
         if (this.getTimeUntilStart() != 0) {
             throw new OperationFailureException("Cannot end auction, auction is still due to start in " + this.getTimeUntilStart() + " seconds.");
@@ -114,6 +135,7 @@ public class Item extends shared.Item {
         this.fireAuctionEnd(this.getAuctionStatus() == AUCTION_WON);
     }
 
+    //region Event Firing
     private void fireAuctionStart() {
         Server.dispatchEvent(new RunnableAdapter() {
             @Override
@@ -156,6 +178,16 @@ public class Item extends shared.Item {
         });
     }
 
+    //endregion
+
+
+    /**
+     * Adds a bid to the database
+     * @param userID User placing bid
+     * @param bid Bid price
+     * @return UUID of new bid
+     * @throws OperationFailureException Thrown if the addition failed
+     */
     private UUID addBidToDatabase(UUID userID, BigDecimal bid) throws OperationFailureException {
         final Logger log = LogManager.getLogger(Item.class);
 
@@ -178,7 +210,7 @@ public class Item extends shared.Item {
             selectBidIDs = c.prepareStatement(selectBidIDsSql);
             bidIDSet = selectBidIDs.executeQuery();
 
-            while(bidIDSet.next()){
+            while (bidIDSet.next()) {
                 bidIDs.add(UUIDUtils.BytesToUUID(bidIDSet.getBytes("bidID")));
             }
 
@@ -206,7 +238,7 @@ public class Item extends shared.Item {
             wasSuccess = false;
         } finally {
             try {
-                if(bidIDSet != null){
+                if (bidIDSet != null) {
                     bidIDSet.close();
                 }
                 if (selectBidIDs != null) {
@@ -223,12 +255,17 @@ public class Item extends shared.Item {
                 log.trace(suppress);
             }
         }
-        if(!wasSuccess){
+        if (!wasSuccess) {
             throw new OperationFailureException("Failed to save bid.");
         }
         return uniqueID;
     }
 
+    /**
+     * Loads a bid into this item
+     * @param bidID ID of bid
+     * @throws OperationFailureException Thrown if the bid could not be loaded
+     */
     private void loadBid(UUID bidID) throws OperationFailureException {
         final Logger log = LogManager.getLogger(Item.class);
 
@@ -246,7 +283,7 @@ public class Item extends shared.Item {
             selectBid.setBytes(1, UUIDUtils.UUIDToBytes(bidID));
             bidIDSet = selectBid.executeQuery();
 
-            while(bidIDSet.next()){
+            while (bidIDSet.next()) {
                 Bid bid = new Bid(
                     UUIDUtils.BytesToUUID(bidIDSet.getBytes("bidID")),
                     this.getID(),
@@ -267,7 +304,7 @@ public class Item extends shared.Item {
             log.error("Failed to load bid.");
         } finally {
             try {
-                if(bidIDSet != null){
+                if (bidIDSet != null) {
                     bidIDSet.close();
                 }
                 if (selectBid != null) {
@@ -291,7 +328,7 @@ public class Item extends shared.Item {
     @Override
     public Bid getTopBid() {
         shared.Bid bid = super.getTopBid();
-        if(bid == null) return null;
+        if (bid == null) return null;
         return new Bid(
             bid.getID(),
             bid.getItemID(),
@@ -301,12 +338,21 @@ public class Item extends shared.Item {
         );
     }
 
-    public static Item createServerItem(shared.Item item) {
-        return new Item(item);
+    /**
+     * Creates a shared.Item version (compatible with the client)
+     * @return Shared Item
+     */
+    public shared.Item getClientItem() {
+        return Item.getClientItem(this);
     }
 
-    public shared.Item getClientItem(){
-        return Item.getClientItem(this);
+    /**
+     * Creates a server item from a shared item
+     * @param item Shared item
+     * @return Server Item
+     */
+    public static Item createServerItem(shared.Item item) {
+        return new Item(item);
     }
 
     public static shared.Item getClientItem(Item item) {

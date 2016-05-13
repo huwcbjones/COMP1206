@@ -17,6 +17,10 @@ public class Bid extends shared.Bid {
         super(bidID, itemID, userID, bidPrice, time);
     }
 
+    /**
+     * Gets the User who placed the bid
+     * @return User who placed the bid
+     */
     public User getUser(){
         return Server.getData().getUser(this.getUserID());
     }

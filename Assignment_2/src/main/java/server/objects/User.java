@@ -71,6 +71,17 @@ public final class User extends shared.User {
         return this.client;
     }
 
+    /**
+     * Changes a user password
+     * @param oldPassword Old password
+     * @param newPassword New password
+     * @param confirm Confirmation of new password
+     * @return Whether the operation succeeded
+     * @throws OperationFailureException Failed
+     * @throws InvalidCredentialException Failed to authenticate
+     * @throws PasswordsDoNotMatchException Self explanatory
+     * @throws ValidationFailedException If the new password does not fit complexity requirements
+     */
     public boolean changePassword(char[] oldPassword, char[] newPassword, char[] confirm)
         throws OperationFailureException, InvalidCredentialException, PasswordsDoNotMatchException, ValidationFailedException {
 
@@ -91,6 +102,12 @@ public final class User extends shared.User {
         return false;
     }
 
+    /**
+     * Returns whether the user can authenticate a password
+     * @param password Password
+     * @return True if the password is correct
+     * @throws OperationFailureException Might happen *shrugs shoulders*
+     */
     public boolean isAuthenticated(char[] password) throws OperationFailureException {
         byte[] passwordHash = User.generatePasswordHash(password, this.salt);
         boolean returnValue = Arrays.equals(passwordHash, this.passwordHash);
@@ -100,6 +117,13 @@ public final class User extends shared.User {
         return returnValue;
     }
 
+    /**
+     * Logs a user in
+     * @param password Password provided
+     * @param client Client attempting to login
+     * @throws InvalidCredentialException If username/password was wrong
+     * @throws OperationFailureException If something went wrong
+     */
     public void login(char[] password, ClientConnection client) throws InvalidCredentialException, OperationFailureException {
         if (this.isLoggedIn()) {
             throw new OperationFailureException("User is already logged in.");
@@ -136,6 +160,7 @@ public final class User extends shared.User {
         this.listenerList.remove(LoginListener.class, listener);
     }
 
+    //region Event Firing
     private void fireUserLoggedIn() {
         Server.dispatchEvent(new RunnableAdapter() {
             @Override
@@ -163,7 +188,11 @@ public final class User extends shared.User {
             }
         });
     }
+    //endregion
 
+    /**
+     * Logs a user out
+     */
     public void logout() {
         if(this.isLoggedIn() && this.client.isConnected()) {
             this.client.sendPacket(Packet.Logout());
@@ -233,6 +262,9 @@ public final class User extends shared.User {
         return bytes;
     }
 
+    /**
+     * Handles the connection closing (auto logout on disconnect)
+     */
     private class ConnectionHandler extends ConnectionAdapter {
         /**
          * Fires when the connection is closed
