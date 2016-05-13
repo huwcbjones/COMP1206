@@ -36,6 +36,10 @@ public final class Config {
         this.servers = new HashMap<>();
     }
 
+    /**
+     * Attempts to load the config file
+     * @throws ConfigLoadException Thrown if loading failed
+     */
     public void loadConfig() throws ConfigLoadException {
         log.info("Loading config file...");
 

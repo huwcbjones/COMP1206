@@ -104,10 +104,6 @@ public final class Client implements ConnectionListener {
         }
     }
 
-    public Client() {
-        this(null, null);
-    }
-
     private void shutdown() {
         log.info("Shutting down client...");
         if (Client.isConnected) {
@@ -120,6 +116,9 @@ public final class Client implements ConnectionListener {
         return Client.config;
     }
 
+    /**
+     * Disconnects from server (if connected)
+     */
     public static void disconnect() {
         if (!Client.isConnected) return;
         Client.comms.shutdown();
