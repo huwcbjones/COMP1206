@@ -7,7 +7,7 @@ import javax.swing.table.AbstractTableModel;
 import java.util.*;
 
 /**
- * {DESCRIPTION}
+ * Table model for auction results
  *
  * @author Huw Jones
  * @since 23/04/2016

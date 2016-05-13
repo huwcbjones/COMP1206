@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Table model for server.objects.User
+ * Table model for User
  *
  * @author Huw Jones
  * @since 23/04/2016
