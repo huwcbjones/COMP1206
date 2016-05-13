@@ -41,6 +41,7 @@ public class ViewUser extends WindowPanel {
     private JLabel content_firstName;
     private JLabel content_lastName;
     private JLabel content_joined;
+    private JLabel content_numAuctions;
 
     private ItemList<Item> content_items;
 
@@ -58,6 +59,7 @@ public class ViewUser extends WindowPanel {
         //region Panels
         this.panel_details = new JPanel(new GridBagLayout());
         this.panel_details.setOpaque(false);
+        this.panel_details.setPreferredSize(new Dimension(200, 200));
         c = new GridBagConstraints();
         c.weightx = 0.2;
         c.weighty = 0.4;
@@ -69,6 +71,7 @@ public class ViewUser extends WindowPanel {
 
         this.panel_items = new JPanel(new GridBagLayout());
         this.panel_items.setOpaque(false);
+        this.panel_items.setPreferredSize(new Dimension(600, 500));
         c = new GridBagConstraints();
         c.weightx = 0.8;
         c.weighty = 1;
@@ -196,6 +199,24 @@ public class ViewUser extends WindowPanel {
         container.add(this.content_joined, c);
         row++;
 
+        JLabel labelNumberAuctions = new JLabel("Auctions:", JLabel.TRAILING);
+        labelNumberAuctions.setFont(labelNumberAuctions.getFont().deriveFont(12f));
+        c = new GridBagConstraints();
+        c.gridy = row;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 4, 2, 6);
+        container.add(labelNumberAuctions, c);
+
+        this.content_numAuctions = new JLabel("", JLabel.LEADING);
+        this.content_numAuctions.setFont(this.content_numAuctions.getFont().deriveFont(12f));
+        c.gridx = 1;
+        c.weightx = 0.7;
+        c.insets = new Insets(2, 6, 2, 4);
+        container.add(this.content_numAuctions, c);
+        row++;
+
         JPanel padder = new JPanel();
         padder.setOpaque(false);
         c = new GridBagConstraints();
@@ -286,8 +307,11 @@ public class ViewUser extends WindowPanel {
                 switch (packet.getType()) {
                     case USER:
                         if (((User) packet.getPayload()).getUniqueID().equals(userID)) {
+                            // No point setting the user again
+                            if(ViewUser.this.user == null || !ViewUser.this.user.getUniqueID().equals(userID)) {
+                                SwingUtilities.invokeLater(() -> ViewUser.this.setUser((User) packet.getPayload()));
+                            }
                             this.waiter.replyReceived();
-                            SwingUtilities.invokeLater(() -> ViewUser.this.setUser((User) packet.getPayload()));
                         }
                         break;
                 }
@@ -333,6 +357,7 @@ public class ViewUser extends WindowPanel {
     }
 
     private void displayItems() {
+        this.content_numAuctions.setText(this.items.size() + "");
         this.content_items.removeAllElements();
         this.content_items.addAllElements(new ArrayList<>(this.items.values()));
     }
