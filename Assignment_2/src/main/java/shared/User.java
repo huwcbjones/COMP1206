@@ -61,4 +61,13 @@ public class User implements Serializable {
     public String getJoinedString(String format){
         return new SimpleDateFormat(format).format(this.getJoined());
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof  User)){
+            return false;
+        }
+        User user = (User)obj;
+        return user.getUniqueID().equals(this.uniqueID);
+    }
 }
