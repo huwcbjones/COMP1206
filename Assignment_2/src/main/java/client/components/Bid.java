@@ -28,10 +28,19 @@ public class Bid extends shared.Bid {
         this(bid.getID(), bid.getItemID(), bid.getUserID(), bid.getPrice(), bid.getTime());
     }
 
+    /**
+     * Fetches the details of the user who placed the bid from the server
+     *
+     * @return The User that placed the bid
+     */
     public User getUser(){
+        // Check if the current logged in user placed the bid
         if(Client.getUser().getUniqueID().equals(this.getUserID())){
             return Client.getUser();
         } else if(this.user == null){
+
+            // The user hasn't been fetched yet
+
             ReplyWaiter handler = new ReplyWaiter(Client.getConfig().getTimeout()) {
                 @Override
                 public void packetReceived(Packet packet) {
@@ -50,6 +59,8 @@ public class Bid extends shared.Bid {
                 }
             };
             Client.addPacketListener(handler);
+
+            // Hacky implementation (in hour before deadline) to make sure only this listener deals with this request
             UserRequest userRequest = new UserRequest(getUserID());
             this.requestID = userRequest.getRequestID();
             Client.sendPacket(new Packet<>(PacketType.FETCH_USER, userRequest));

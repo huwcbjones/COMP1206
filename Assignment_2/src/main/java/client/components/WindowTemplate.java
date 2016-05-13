@@ -14,9 +14,6 @@ public abstract class WindowTemplate extends shared.utils.WindowTemplate {
         super(title);
     }
 
-    public WindowTemplate() {
-    }
-
     /**
      * Sets the title for this frame to the specified string.
      *
