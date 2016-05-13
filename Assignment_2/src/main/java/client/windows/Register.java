@@ -14,6 +14,7 @@ import shared.utils.ValidationUtils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -345,7 +346,8 @@ public class Register extends WindowPanel {
             Client.register(new User(
                     Register.this.text_username.getText(),
                     Register.this.text_firstName.getText(),
-                    Register.this.text_lastName.getText()
+                    Register.this.text_lastName.getText(),
+                    new Timestamp(0)
                 ),
                 Register.this.text_password.getPassword(),
                 Register.this.text_passwordConfirm.getPassword()

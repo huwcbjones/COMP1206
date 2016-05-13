@@ -16,6 +16,7 @@ import shared.utils.ValidationUtils;
 import javax.swing.event.EventListenerList;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
@@ -35,8 +36,8 @@ public final class User extends shared.User {
     private final ConnectionHandler connectionHandler = new ConnectionHandler();
     private ClientConnection client = null;
 
-    public User(UUID uniqueID, String username, String firstName, String lastName, byte[] passwordHash, byte[] salt) {
-        super(uniqueID, username, firstName, lastName);
+    public User(UUID uniqueID, String username, String firstName, String lastName, byte[] passwordHash, byte[] salt, Timestamp joined) {
+        super(uniqueID, username, firstName, lastName, joined);
         this.passwordHash = passwordHash;
         this.salt = salt;
         this.addLoginListener(Server.getLoginEventHandler());
@@ -57,7 +58,7 @@ public final class User extends shared.User {
      * @return shared.User
      */
     public shared.User getSharedUser() {
-        return new shared.User(this.getUniqueID(), this.getUsername(), this.getFirstName(), this.getLastName());
+        return new shared.User(this.getUniqueID(), this.getUsername(), this.getFirstName(), this.getLastName(), this.getJoined());
     }
 
     /**

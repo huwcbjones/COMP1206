@@ -1,9 +1,10 @@
 package shared;
 
 import shared.utils.StringUtils;
-import shared.utils.UUIDUtils;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.UUID;
 
 /**
@@ -20,15 +21,17 @@ public class User implements Serializable {
     private final String firstName;
     private final String lastName;
     private final UUID uniqueID;
+    private final Timestamp joined;
 
-    public User(UUID uniqueID, String username, String firstName, String lastName) {
+    public User(UUID uniqueID, String username, String firstName, String lastName, Timestamp joined) {
         this.uniqueID = uniqueID;
         this.username = username;
         this.firstName = StringUtils.CapitaliseString(firstName);
         this.lastName = StringUtils.CapitaliseString(lastName);
+        this.joined = joined;
     }
-    public User(String username, String firstName, String lastName) {
-        this(UUID.nameUUIDFromBytes(username.getBytes()), username, firstName, lastName);
+    public User(String username, String firstName, String lastName, Timestamp joined) {
+        this(UUID.nameUUIDFromBytes(username.getBytes()), username, firstName, lastName, joined);
     }
 
     public String getUsername() {
@@ -51,7 +54,11 @@ public class User implements Serializable {
         return this.uniqueID;
     }
 
-    public byte[] getUniqueByteID() {
-        return UUIDUtils.UUIDToBytes(this.uniqueID);
+    public Timestamp getJoined() { return this.joined; }
+
+    public String getJoinedString() { return this.getJoinedString("dd/MM/yyyy"); }
+
+    public String getJoinedString(String format){
+        return new SimpleDateFormat(format).format(this.getJoined());
     }
 }

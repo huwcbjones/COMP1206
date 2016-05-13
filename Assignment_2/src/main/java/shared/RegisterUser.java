@@ -16,13 +16,7 @@ public class RegisterUser extends User implements Serializable {
     private final char[] passwordConfirm;
 
     public RegisterUser(User user, char[] password, char[] passwordConfirm) {
-        super(user.getUsername(), user.getFirstName(), user.getLastName());
-        this.password = password;
-        this.passwordConfirm = passwordConfirm;
-    }
-
-    public RegisterUser(String username, String firstName, String lastName, char[] password, char[] passwordConfirm) {
-        super(username, firstName, lastName);
+        super(user.getUsername(), user.getFirstName(), user.getLastName(), user.getJoined());
         this.password = password;
         this.passwordConfirm = passwordConfirm;
     }

@@ -76,7 +76,7 @@ public class RegisterTask extends Task {
 
         Connection c = null;
         PreparedStatement insertUser = null;
-        String insertUserSql = "INSERT INTO users (userID, username, firstName, lastName, password) VALUES (?, ?, ?, ?, ?)";
+        String insertUserSql = "INSERT INTO users (userID, username, firstName, lastName, password, joined) VALUES (?, ?, ?, ?, ?, CAST(strftime('%s', 'now') AS INT))";
         boolean wasSuccess;
         try {
             c = Server.getData().getConnection();

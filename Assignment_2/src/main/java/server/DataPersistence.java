@@ -124,7 +124,8 @@ public final class DataPersistence {
                 "  username VARCHAR(64) NOT NULL UNIQUE," +
                 "  firstName VARCHAR(64) NOT NULL," +
                 "  lastName VARCHAR(64) NOT NULL," +
-                "  password BLOB NOT NULL" +
+                "  password BLOB NOT NULL," +
+                "  joined DATETIME NOT NULL DEFAULT 0" +
                 ")";
             statement.execute(usersTable);
             log.info("Created users table!");
@@ -154,7 +155,7 @@ public final class DataPersistence {
                 "  itemID BLOB NOT NULL," +
                 "  userID BLOB NOT NULL," +
                 "  price INTEGER NOT NULL," +
-                "  time DATETIME NOT NULL," +
+                "  time DATETIME NOT NULL DEFAULT 0," +
                 "  FOREIGN KEY (itemID) REFERENCES items(itemID)," +
                 "  FOREIGN KEY (userID) REFERENCES users(userID)" +
                 ")";
@@ -256,7 +257,7 @@ public final class DataPersistence {
      */
     private void loadUser(UUID query_userID, String query_username) throws OperationFailureException {
         log.debug("Querying database for User({})({})", query_userID, query_username);
-        String selectQuerySql = "SELECT userID, username, firstName, lastName, password FROM users WHERE userID=? OR username=?";
+        String selectQuerySql = "SELECT userID, username, firstName, lastName, password, joined FROM users WHERE userID=? OR username=?";
         Connection c = null;
         PreparedStatement selectQuery = null;
         try {
@@ -270,6 +271,7 @@ public final class DataPersistence {
 
             UUID userID;
             String username, firstName, lastName;
+            Timestamp joined;
             byte[] passwordBytes, password, salt;
             User newUser;
 
@@ -282,13 +284,15 @@ public final class DataPersistence {
                 passwordBytes = results.getBytes("password");
                 password = Arrays.copyOfRange(passwordBytes, 0, 32);
                 salt = Arrays.copyOfRange(passwordBytes, 32, 64);
+                joined = new Timestamp(results.getLong("joined") * 1000L);
                 newUser = new User(
                     userID,
                     username,
                     firstName,
                     lastName,
                     password,
-                    salt
+                    salt,
+                    joined
                 );
                 this.users.put(newUser.getUniqueID(), newUser);
                 this.usernameToUUID.put(newUser.getUsername(), newUser.getUniqueID());
