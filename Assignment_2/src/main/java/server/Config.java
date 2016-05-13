@@ -40,6 +40,10 @@ public final class Config {
         this.keyStore = new File(configFileLocation.getAbsoluteFile().getParent() + File.pathSeparator + "biddr.jks");
     }
 
+    /**
+     * Set location of the config file
+     * @param fileLocation Location of config file
+     */
     public void setConfigFile(String fileLocation) {
         this.configFileLocation = new File(fileLocation).getAbsoluteFile();
         this.dataStore = configFileLocation.getParentFile();

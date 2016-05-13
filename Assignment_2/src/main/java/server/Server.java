@@ -83,14 +83,25 @@ public final class Server {
         Runtime.getRuntime().addShutdownHook(new shutdownThread());
     }
 
+    /**
+     * Set config file location
+     * @param file Location
+     */
     public void setConfigFile(String file) {
         config.setConfigFile(file);
     }
 
+    /**
+     * Set data location
+     * @param dir
+     */
     public void setDataDirectory(String dir) {
         config.setDataStore(dir);
     }
 
+    /**
+     * Tests the config file
+     */
     public void testConfig() {
         try {
             config.loadConfig();

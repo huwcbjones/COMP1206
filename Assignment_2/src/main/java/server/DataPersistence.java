@@ -454,6 +454,11 @@ public final class DataPersistence {
         }
     }
 
+    /**
+     * Processes the image for an item (when a new item is added)
+     * @param itemID ID of Item
+     * @param image Image user provided
+     */
     public void processItemImage(UUID itemID, BufferedImage image) {
         if (image == null) return;
 
@@ -470,6 +475,9 @@ public final class DataPersistence {
         }
     }
 
+    /**
+     * Loads keywords into memory
+     */
     private void loadKeywords() {
         log.debug("Loading keywords...");
         int initialSize = this.keywords.size();

@@ -78,6 +78,9 @@ public final class ServerGUI extends WindowTemplate {
         this.initEventListeners();
     }
 
+    /**
+     * Redirects System.out/.err to the console text area
+     */
     private void redirectConsole() {
         PrintStream textStream = new PrintStream(new JTextAreaOutputStream(this.text_console));
         System.setOut(textStream);
@@ -234,6 +237,9 @@ public final class ServerGUI extends WindowTemplate {
         this.label_time.setText(new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(Calendar.getInstance().getTime()));
     }
 
+    /**
+     * Handles server events (starting, started, stopping, stopped, start failed)
+     */
     private class ServerHandler extends ServerAdapter {
 
         /**
@@ -312,6 +318,9 @@ public final class ServerGUI extends WindowTemplate {
         }
     }
 
+    /**
+     * Handles User Events (login, logout)
+     */
     private class UserHandler implements LoginListener {
 
         /**
@@ -336,6 +345,9 @@ public final class ServerGUI extends WindowTemplate {
         }
     }
 
+    /**
+     * Handles Auction events (start, end, bids)
+     */
     private class AuctionHandler implements AuctionListener {
         /**
          * Fired when an auction starts
@@ -376,6 +388,10 @@ public final class ServerGUI extends WindowTemplate {
         }
     }
 
+    /**
+     * Removes listeners when window closes.
+     * Server has a shutdown hook, so calling Server.shutdown is unnecessary
+     */
     private class WindowHandler extends WindowAdapter {
         /**
          * Invoked when a window is in the process of being closed.
@@ -390,6 +406,9 @@ public final class ServerGUI extends WindowTemplate {
         }
     }
 
+    /**
+     * Fetches auction results from the server
+     */
     private class FetchResults implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
