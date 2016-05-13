@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -11,16 +12,31 @@ public class ByteBasedStream {
 
     public static void main(String[] args){
         try {
-            FileOutputStream fos = new FileOutputStream("byte_output_file.txt");
-            for(int i = 0; i< 10000; i++){
-                fos.write(new Random(100000).nextInt());
+            ArrayList<Integer> ints = new ArrayList<>(10000);
+            Random random = new Random();
+            for(int i = 0; i < 10000; i++){
+                ints.add(random.nextInt());
             }
+            FileOutputStream fos = new FileOutputStream("byte_output_file.txt");
+            ints.forEach(integer -> {
+                try {
+                    // Writes lower 8 bits to OS, upper 24 bits (3 bytes) are ignored
+                    fos.write(integer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             fos.close();
 
             FileWriter fw = new FileWriter("char_output_file.txt");
-            for(int i = 0; i< 10000; i++){
-                fw.write(new Random(100000).nextInt());
-            }
+            ints.forEach(integer -> {
+                try {
+                    // Writes lower 16 bits to OS, upper 16 bits (2 bytes) are ignored
+                    fw.write((char)integer.intValue());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             fw.close();
 
         } catch (FileNotFoundException e) {
