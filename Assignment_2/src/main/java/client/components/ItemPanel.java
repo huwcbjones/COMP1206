@@ -34,7 +34,7 @@ public class ItemPanel extends JPanel {
 
     public ItemPanel(Item item) {
         super(new GridBagLayout());
-        this.setMinimumSize(new Dimension(0, 200));
+        this.setMinimumSize(new Dimension(200, 200));
         this.item = item;
         this.initComponents();
         this.addMouseListener(new MouseHandler());
