@@ -44,14 +44,15 @@ COMPILATION INSTRUCTIONS:
 			The contents of "src/main/resources/" needs to be copied to {$OUTPUT_DIR}/. This copies the config files, image resources, log4j2 config file (log4j2.xml) and keystore to the output path.
 			
 		TO RUN:
+			Run in the {$OUTPUT_DIR}, it makes it easier for running.
 		    Where {$CLASSNAME} is one of the following:
 		        - BiddrClient       The Auction Server Client
 		        - BiddrServer       The Auction Server GUI
 		        - biddrd            Headless Auction Server (Unix type daemon service)
 		    Windows:
-		        java -cp "{$OUTPUT_DIR};lib/*" {$CLASSNAME}
+		        java -cp ".;../lib/*" {$CLASSNAME}
 		    OS X/Unix:
-            	java -cp "{$OUTPUT_DIR}:lib/*" {$CLASSNAME}
+            	java -cp ".:../lib/*" {$CLASSNAME}
 		
 	Alternatively, if you have maven, run "mvn package" in the base directory of my submission. This will create 3 executable jar's and copy the required dependencies to lib/*.
 	This allows you to start the:
