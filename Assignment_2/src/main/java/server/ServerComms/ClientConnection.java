@@ -63,6 +63,10 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         }
     }
 
+    /**
+     * Connects the client to the server
+     * @throws ConnectionFailedException If the connection failed
+     */
     public void connect() throws ConnectionFailedException {
         ConnectHandler connectHandler = new ConnectHandler(this);
         connectHandler.connect();
@@ -227,6 +231,9 @@ public final class ClientConnection extends ConnectionAdapter implements PacketL
         this.closeConnection();
     }
 
+    /**
+     * Closes the connection
+     */
     public void closeConnection() {
         log.info("Disconnecting Client({}).", this.clientID);
         this.comms.removeConnectionListener(this);

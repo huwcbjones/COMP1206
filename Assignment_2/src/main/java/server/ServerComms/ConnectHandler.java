@@ -27,6 +27,10 @@ public class ConnectHandler {
         this.client = client;
     }
 
+    /**
+     * Connects a client to the server
+     * @throws ConnectionFailedException If the connection failed
+     */
     public void connect() throws ConnectionFailedException {
         this.waiter = new NotificationWaiter();
         PacketListener helloListener;
@@ -97,6 +101,9 @@ public class ConnectHandler {
         //endregion
     }
 
+    /**
+     * Handles client version checking
+     */
     private class VersionListener extends ReplyWaiter {
 
         private int clientVersion;

@@ -73,6 +73,9 @@ public class ServerComms extends Thread {
         return new ClientConnection(clientID, socket);
     }
 
+    /**
+     * Shuts down this server comms
+     */
     public void shutdown () {
         this.shouldQuit = true;
         try {
