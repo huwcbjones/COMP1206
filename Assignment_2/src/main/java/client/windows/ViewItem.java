@@ -137,6 +137,7 @@ public class ViewItem extends WindowPanel {
         //region Panels
         this.panel_image = new ImagePanel();
         this.panel_image.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+        this.panel_image.setPreferredSize(new Dimension(200, 200));
         c = new GridBagConstraints();
         c.weightx = 0.5;
         c.weighty = 0.5;
