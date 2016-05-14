@@ -47,15 +47,16 @@ public class ConnectHandler {
     public void connect() throws ConnectionFailedException, ConnectionUpgradeException {
         this.doConnect();
 
+
         //region Secure Connection
-        SecureHandler secureHandler = new SecureHandler(this.waiter);
+        SecureHandler secureHandler = new SecureHandler(Client.getConfig().getTimeout());
         Client.addPacketListener(secureHandler);
 
         // Tell server everything up to now is OK
         Client.sendPacket(Packet.wasOK(true));
 
-        waiter.waitForReply();
-        if (waiter.isReplyTimedOut()) {
+        secureHandler.getWaiter().waitForReply();
+        if (secureHandler.getWaiter().isReplyTimedOut()) {
             throw new ConnectionFailedException("Handshake was unsuccessful.");
         }
         if (secureHandler.getSecurePort() == -1) {
@@ -82,7 +83,7 @@ public class ConnectHandler {
 
         //region Say HELLO to server
         log.debug("Saying HELLO to the server...");
-        ReplyWaiter replyHandler = new ReplyWaiter(this.waiter) {
+        ReplyWaiter replyHandler = new ReplyWaiter(Client.getConfig().getTimeout()) {
             @Override
             public void packetReceived(Packet packet) {
                 switch (packet.getType()) {
@@ -95,9 +96,10 @@ public class ConnectHandler {
         };
         Client.addPacketListener(replyHandler);
 
-        VersionOKHandler versionOKHandler = new VersionOKHandler(this.waiter);
+        VersionOKHandler versionOKHandler = new VersionOKHandler(Client.getConfig().getTimeout());
         PacketListener serverVersionHandler = packet -> {
             if (packet.getType() == PacketType.VERSION) log.info("Server version is: {}", (int) packet.getPayload());
+            waiter.replyReceived();
         };
 
         Client.addPacketListener(versionOKHandler);
@@ -106,9 +108,9 @@ public class ConnectHandler {
         Client.sendPacket(Packet.Hello());
 
         // Wait for reply
-        waiter.waitForReply();
+        replyHandler.getWaiter().waitForReply();
         Client.removePacketListener(replyHandler);
-        if (waiter.isReplyTimedOut()) {
+        if (replyHandler.getWaiter().isReplyTimedOut()) {
             throw new ConnectionFailedException("Handshake was unsuccessful.");
         }
         //endregion
@@ -117,9 +119,9 @@ public class ConnectHandler {
 
         log.debug("Sending server our version number...");
         Client.sendPacket(new Packet<>(PacketType.VERSION, Config.VERSION));
-        waiter.waitForReply();
+        versionOKHandler.getWaiter().waitForReply();
 
-        if (waiter.isReplyTimedOut()) {
+        if (versionOKHandler.getWaiter().isReplyTimedOut()) {
             throw new ConnectionFailedException("Handshake was unsuccessful.");
         }
         if (!versionOKHandler.versionIsOK()) {
@@ -164,8 +166,8 @@ public class ConnectHandler {
     private class VersionOKHandler extends ReplyWaiter {
         boolean versionIsOK = false;
 
-        public VersionOKHandler(NotificationWaiter waiter) {
-            super(waiter);
+        public VersionOKHandler(int timeout) {
+            super(timeout);
         }
 
         public boolean versionIsOK() {
@@ -194,8 +196,8 @@ public class ConnectHandler {
     private class SecureHandler extends ReplyWaiter {
         int securePort = -1;
 
-        public SecureHandler(NotificationWaiter waiter) {
-            super(waiter);
+        public SecureHandler(int timeout) {
+            super(timeout);
         }
 
         public int getSecurePort() {

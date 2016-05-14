@@ -35,7 +35,7 @@ public class FetchUserBidsTask extends Task {
      */
     @Override
     protected void failureAction() {
-        this.client.sendPacket(new Packet<>(PacketType.USERBIDS, new Item[0]));
+        this.client.sendPacket(new Packet<>(PacketType.USERBIDS, new shared.Item[0]));
     }
 
     @Override
@@ -46,7 +46,7 @@ public class FetchUserBidsTask extends Task {
 
         itemIDs.forEach(itemID -> bidArray.add(Server.getData().getItem(itemID)));
 
-        this.client.sendPacket(new Packet<>(PacketType.USERBIDS, bidArray.toArray(new Item[bidArray.size()])));
+        this.client.sendPacket(new Packet<>(PacketType.USERBIDS, bidArray.toArray(new shared.Item[bidArray.size()])));
     }
 
     private ArrayList<UUID> getItemIDs() throws OperationFailureException {

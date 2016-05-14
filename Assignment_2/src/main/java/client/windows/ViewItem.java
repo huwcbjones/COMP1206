@@ -119,7 +119,7 @@ public class ViewItem extends WindowPanel {
                 }
                 Client.sendPacket(new Packet<>(
                     PacketType.PLACE_BID,
-                    new Bid(new UUID(0, 0), this.item.getID(), Client.getUser().getUniqueID(), bid, new Timestamp(Calendar.getInstance().getTime().getTime())))
+                    new shared.Bid(new UUID(0, 0), this.item.getID(), Client.getUser().getUniqueID(), bid, new Timestamp(Calendar.getInstance().getTime().getTime())))
                 );
             } catch (ParseException e1) {
                 JOptionPane.showMessageDialog(this, "Invalid bid format. Failed to understand bid price.", "Invalid Bid!", JOptionPane.WARNING_MESSAGE);

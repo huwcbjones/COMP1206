@@ -25,6 +25,7 @@ public abstract class NotificationWaiter {
     public abstract void waitForReply();
 
     public void waitForReply(int timeout) {
+        this.replyTimedOut = false;
         synchronized (this.waitForReply) {
             try {
                 // Change reply timed out to true, if we received a reply, the handling code should change this to false

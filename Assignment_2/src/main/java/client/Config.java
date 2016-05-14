@@ -158,6 +158,7 @@ public final class Config {
      * @param server Server to remove
      */
     public void removeServer(Server server) {
+        if(server == null) return;
         log.info("Removing server '{}'.", server.getName());
         this.servers.remove(server.getName());
     }
